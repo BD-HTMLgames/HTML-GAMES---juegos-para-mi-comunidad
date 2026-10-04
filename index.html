@@ -481,7 +481,6 @@
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
-// TUS NUEVAS CLAVES DE FIREBASE YA ESTÁN AQUÍ:
 const firebaseConfig = {
   apiKey: "AIzaSyD4F-dDO0APfcrGNTCugMriwyD53Iyd2FY",
   authDomain: "bd--htmlgames.firebaseapp.com",
@@ -496,21 +495,26 @@ const firebaseConfig = {
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
 let globalLeaderboardData = []; 
+let globalGameRatings = {}; 
 
-// TUS CLAVES DE EMAILJS YA ESTÁN AQUÍ:
 emailjs.init({ publicKey: "5PducOYUQMALmJugY" }); 
 const EMAILJS_SERVICE_ID = "service_vwvgqqg"; 
 const EMAILJS_TEMPLATE_ID = "template_re44dk7"; 
 
 const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
 
+// ====== JUEGOS Y CATEGORÍAS ACTUALIZADOS ======
 const games = [
   { title: "Juego de la serpiente", cat: "arcade", tag: "NEW", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
+  { title: "Juego UNO", cat: "cards", tag: "NEW", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
 ];
 
 const categories = [
-  { id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }
+  { id: "all", label: "Todos" }, 
+  { id: "arcade", label: "Arcade" },
+  { id: "cards", label: "Cartas" }
 ];
+// ===============================================
 
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
@@ -913,14 +917,33 @@ document.addEventListener('click', (e) => {
 
 db.ref('users').on('value', (snapshot) => {
   globalLeaderboardData = [];
+  globalGameRatings = {}; 
+  const tempRatings = {}; 
+
   snapshot.forEach((child) => {
     const val = child.val();
     let pScore = 0;
-    if (val.history) { for (let g in val.history) { pScore += val.history[g].highScore || 0; } }
+    if (val.history) {
+      for (let g in val.history) {
+        pScore += val.history[g].highScore || 0;
+        if (val.history[g].rating > 0) {
+          if (!tempRatings[g]) tempRatings[g] = [];
+          tempRatings[g].push(val.history[g].rating);
+        }
+      }
+    }
     globalLeaderboardData.push({ name: child.key, ...val, totalScore: pScore });
   });
+
+  for (let g in tempRatings) {
+    const sum = tempRatings[g].reduce((a, b) => a + b, 0);
+    const avg = sum / tempRatings[g].length;
+    globalGameRatings[g] = { avg: avg.toFixed(1), count: tempRatings[g].length };
+  }
+
   globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore);
   if (leaderboardDropdown.classList.contains('show')) renderLeaderboard();
+  renderGames(); 
 });
 
 const catContainer = document.getElementById("categories");
@@ -955,9 +978,11 @@ function renderGames() {
   filtered.forEach((g, i) => {
     const card = document.createElement("div");
     card.className = "game-card fade-up";
-    const gameData = userData?.history?.[g.title];
-    const rating = gameData?.rating || 0;
-    const ratingHtml = rating > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${rating}.0</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`;
+    
+    const globalRating = globalGameRatings[g.title]?.avg || 0;
+    const ratingHtml = globalRating > 0 
+        ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${globalRating}</div>` 
+        : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`;
         
     card.innerHTML = `
       ${g.tag ? `<div class="game-tag">${g.tag}</div>` : ""}
@@ -985,7 +1010,13 @@ function renderGames() {
 closeGameBtn.addEventListener('click', () => {
   gameContainer.classList.remove('show');
   gameFrame.src = '';
-  if (userData && currentGameTitle) setTimeout(() => openRatingModal(currentGameTitle), 300);
+  
+  if (userData && currentGameTitle) {
+    const gameData = userData.history?.[currentGameTitle];
+    if (!gameData || !gameData.rating || gameData.rating === 0) {
+      setTimeout(() => openRatingModal(currentGameTitle), 300);
+    }
+  }
 });
 
 window.addEventListener('message', (event) => {
