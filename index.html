@@ -1,0 +1,1139 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HTML GAMES - juegos para mi comunidad</title>
+<link rel="icon" href="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/icono%20de%20pagina.jpg">
+
+<!-- Fuentes -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Oswald:wght@300;400;500;600;700&family=Bebas+Neue&family=Noto+Sans:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+<script src="https://cdn.tailwindcss.com"></script>
+
+<style>
+  /* ============ FUENTE PRINCIPAL IMPACT STRIVE ============ */
+  @font-face {
+    font-family: 'ImpactStrive';
+    src: url('https://ik.imagekit.io/rx3s8imfb/FUENTES%20DE%20TEXTOS/Impact%20-%20Strive.otf?updatedAt=1784486225592') format('opentype');
+    font-display: swap;
+    font-weight: normal;
+  }
+
+  :root {
+    --bg: #0a0606; --bg-2: #160808; --panel: #1a0d0d;
+    --red: #c8102e; --red-bright: #ff1a2e; --red-dark: #6b0815;
+    --gold: #d4af37; --cream: #f4f1e8; --gray: #2a2520; --border: #3a1818;
+  }
+
+  * { box-sizing: border-box; }
+  html, body { margin: 0; padding: 0; background: var(--bg); color: var(--cream); font-family: 'Oswald', sans-serif; overflow-x: hidden; }
+
+  body::before {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -2;
+    background: radial-gradient(ellipse at 20% 0%, rgba(200, 16, 46, 0.18) 0%, transparent 50%), radial-gradient(ellipse at 80% 100%, rgba(107, 8, 21, 0.25) 0%, transparent 50%), linear-gradient(180deg, #0a0606 0%, #160808 50%, #0a0606 100%);
+  }
+  body::after {
+    content: ''; position: fixed; inset: 0; pointer-events: none; z-index: -1; animation: scanlines 8s linear infinite;
+    background-image: repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(255,255,255,0.012) 2px, rgba(255,255,255,0.012) 4px);
+  }
+  @keyframes scanlines { 0% { transform: translateY(0); } 100% { transform: translateY(4px); } }
+
+  .strive { font-family: 'ImpactStrive', 'Bebas Neue', sans-serif; letter-spacing: 0.02em; }
+
+  .top-bar { background: linear-gradient(180deg, #0d0606 0%, #1a0a0a 100%); border-bottom: 3px solid var(--red); box-shadow: 0 4px 20px rgba(200, 16, 46, 0.3); position: sticky; top: 0; z-index: 50; }
+  .logo-mark { width: 56px; height: 56px; background: var(--red); clip-path: polygon(15% 0, 100% 0, 85% 100%, 0 100%); display: flex; align-items: center; justify-content: center; box-shadow: 0 0 20px rgba(255, 26, 46, 0.5); transition: transform 0.3s; cursor: pointer; }
+  .logo-mark:hover { transform: skewX(-5deg) scale(1.05); }
+  .logo-mark img { width: 42px; height: 42px; object-fit: contain; filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.5)); }
+
+  .search-box { background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 10px 16px; font-family: 'Oswald', sans-serif; font-weight: 500; letter-spacing: 0.05em; text-transform: uppercase; outline: none; transition: all 0.2s; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); width: 100%; }
+  .search-box:focus { border-color: var(--red); box-shadow: 0 0 15px rgba(200, 16, 46, 0.5); background: #14060a; }
+  .search-box::placeholder { color: #6a3030; }
+
+  .cat-btn { background: var(--panel); color: var(--cream); padding: 8px 18px; font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; letter-spacing: 0.08em; text-transform: uppercase; border: 2px solid var(--border); cursor: pointer; transition: all 0.2s ease; clip-path: polygon(8% 0, 100% 0, 92% 100%, 0 100%); white-space: nowrap; }
+  .cat-btn:hover { background: var(--red-dark); transform: translateY(-2px); }
+  .cat-btn.active { background: var(--red); color: var(--cream); border-color: var(--red); box-shadow: 0 0 20px rgba(200, 16, 46, 0.6), inset 0 0 10px rgba(0,0,0,0.3); }
+
+  .hero { position: relative; padding: 30px 20px 40px; overflow: hidden; border-bottom: 4px solid var(--red); background: linear-gradient(135deg, rgba(200, 16, 46, 0.15) 0%, transparent 60%), radial-gradient(circle at 70% 50%, rgba(200, 16, 46, 0.2) 0%, transparent 50%); }
+  .hero::before { content: ''; position: absolute; inset: 0; background-image: linear-gradient(45deg, transparent 48%, rgba(200, 16, 46, 0.04) 49%, rgba(200, 16, 46, 0.04) 51%, transparent 52%); background-size: 30px 30px; pointer-events: none; }
+  .hero-title { font-family: 'ImpactStrive', sans-serif; font-size: clamp(3rem, 9vw, 6rem); line-height: 0.85; -webkit-text-stroke: 2px #000; text-shadow: 4px 4px 0 #000, 6px 6px 20px rgba(200, 16, 46, 0.6); background: linear-gradient(180deg, #fff 0%, #fff 45%, var(--red) 50%, var(--red-dark) 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; animation: heroGlitch 6s infinite; }
+  @keyframes heroGlitch { 0%, 95%, 100% { transform: translate(0); filter: none; } 96% { transform: translate(-2px, 1px); filter: hue-rotate(20deg); } 97% { transform: translate(2px, -1px); } 98% { transform: translate(-1px, 0); filter: hue-rotate(-10deg); } 99% { transform: translate(1px, 1px); } }
+
+  .game-card { position: relative; background: var(--panel); border: 2px solid var(--border); cursor: pointer; overflow: hidden; transition: all 0.25s ease; clip-path: polygon(0 0, 100% 0, 100% 88%, 92% 100%, 0 100%); }
+  .game-card:hover { border-color: var(--red); transform: translateY(-6px) scale(1.02); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.7), 0 0 30px rgba(200, 16, 46, 0.4); }
+  .thumb-wrap { width: 100%; aspect-ratio: 4 / 3; background: #0d0707; display: flex; align-items: center; justify-content: center; overflow: hidden; position: relative; }
+  .game-thumb { width: 100%; height: 100%; object-fit: contain; transition: transform 0.4s ease, filter 0.3s; filter: saturate(0.8) contrast(1.1); }
+  .game-card:hover .game-thumb { transform: scale(1.08); filter: saturate(1.2) contrast(1.2); }
+  .game-overlay { position: absolute; inset: 0; background: linear-gradient(180deg, transparent 40%, rgba(10, 6, 6, 0.95) 100%); pointer-events: none; }
+  .game-tag { position: absolute; top: 10px; left: 0; background: var(--red); color: var(--cream); padding: 3px 12px 3px 8px; font-family: 'ImpactStrive', sans-serif; font-size: 0.75rem; letter-spacing: 0.1em; z-index: 3; clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%); }
+  .game-tag.gold { background: var(--gold); color: #000; }
+  .game-title { position: absolute; bottom: 8px; left: 10px; right: 10px; font-family: 'ImpactStrive', sans-serif; font-size: 1rem; color: var(--cream); text-shadow: 2px 2px 4px #000, -1px -1px 0 var(--red); z-index: 3; }
+  .game-meta { position: absolute; top: 10px; right: 10px; background: rgba(0,0,0,0.7); border: 1px solid var(--red); padding: 2px 6px; font-size: 0.7rem; color: var(--gold); z-index: 3; font-family: 'Oswald', sans-serif; font-weight: 600; display: flex; align-items: center; gap: 3px; }
+  .play-icon { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(0); width: 60px; height: 60px; background: var(--red); color: var(--cream); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; z-index: 4; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1); clip-path: polygon(20% 0, 100% 0, 80% 100%, 0 100%); }
+  .game-card:hover .play-icon { transform: translate(-50%, -50%) scale(1) rotate(-5deg); }
+
+  .game-container { position: fixed; inset: 0; background: #000; z-index: 1200; display: none; flex-direction: column; }
+  .game-container.show { display: flex; }
+  .game-header { background: linear-gradient(180deg, #0d0606 0%, #1a0a0a 100%); border-bottom: 3px solid var(--red); padding: 10px 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 20px rgba(200, 16, 46, 0.3); z-index: 10; }
+  .back-btn { background: var(--red); color: var(--cream); padding: 10px 24px 10px 18px; font-family: 'ImpactStrive', sans-serif; font-size: 1rem; letter-spacing: 0.08em; text-transform: uppercase; border: 2px solid var(--red-dark); cursor: pointer; transition: all 0.2s ease; clip-path: polygon(0 0, 100% 0, 90% 100%, 0% 100%); display: flex; align-items: center; gap: 8px; }
+  .back-btn:hover { background: var(--red-bright); transform: translateY(-2px); box-shadow: 0 5px 15px rgba(255, 26, 46, 0.5); }
+  .game-frame { width: 100%; flex: 1; border: none; background: #000; }
+
+  .dropdown-panel { position: absolute; top: calc(100% + 12px); background: var(--panel); border: 2px solid var(--red); border-top: 4px solid var(--red); box-shadow: 0 15px 40px rgba(0,0,0,0.8), 0 0 20px rgba(200, 16, 46, 0.3); z-index: 100; transform: scale(0.95) translateY(-10px); opacity: 0; pointer-events: none; transition: all 0.2s ease; clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 5% 100%, 0 95%); }
+  .dropdown-panel.show { transform: scale(1) translateY(0); opacity: 1; pointer-events: auto; }
+  .login-dropdown { left: 0; width: 320px; padding: 25px; transform-origin: top left; }
+  .lb-dropdown { right: 0; width: 340px; transform-origin: top right; }
+  .lb-header { padding: 15px; border-bottom: 2px solid var(--border); text-align: center; background: rgba(200, 16, 46, 0.1); }
+  .lb-header h3 { font-family: 'ImpactStrive', sans-serif; font-size: 1.2rem; color: var(--cream); margin: 0; }
+  .lb-header p { color: var(--gold); font-size: 0.7rem; letter-spacing: 0.2em; text-transform: uppercase; margin: 4px 0 0 0; }
+
+  .rank-ruby { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #ff0033 0%, #8b0000 40%, #ff3333 50%, #8b0000 60%, #cc0033 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+  .rank-diamond { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #b9f2ff 0%, #ffffff 40%, #b9f2ff 50%, #ffffff 60%, #e0f7ff 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+  .rank-gold { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #fff3b0 0%, #d4af37 40%, #ffea99 50%, #d4af37 60%, #aa8125 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+  .rank-silver { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #ffffff 0%, #c0c0c0 40%, #f5f5f5 50%, #c0c0c0 60%, #8a8a8a 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+  .rank-bronze { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #f8b88b 0%, #cd7f32 40%, #ffd9b3 50%, #cd7f32 60%, #8c4b1e 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+
+  .leaderboard-row { display: grid; grid-template-columns: 50px 1fr auto; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); font-family: 'Oswald', sans-serif; transition: background 0.2s; }
+  .leaderboard-row:last-child { border-bottom: none; }
+  .leaderboard-row:hover { background: rgba(200, 16, 46, 0.1); }
+  .leaderboard-row.me { background: rgba(200, 16, 46, 0.2); border-left: 4px solid var(--red); }
+  .leaderboard-row.empty { opacity: 0.4; }
+  .rank { font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; text-align: center; }
+  .player-name { font-weight: 600; letter-spacing: 0.05em; color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
+  .player-score { font-weight: 700; color: var(--red-bright); font-size: 0.9rem; }
+
+  .sidebar-overlay { position: fixed; inset: 0; background: rgba(5, 2, 2, 0.8); backdrop-filter: blur(3px); z-index: 1500; display: none; }
+  .sidebar-overlay.show { display: block; }
+  .profile-sidebar { position: fixed; top: 0; left: 0; width: 340px; height: 100vh; background: var(--bg-2); border-right: 4px solid var(--red); box-shadow: 5px 0 30px rgba(0,0,0,0.8); z-index: 1600; transform: translateX(-105%); transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); overflow-y: auto; clip-path: polygon(0 0, 100% 0, 100% 95%, 90% 100%, 0 100%); }
+  .profile-sidebar.show { transform: translateX(0); }
+  .sidebar-header { background: linear-gradient(180deg, #1a0a0a 0%, #0d0606 100%); border-bottom: 3px solid var(--red); padding: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .sidebar-close-btn { background: transparent; border: 2px solid var(--border); color: var(--cream); width: 36px; height: 36px; cursor: pointer; transition: all 0.2s; clip-path: polygon(10% 0, 100% 0, 90% 100%, 0 100%); }
+  .sidebar-close-btn:hover { background: var(--red-dark); border-color: var(--red); }
+  .sidebar-profile { text-align: center; padding: 30px 20px; border-bottom: 2px solid var(--border); }
+  .sidebar-profile img { width: 80px; height: 80px; object-fit: contain; margin: 0 auto 10px; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.8)); }
+  .sidebar-profile h2 { font-family: 'ImpactStrive', sans-serif; font-size: 1.8rem; color: var(--cream); margin: 0; text-shadow: 2px 2px 0 #000; }
+  .rank-badge { display: inline-block; margin-top: 8px; padding: 4px 12px; background: var(--panel); border: 1px solid var(--border); font-family: 'ImpactStrive', sans-serif; font-size: 1.5rem; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
+  .sidebar-stats { padding: 20px; display: grid; grid-template-columns: 1fr 1fr; gap: 15px; border-bottom: 2px solid var(--border); }
+  .stat-box { background: var(--panel); border: 2px solid var(--border); border-left: 4px solid var(--red); padding: 15px; text-align: center; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); }
+  .stat-box i { color: var(--gold); font-size: 1.2rem; margin-bottom: 5px; }
+  .stat-box strong { display: block; font-family: 'ImpactStrive', sans-serif; font-size: 1.4rem; color: var(--cream); }
+  .stat-box span { font-size: 0.7rem; color: var(--cream); opacity: 0.7; text-transform: uppercase; letter-spacing: 0.1em; }
+  .history-section { padding: 20px; }
+  .history-toggle { background: var(--panel); border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 12px; font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; cursor: pointer; width: 100%; text-align: left; display: flex; justify-content: space-between; align-items: center; transition: all 0.2s; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); }
+  .history-toggle:hover { background: var(--red-dark); }
+  .history-toggle i { transition: transform 0.3s; }
+  .history-toggle.open i { transform: rotate(90deg); }
+  .history-list { max-height: 0; overflow: hidden; transition: max-height 0.3s ease; }
+  .history-list.open { max-height: 1000px; overflow-y: auto; padding-top: 15px; }
+  
+  .history-game-item { position: relative; background-size: cover; background-position: center; border: 1px solid var(--border); border-left: 4px solid var(--red); margin-bottom: 12px; padding: 15px; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); overflow: hidden; min-height: 80px; display: flex; flex-direction: column; justify-content: center; transition: transform 0.2s, box-shadow 0.2s; }
+  .history-game-item::before { content: ''; position: absolute; inset: 0; background: linear-gradient(rgba(10, 6, 6, 0.85), rgba(10, 6, 6, 0.95)); z-index: 0; }
+  .history-game-item:hover { transform: translateY(-2px); border-color: var(--red); box-shadow: 0 4px 15px rgba(0,0,0,0.5); }
+  .hgi-content { position: relative; z-index: 1; }
+  .hgi-title { font-family: 'ImpactStrive', sans-serif; font-size: 1.2rem; color: #fff; margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 5px; text-shadow: 2px 2px 4px #000; }
+  .hgi-stats { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
+  .hgi-stat-badge { display: flex; align-items: center; gap: 6px; background: rgba(0,0,0,0.6); padding: 4px 8px; border-radius: 4px; border: 1px solid rgba(255,255,255,0.1); }
+  .hgi-stat-badge i { color: var(--red-bright); font-size: 0.9rem; }
+  .hgi-stat-info { display: flex; flex-direction: column; line-height: 1; }
+  .hgi-stat-info span { font-size: 0.6rem; color: rgba(244,241,232,0.6); text-transform: uppercase; }
+  .hgi-stat-info strong { font-size: 0.9rem; color: #fff; }
+  .hgi-stars { gap: 2px; padding: 4px 6px; }
+  .hgi-stars i { font-size: 0.8rem; }
+  .history-item.empty { opacity: 0.5; justify-content: center; font-style: italic; text-align: center; padding: 20px; background: var(--panel); border: 1px solid var(--border); }
+
+  .form-label { display: block; text-align: left; font-size: 0.7rem; color: var(--gold); letter-spacing: 0.15em; text-transform: uppercase; margin-bottom: 5px; font-family: 'ImpactStrive', sans-serif; }
+  .modal-input { background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 10px 14px; font-family: 'Oswald', sans-serif; font-weight: 500; letter-spacing: 0.05em; outline: none; width: 100%; text-align: left; margin-bottom: 15px; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); transition: border-color 0.2s; }
+  .modal-input:focus { border-color: var(--red); }
+  .modal-input.error { border-color: var(--red-bright); animation: shake 0.3s; }
+  .modal-input.disabled { background: #160808; color: #6a3030; cursor: not-allowed; }
+  .gender-options { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+  .gender-btn { background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 10px; cursor: pointer; transition: all 0.2s; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); display: flex; flex-direction: column; align-items: center; gap: 5px; }
+  .gender-btn:hover { border-color: var(--red-dark); }
+  .gender-btn.active { border-color: var(--red); background: rgba(200, 16, 46, 0.15); box-shadow: 0 0 10px rgba(200, 16, 46, 0.3); }
+  .gender-btn img { width: 32px; height: 32px; object-fit: contain; }
+  .gender-btn span { font-family: 'ImpactStrive', sans-serif; font-size: 0.9rem; letter-spacing: 0.05em; }
+  @keyframes shake { 0%, 100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  .login-error { color: var(--red-bright); font-size: 0.8rem; font-family: 'Oswald', sans-serif; text-align: center; margin-bottom: 15px; display: none; }
+
+  footer { background: linear-gradient(180deg, #0a0606 0%, #1a0a0a 100%); border-top: 4px solid var(--red); padding: 40px 20px 20px; margin-top: 60px; position: relative; }
+  footer::before { content: ''; position: absolute; top: -4px; left: 0; right: 0; height: 4px; background: repeating-linear-gradient(90deg, var(--red) 0 20px, transparent 20px 30px); }
+  .glitch-link { color: var(--cream); text-decoration: none; font-weight: 700; position: relative; display: inline-block; transition: color 0.2s; }
+  .glitch-link:hover { color: #fff; animation: glitchAnim 0.3s infinite; }
+  @keyframes glitchAnim { 0%, 100% { text-shadow: 2px 0 #00f0ff, -2px 0 #ff00d4; transform: translate(0); } 25% { text-shadow: -2px 0 #00f0ff, 2px 0 #ff00d4; transform: translate(1px, -1px); } 50% { text-shadow: 2px 0 #00f0ff, -2px 0 #ff00d4; transform: translate(-1px, 1px); } 75% { text-shadow: -2px 0 #00f0ff, 2px 0 #ff00d4; transform: translate(1px, 1px); } }
+
+  .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(150%); background: var(--panel); border: 2px solid var(--red); border-left: 5px solid var(--red); color: var(--cream); padding: 14px 24px; font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; z-index: 2000; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%); box-shadow: 0 0 30px rgba(200, 16, 46, 0.5); display: flex; align-items: center; gap: 12px; max-width: 90vw; }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  #ratingToast {
+    position: fixed; bottom: 20px; right: 20px; width: 320px;
+    background: var(--panel); border: 2px solid var(--red); border-left: 5px solid var(--red);
+    padding: 20px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
+    transform: translateX(120%); transition: transform 0.5s cubic-bezier(0.17, 0.84, 0.44, 1);
+  }
+  #ratingToast.show { transform: translateX(0); }
+  .rt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
+  .rt-title { font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; color: var(--cream); }
+  .rt-game { color: var(--gold); font-size: 0.9rem; font-family: 'Oswald', sans-serif; }
+  .rt-close { background: transparent; border: none; color: var(--cream); opacity: 0.5; cursor: pointer; transition: opacity 0.2s; font-size: 1.2rem; }
+  .rt-close:hover { opacity: 1; color: var(--red); }
+  .stars-input { display: flex; gap: 10px; margin: 15px 0; justify-content: center; }
+  
+  .stars-input i { font-size: 2rem; cursor: pointer; transition: transform 0.2s; }
+  .stars-input i.star-empty { color: #3a1818; }
+  .stars-input i.star-metallic {
+    color: transparent; -webkit-background-clip: text; background-clip: text;
+    background-image: linear-gradient(135deg, #fff3b0 0%, #d4af37 40%, #ffea99 50%, #d4af37 60%, #aa8125 100%);
+    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
+  }
+  .stars-input i.star-metallic:hover, .stars-input i.star-metallic.hover { transform: scale(1.2); }
+
+  .rt-send-btn {
+    width: 100%; background: var(--red); color: white; border: none; padding: 10px;
+    font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; cursor: pointer;
+    transition: background 0.2s; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
+  }
+  .rt-send-btn:hover { background: var(--red-bright); }
+
+  .stripe-deco { height: 8px; background: repeating-linear-gradient(45deg, var(--red) 0 12px, #000 12px 24px); opacity: 0.6; }
+  ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-track { background: #0a0606; } ::-webkit-scrollbar-thumb { background: var(--red-dark); border: 2px solid #0a0606; } ::-webkit-scrollbar-thumb:hover { background: var(--red); }
+  .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 0.5s ease forwards; }
+  @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  @media (max-width: 768px) {
+    .hero { padding: 20px 16px 25px; }
+    .lb-dropdown { right: auto; left: 50%; transform: translateX(-50%) scale(0.95) translateY(-10px); width: 90vw; }
+    .lb-dropdown.show { transform: translateX(-50%) scale(1) translateY(0); }
+    .login-dropdown { left: 50%; transform: translateX(-50%) scale(0.95) translateY(-10px); width: 90vw; }
+    .login-dropdown.show { transform: translateX(-50%) scale(1) translateY(0); }
+    .profile-sidebar { width: 100%; }
+    #ratingToast { right: 10px; left: 10px; width: auto; bottom: 10px; }
+  }
+
+  .particle { position: fixed; pointer-events: none; background: var(--red); border-radius: 50%; opacity: 0; z-index: 0; }
+  .contact-icon { width: 50px; height: 50px; border-radius: 8px; border: 2px solid var(--red); box-shadow: 0 0 15px rgba(200, 16, 46, 0.4); object-fit: cover; transition: all 0.3s ease; margin-top: 15px; }
+  .contact-icon:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 0 25px rgba(255, 26, 46, 0.8); }
+
+  .login-view { display: none; }
+  .login-view.active { display: block; }
+  .forgot-link { text-align: center; margin-top: 15px; }
+  .forgot-link a { color: var(--cream); opacity: 0.6; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
+  .forgot-link a:hover { opacity: 1; color: var(--red-bright); }
+  
+  .recovery-section { padding: 20px; border-top: 2px solid var(--border); margin-top: 20px; text-align: center; }
+  .recovery-text { font-size: 0.8rem; color: var(--cream); opacity: 0.7; margin-bottom: 10px; line-height: 1.4; }
+  .recovery-link { color: var(--gold); font-weight: 700; cursor: pointer; text-decoration: underline; }
+  .recovery-email-box { background: var(--panel); border: 1px solid var(--gold); padding: 10px; margin-top: 10px; font-size: 0.8rem; color: var(--gold); }
+  .setup-dropdown { margin-top: 15px; padding: 15px; background: #0d0606; border: 2px solid var(--border); border-left: 4px solid var(--red); clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); text-align: left; }
+</style>
+</head>
+<body>
+
+<header class="top-bar">
+  <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
+    
+    <div class="flex items-center gap-3 relative">
+      <div id="mainLogoBtn" class="logo-mark">
+        <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-19_110645964-removebg-preview.png?updatedAt=1773936429844" alt="logo">
+      </div>
+      <div id="userAreaText">
+        <button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm">
+          <i class="fas fa-user mr-2"></i> INICIAR SESIÓN
+        </button>
+      </div>
+      
+      <div id="loginDropdown" class="dropdown-panel login-dropdown">
+        
+        <div id="viewLogin" class="login-view active">
+          <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Crea tu cuenta o ingresa</h3>
+          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Tus datos se guardarán para la próxima vez</p>
+          
+          <form id="loginForm" autocomplete="on">
+            <label class="form-label">USUARIO</label>
+            <input type="text" id="usernameInput" class="modal-input" placeholder="Ej: Tu_User_Preferido" maxlength="16" autocomplete="username">
+            
+            <label class="form-label">CONTRASEÑA</label>
+            <input type="password" id="passwordInput" class="modal-input" placeholder="••••••••" autocomplete="current-password">
+          </form>
+          
+          <label class="form-label">ICONO</label>
+          <div class="gender-options">
+            <div id="genderBoy" class="gender-btn" data-val="boy">
+              <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" alt="boy"><span>CHICO</span>
+            </div>
+            <div id="genderGirl" class="gender-btn" data-val="girl">
+              <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" alt="girl"><span>CHICA</span>
+            </div>
+          </div>
+          
+          <div id="loginError" class="login-error">Error de credenciales.</div>
+          
+          <button id="confirmLogin" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">CONFIRMAR</button>
+          <button id="closeLogin" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
+          
+          <div class="forgot-link">
+            <a id="openRecoveryLink">¿Olvidaste tu contraseña?</a>
+          </div>
+        </div>
+
+        <div id="viewRecoveryEmail" class="login-view">
+          <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Recuperar Contraseña</h3>
+          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Ingresa tu correo registrado para enviarte un código</p>
+          
+          <label class="form-label">CORREO</label>
+          <input type="email" id="recEmailInput" class="modal-input" placeholder="tu_correo@gmail.com">
+          
+          <div id="recEmailError" class="login-error"></div>
+          
+          <button id="sendCodeBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">ENVIAR CÓDIGO</button>
+          <button id="cancelRecBtn" class="cat-btn w-full" style="margin-top: 10px;">VOLVER</button>
+        </div>
+
+        <div id="viewRecoveryCode" class="login-view">
+          <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Verificar Código</h3>
+          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Revisa tu buzón. Hemos enviado un número del 1 al 100.</p>
+          
+          <label class="form-label">CÓDIGO SECRETO</label>
+          <input type="number" id="codeInput" class="modal-input" placeholder="Ej: 42" min="1" max="100">
+          
+          <div id="codeError" class="login-error"></div>
+          
+          <button id="verifyCodeBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">VERIFICAR</button>
+          <button id="cancelCodeBtn" class="cat-btn w-full" style="margin-top: 10px;">VOLVER</button>
+        </div>
+
+        <div id="viewNewPassword" class="login-view">
+          <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Nueva Contraseña</h3>
+          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Identidad verificada. Crea tu nueva clave.</p>
+          
+          <label class="form-label">USUARIO</label>
+          <input type="text" id="recUsernameInput" class="modal-input disabled" readonly>
+
+          <label class="form-label">NUEVA CONTRASEÑA</label>
+          <input type="password" id="newPassInput" class="modal-input" placeholder="••••••••">
+          
+          <div id="newPassError" class="login-error"></div>
+          
+          <button id="saveNewPassBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">GUARDAR Y ENTRAR</button>
+          <button id="cancelNewPassBtn" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="flex-1 min-w-[200px] max-w-md mx-auto order-3 md:order-none w-full md:w-auto">
+      <div class="relative">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2" style="color: var(--red);"></i>
+        <input id="searchInput" type="text" placeholder="Buscar juego..." class="search-box pl-12 pr-4">
+      </div>
+    </div>
+
+    <div class="relative ml-auto">
+      <button id="leaderboardBtn" class="cat-btn !py-2 !px-4 !text-sm w-full flex justify-center items-center">
+        <i class="fas fa-trophy mr-2" style="color: var(--gold);"></i> TABLA GLOBAL
+      </button>
+      <div id="leaderboardDropdown" class="dropdown-panel lb-dropdown">
+        <div class="lb-header">
+          <h3>TABLA GLOBAL</h3>
+          <p>Ranking Semanal - Top 100 Jugadores</p>
+        </div>
+        <div id="leaderboardList" class="max-h-80 overflow-y-auto"></div>
+      </div>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
+    <h1 class="hero-title text-center md:text-left">HTML GAMES</h1>
+    <p class="max-w-md text-base md:text-lg font-light text-center md:text-right leading-relaxed" style="color: rgba(244, 241, 232, 0.85);">
+      Aquí encontrarás todos los juegos que la comunidad ha pedido que recree. Inicia sesión para guardar tus marcas y récords, y luchar por la cima de la tabla global, la cual se reinicia cada semana.
+    </p>
+  </div>
+</section>
+
+<div class="stripe-deco"></div>
+
+<section class="max-w-7xl mx-auto px-4 py-4">
+  <div class="flex items-center gap-3 mb-3">
+    <div class="strive text-xl" style="color: var(--red);">/</div>
+    <h2 class="strive text-2xl" style="color: var(--cream);">CATEGORÍAS</h2>
+    <div class="flex-1 h-[2px]" style="background: linear-gradient(90deg, var(--red), transparent);"></div>
+  </div>
+  <div id="categories" class="flex gap-2 flex-wrap"></div>
+</section>
+
+<main class="max-w-7xl mx-auto px-4 pb-12">
+  <div class="flex items-center gap-3 mb-4">
+    <div class="strive text-xl" style="color: var(--red);">/</div>
+    <h2 class="strive text-2xl" style="color: var(--cream);">SELECCIÓN <span id="resultLabel" style="color: var(--gold); font-size: 0.9rem; letter-spacing: 0.2em;">— TODOS</span></h2>
+    <div class="flex-1 h-[2px]" style="background: linear-gradient(90deg, var(--red), transparent);"></div>
+  </div>
+
+  <div id="gamesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4"></div>
+
+  <div id="emptyState" class="hidden text-center py-20">
+    <i class="fas fa-skull text-6xl mb-4" style="color: var(--red-dark);"></i>
+    <h3 class="strive text-3xl mb-2" style="color: var(--cream);">SIN RESULTADOS</h3>
+    <p style="color: var(--gold); opacity: 0.7;">No se encontraron juegos para tu búsqueda.</p>
+    <div class="mt-6 flex flex-col items-center justify-center gap-3">
+      <p style="color: rgba(244, 241, 232, 0.8); font-size: 0.95rem;">¿Esperas ver este juego más adelante? ¡Hazmelo saber!</p>
+      <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" title="Escríbeme por TikTok">
+        <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/icono%20de%20pagina.jpg?updatedAt=1790810103488" alt="Contacto TikTok" class="contact-icon">
+      </a>
+    </div>
+  </div>
+</main>
+
+<footer>
+  <div class="max-w-7xl mx-auto px-4 text-center">
+    <div class="strive text-xl mb-3" style="color: var(--cream);">HTML GAMES</div>
+    <p class="text-sm max-w-lg mx-auto mb-8" style="color: rgba(244,241,232,0.7);">
+      Si quieres algún juego en específico hazmelo saber en mi <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" class="glitch-link">tiktok</a> para que me compartas tu idea
+    </p>
+    <div class="pt-6 border-t flex flex-col md:flex-row justify-between items-center gap-3 text-xs" style="border-color: var(--border); color: rgba(244,241,232,0.5);">
+      <div class="tracking-widest uppercase">© 2026 HTML GAMES - juegos para mi comunidad</div>
+      <div class="tracking-widest uppercase" style="color: var(--gold);">Hecho con las mejores ganas jeje / <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" class="glitch-link">sigueme :)</a></div>
+    </div>
+  </div>
+</footer>
+
+<div id="gameContainer" class="game-container">
+  <div class="game-header">
+    <button id="closeGameBtn" class="back-btn">
+      <i class="fas fa-arrow-left"></i> VOLVER
+    </button>
+    <div class="strive text-lg hidden sm:block" style="color: var(--cream); text-shadow: 2px 2px 0 #000;">EN JUEGO</div>
+  </div>
+  <iframe id="gameFrame" class="game-frame" allow="autoplay; fullscreen; gamepad"></iframe>
+</div>
+
+<div id="sidebarOverlay" class="sidebar-overlay"></div>
+<div id="profileSidebar" class="profile-sidebar">
+  <div class="sidebar-header">
+    <span class="strive text-lg" style="color: var(--cream);">TU PERFIL</span>
+    <button id="closeSidebarBtn" class="sidebar-close-btn"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="sidebar-profile">
+    <img id="sidebarAvatar" src="" alt="avatar">
+    <h2 id="sidebarName">Usuario</h2>
+    <div class="rank-badge"><span id="sidebarRankText">Rango #100</span></div>
+  </div>
+  <div class="sidebar-stats">
+    <div class="stat-box">
+      <i class="fas fa-clock"></i>
+      <strong id="sidebarTime">0h 0m</strong>
+      <span>Tiempo Total</span>
+    </div>
+    <div class="stat-box">
+      <i class="fas fa-gamepad"></i>
+      <strong id="sidebarGamesCount">0</strong>
+      <span>Juegos Jugados</span>
+    </div>
+    <div class="stat-box" style="grid-column: span 2;">
+      <i class="fas fa-star"></i>
+      <strong id="sidebarPoints">0 pts</strong>
+      <span>Score Total Acumulado</span>
+    </div>
+  </div>
+  <div class="history-section">
+    <button id="historyToggle" class="history-toggle">
+      <span>HISTORIAL DE JUEGOS</span>
+      <i class="fas fa-chevron-right"></i>
+    </button>
+    <div id="historyList" class="history-list"></div>
+  </div>
+  
+  <div class="recovery-section">
+    <p class="recovery-text">Si llegas a olvidar tu contraseña en un futuro, puedes recuperarla mediante tu correo preferido.</p>
+    <div id="recoveryContent"></div>
+    <div id="setupDropdown" class="setup-dropdown" style="display: none;"></div>
+  </div>
+</div>
+
+<div id="ratingToast">
+  <div class="rt-header">
+    <div>
+      <div class="rt-title">¿QUÉ TAL TE HA PARECIDO?</div>
+      <div class="rt-game" id="toastGameTitle">Juego</div>
+    </div>
+    <button id="closeRatingToast" class="rt-close"><i class="fas fa-times"></i></button>
+  </div>
+  <div class="stars-input" id="starsInputToast">
+    <i class="fas fa-star star-empty" data-val="1"></i>
+    <i class="fas fa-star star-empty" data-val="2"></i>
+    <i class="fas fa-star star-empty" data-val="3"></i>
+    <i class="fas fa-star star-empty" data-val="4"></i>
+    <i class="fas fa-star star-empty" data-val="5"></i>
+  </div>
+  <button id="sendRatingToast" class="rt-send-btn">ENVIAR CALIFICACIÓN</button>
+</div>
+
+<div id="toast" class="toast">
+  <i class="fas fa-gamepad" style="color: var(--red-bright);"></i>
+  <span id="toastMsg">Juego seleccionado</span>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+
+<script>
+// TUS NUEVAS CLAVES DE FIREBASE YA ESTÁN AQUÍ:
+const firebaseConfig = {
+  apiKey: "AIzaSyD4F-dDO0APfcrGNTCugMriwyD53Iyd2FY",
+  authDomain: "bd--htmlgames.firebaseapp.com",
+  databaseURL: "https://bd--htmlgames-default-rtdb.firebaseio.com",
+  projectId: "bd--htmlgames",
+  storageBucket: "bd--htmlgames.firebasestorage.app",
+  messagingSenderId: "950849683455",
+  appId: "1:950849683455:web:270cfd5c66dfc3d914f1ca",
+  measurementId: "G-5K8XWY9SM0"
+};
+
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+let globalLeaderboardData = []; 
+
+// TUS CLAVES DE EMAILJS YA ESTÁN AQUÍ:
+emailjs.init({ publicKey: "5PducOYUQMALmJugY" }); 
+const EMAILJS_SERVICE_ID = "service_vwvgqqg"; 
+const EMAILJS_TEMPLATE_ID = "template_re44dk7"; 
+
+const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
+
+const games = [
+  { title: "Juego de la serpiente", cat: "arcade", tag: "NEW", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
+];
+
+const categories = [
+  { id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }
+];
+
+let currentCat = "all", currentSearch = "";
+let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
+let userDbRef = null; 
+
+function getRankClass(index) {
+  if (index <= 10) return 'rank-ruby';
+  if (index <= 25) return 'rank-diamond';
+  if (index <= 50) return 'rank-gold';
+  if (index <= 75) return 'rank-silver';
+  return 'rank-bronze';
+}
+
+function getTotalScore() {
+  if (!userData || !userData.history) return 0;
+  let total = 0;
+  for (let key in userData.history) { total += userData.history[key].highScore || 0; }
+  return total;
+}
+
+function getPlayedGamesCount() {
+  if (!userData || !userData.history) return 0;
+  return Object.keys(userData.history).length;
+}
+
+const mainLogoBtn = document.getElementById("mainLogoBtn");
+const userAreaText = document.getElementById("userAreaText");
+const profileSidebar = document.getElementById("profileSidebar");
+const sidebarOverlay = document.getElementById("sidebarOverlay");
+
+function renderUserArea() {
+  if (userData) {
+    const avatarUrl = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
+    mainLogoBtn.innerHTML = `<img src="${avatarUrl}" alt="avatar">`;
+    userAreaText.innerHTML = `
+      <div class="flex items-center gap-3">
+        <div class="text-left hidden sm:block">
+          <div class="text-[10px] tracking-[0.2em] uppercase" style="color: var(--gold);">JUGADOR</div>
+          <div class="strive text-lg leading-none" style="color: var(--cream);">${userData.name}</div>
+        </div>
+        <button id="logoutBtn" class="cat-btn !py-2 !px-3 !text-sm" title="Cerrar Sesión">
+          <i class="fas fa-sign-out-alt"></i>
+        </button>
+      </div>`;
+    document.getElementById('logoutBtn').addEventListener('click', () => {
+      if (userDbRef) userDbRef.off();
+      localStorage.removeItem('htmlGamesUser');
+      userData = null;
+      renderUserArea();
+      showToast("Sesión cerrada.");
+    });
+    mainLogoBtn.removeEventListener('click', openLoginDropdown);
+    mainLogoBtn.addEventListener('click', openSidebar);
+  } else {
+    mainLogoBtn.innerHTML = `<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-19_110645964-removebg-preview.png?updatedAt=1773936429844" alt="logo">`;
+    userAreaText.innerHTML = `<button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm"><i class="fas fa-user mr-2"></i> INICIAR SESIÓN</button>`;
+    mainLogoBtn.removeEventListener('click', openSidebar);
+    mainLogoBtn.addEventListener('click', openLoginDropdown);
+    document.getElementById('loginBtn').addEventListener('click', openLoginDropdown);
+  }
+}
+
+function openLoginDropdown(e) {
+  if (e) e.stopPropagation();
+  showLoginView('viewLogin');
+  loginDropdown.classList.toggle('show');
+  leaderboardDropdown.classList.remove('show');
+}
+
+function showLoginView(viewId) {
+  document.querySelectorAll('.login-view').forEach(v => v.classList.remove('active'));
+  document.getElementById(viewId).classList.add('active');
+}
+
+function openSidebar() {
+  updateSidebarData();
+  profileSidebar.classList.add('show');
+  sidebarOverlay.classList.add('show');
+}
+function closeSidebar() {
+  profileSidebar.classList.remove('show');
+  sidebarOverlay.classList.remove('show');
+}
+document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
+sidebarOverlay.addEventListener('click', closeSidebar);
+
+function updateSidebarData() {
+  if (!userData) return;
+  const avatarUrl = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
+  document.getElementById('sidebarAvatar').src = avatarUrl;
+  document.getElementById('sidebarName').textContent = userData.name;
+  document.getElementById('sidebarPoints').textContent = getTotalScore().toLocaleString() + ' pts';
+  document.getElementById('sidebarGamesCount').textContent = getPlayedGamesCount();
+  
+  const time = userData.timeSpent || 0;
+  document.getElementById('sidebarTime').textContent = `${Math.floor(time / 3600)}h ${Math.floor((time % 3600) / 60)}m`;
+  
+  let myRank = globalLeaderboardData.findIndex(u => u.name === userData.name);
+  myRank = myRank !== -1 ? myRank + 1 : 100;
+  const rankClass = getRankClass(myRank);
+  document.getElementById('sidebarRankText').textContent = `Rango #${myRank}`;
+  document.getElementById('sidebarRankText').className = `${rankClass}`;
+  
+  let histHtml = '';
+  if (userData.history && Object.keys(userData.history).length > 0) {
+    for (let title in userData.history) {
+      const stats = userData.history[title];
+      const gameInfo = games.find(g => g.title === title);
+      const gameImg = gameInfo ? gameInfo.img : defaultImg;
+      
+      const stars = stats.rating || 0;
+      let starsHtml = '';
+      for(let i=1; i<=5; i++) { starsHtml += `<i class="fas fa-star" style="color: ${i <= stars ? 'var(--gold)' : '#3a1818'};"></i>`; }
+      
+      histHtml += `
+        <div class="history-game-item" style="background-image: url('${gameImg}');">
+          <div class="hgi-content">
+            <div class="hgi-title">${title}</div>
+            <div class="hgi-stats">
+              <div class="hgi-stat-badge">
+                <i class="fas fa-redo"></i>
+                <div class="hgi-stat-info">
+                  <span>Veces</span>
+                  <strong>${stats.timesPlayed || 0}</strong>
+                </div>
+              </div>
+              <div class="hgi-stat-badge">
+                <i class="fas fa-trophy"></i>
+                <div class="hgi-stat-info">
+                  <span>Récord</span>
+                  <strong>${(stats.highScore || 0).toLocaleString()}</strong>
+                </div>
+              </div>
+              <div class="hgi-stat-badge hgi-stars">
+                ${starsHtml}
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+    }
+  } else {
+    histHtml = '<div class="history-item empty">Aún no has jugado nada.</div>';
+  }
+  document.getElementById('historyList').innerHTML = histHtml;
+
+  const recoveryContent = document.getElementById('recoveryContent');
+  const setupDropdown = document.getElementById('setupDropdown');
+  setupDropdown.style.display = 'none'; 
+  
+  if (userData.recoveryEmail) {
+    recoveryContent.innerHTML = `<div class="recovery-email-box"><i class="fas fa-envelope"></i> ${userData.recoveryEmail}</div>`;
+  } else {
+    recoveryContent.innerHTML = `<a class="recovery-link" id="setupRecoveryBtn">Configurar correo de recuperación ahora</a>`;
+    document.getElementById('setupRecoveryBtn').addEventListener('click', () => {
+      setupDropdown.style.display = 'block';
+      renderSetupView(1);
+    });
+  }
+}
+document.getElementById('historyToggle').addEventListener('click', function() {
+  this.classList.toggle('open');
+  document.getElementById('historyList').classList.toggle('open');
+});
+
+const loginDropdown = document.getElementById("loginDropdown");
+const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
+const loginError = document.getElementById("loginError");
+const genderBtns = document.querySelectorAll('.gender-btn');
+let selectedGender = null;
+
+genderBtns.forEach(btn => {
+  btn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    selectedGender = btn.dataset.val;
+    genderBtns.forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+  });
+});
+
+document.getElementById('confirmLogin').addEventListener('click', async (e) => {
+  e.stopPropagation();
+  const name = usernameInput.value.trim();
+  const pass = passwordInput.value.trim();
+  
+  if (name.length < 3) { loginError.textContent = "El nombre debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; }
+  if (pass.length < 3) { loginError.textContent = "La contraseña debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; }
+
+  const formattedName = name.toUpperCase().replace(/\s+/g, '_');
+  const userRef = db.ref('users/' + formattedName);
+  const snapshot = await userRef.once('value');
+  
+  if (snapshot.exists()) {
+    const dbData = snapshot.val();
+    if (dbData.password !== pass) {
+      loginError.textContent = "Contraseña incorrecta. Intenta de nuevo.";
+      loginError.style.display = 'block';
+      return;
+    }
+    userData = dbData;
+    userData.name = formattedName;
+  } else {
+    if (!selectedGender) { 
+      loginError.textContent = "Eres nuevo. Elige un icono para registrarte."; 
+      loginError.style.display = 'block'; return; 
+    }
+    userData = {
+      name: formattedName,
+      password: pass,
+      gender: selectedGender,
+      timeSpent: 0,
+      history: {}
+    };
+    await userRef.set(userData);
+  }
+
+  localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
+  listenToUserData(formattedName);
+
+  loginDropdown.classList.remove('show');
+  renderUserArea();
+  showToast(`¡Bienvenido, ${userData.name}!`);
+});
+
+document.getElementById('closeLogin').addEventListener('click', () => loginDropdown.classList.remove('show'));
+
+function listenToUserData(name) {
+  userDbRef = db.ref('users/' + name);
+  userDbRef.on('value', (snapshot) => {
+    if (snapshot.exists()) {
+      userData = snapshot.val();
+      userData.name = name;
+      localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
+      if (profileSidebar.classList.contains('show')) updateSidebarData();
+      renderGames(); 
+    }
+  });
+}
+
+setInterval(() => {
+  if (userData && userDbRef) {
+    userData.timeSpent = (userData.timeSpent || 0) + 10;
+    userDbRef.child('timeSpent').set(userData.timeSpent);
+  }
+}, 10000);
+
+let recoveryTemp = { email: '', code: 0, userKey: '' };
+
+document.getElementById('openRecoveryLink').addEventListener('click', () => {
+  loginError.style.display = 'none';
+  showLoginView('viewRecoveryEmail');
+});
+
+document.getElementById('cancelRecBtn').addEventListener('click', () => showLoginView('viewLogin'));
+document.getElementById('cancelCodeBtn').addEventListener('click', () => showLoginView('viewLogin'));
+document.getElementById('cancelNewPassBtn').addEventListener('click', () => showLoginView('viewLogin'));
+
+document.getElementById('sendCodeBtn').addEventListener('click', async () => {
+  const email = document.getElementById('recEmailInput').value.trim();
+  const errEl = document.getElementById('recEmailError');
+  if (!email.includes('@') || !email.includes('.')) { errEl.textContent = "Ingresa un correo válido."; errEl.style.display = 'block'; return; }
+  
+  const snapshot = await db.ref('users').orderByChild('recoveryEmail').equalTo(email).once('value');
+  if (!snapshot.exists()) {
+    errEl.textContent = "Este correo no está registrado en nuestra comunidad.";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  recoveryTemp.email = email;
+  recoveryTemp.code = Math.floor(Math.random() * 100) + 1;
+  recoveryTemp.userKey = Object.keys(snapshot.val())[0];
+
+  try {
+    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, code: recoveryTemp.code });
+    errEl.style.display = 'none';
+    showLoginView('viewRecoveryCode');
+  } catch (error) {
+    errEl.textContent = "Error al enviar el correo. Intenta más tarde.";
+    errEl.style.display = 'block';
+  }
+});
+
+document.getElementById('verifyCodeBtn').addEventListener('click', () => {
+  const code = parseInt(document.getElementById('codeInput').value);
+  const errEl = document.getElementById('codeError');
+  if (code === recoveryTemp.code) {
+    errEl.style.display = 'none';
+    document.getElementById('recUsernameInput').value = recoveryTemp.userKey;
+    showLoginView('viewNewPassword');
+  } else {
+    errEl.textContent = "Código incorrecto. Verifica tu buzón.";
+    errEl.style.display = 'block';
+  }
+});
+
+document.getElementById('saveNewPassBtn').addEventListener('click', async () => {
+  const newPass = document.getElementById('newPassInput').value.trim();
+  const errEl = document.getElementById('newPassError');
+  if (newPass.length < 3) { errEl.textContent = "La contraseña debe tener al menos 3 caracteres."; errEl.style.display = 'block'; return; }
+
+  await db.ref('users/' + recoveryTemp.userKey + '/password').set(newPass);
+  
+  const snapshot = await db.ref('users/' + recoveryTemp.userKey).once('value');
+  userData = snapshot.val();
+  userData.name = recoveryTemp.userKey;
+  localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
+  listenToUserData(userData.name);
+  
+  loginDropdown.classList.remove('show');
+  renderUserArea();
+  showToast("¡Contraseña actualizada! Bienvenido de vuelta.");
+});
+
+function renderSetupView(step, email = '') {
+  const setupDropdown = document.getElementById('setupDropdown');
+  if (step === 1) {
+    setupDropdown.innerHTML = `
+      <label class="form-label" style="margin-top: 0;">CORREO</label>
+      <input type="email" id="setupEmailInput" class="modal-input" placeholder="tu_correo@gmail.com" style="margin-bottom: 10px;">
+      <div id="setupError" class="login-error"></div>
+      <button id="setupNextBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">SIGUIENTE</button>
+      <button id="setupCancelBtn" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
+    `;
+    document.getElementById('setupCancelBtn').addEventListener('click', () => setupDropdown.style.display = 'none');
+    document.getElementById('setupNextBtn').addEventListener('click', () => {
+      const emailVal = document.getElementById('setupEmailInput').value.trim();
+      const errEl = document.getElementById('setupError');
+      if (!emailVal.includes('@') || !emailVal.includes('.')) { errEl.textContent = "Ingresa un correo válido."; errEl.style.display = 'block'; return; }
+      renderSetupView(2, emailVal);
+    });
+  } else if (step === 2) {
+    setupDropdown.innerHTML = `
+      <div style="border: 1px solid var(--red); padding: 10px; margin-bottom: 15px; font-size: 0.8rem; color: var(--cream); line-height: 1.4; text-transform: none; letter-spacing: 0;">
+        Este correo quedará registrado como principal para recuperar tu contraseña y <strong style="color: var(--red-bright);">no podrás cambiarlo</strong>. Verifica que esté bien escrito antes de seguir.
+      </div>
+      <div style="font-family: monospace; font-size: 1.1rem; color: var(--gold); margin: 15px 0; text-align: center;">${email}</div>
+      <button id="setupEditBtn" class="cat-btn w-full" style="margin-top: 5px;">EDITAR</button>
+      <button id="setupSaveBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 10px;">CONTINUAR</button>
+    `;
+    document.getElementById('setupEditBtn').addEventListener('click', () => renderSetupView(1));
+    document.getElementById('setupSaveBtn').addEventListener('click', async () => {
+      if (userDbRef) {
+        await userDbRef.child('recoveryEmail').set(email);
+        showToast("Correo de recuperación guardado.");
+        updateSidebarData();
+      }
+    });
+  }
+}
+
+const leaderboardBtn = document.getElementById("leaderboardBtn");
+const leaderboardDropdown = document.getElementById("leaderboardDropdown");
+const leaderboardList = document.getElementById("leaderboardList");
+
+function renderLeaderboard() {
+  let html = '';
+  for (let i = 0; i < 100; i++) {
+    let isMe = false;
+    let name = '---';
+    let score = '---';
+    let avatar = '';
+    
+    const player = globalLeaderboardData[i];
+    if (player) {
+      name = player.name;
+      let pScore = 0;
+      if (player.history) { for (let g in player.history) { pScore += player.history[g].highScore || 0; } }
+      score = pScore.toLocaleString() + ' pts';
+      avatar = player.gender === 'girl' 
+        ? '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" class="w-6 h-6 object-contain" alt="avatar">'
+        : '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" class="w-6 h-6 object-contain" alt="avatar">';
+      if (userData && player.name === userData.name) isMe = true;
+    }
+
+    const rankClass = getRankClass(i + 1);
+    html += `
+      <div class="leaderboard-row ${isMe ? 'me' : 'empty'}">
+        <div class="rank ${rankClass}">#${i + 1}</div>
+        <div class="player-name">${avatar} ${name}</div>
+        <div class="player-score">${score}</div>
+      </div>
+    `;
+  }
+  leaderboardList.innerHTML = html;
+}
+
+leaderboardBtn.addEventListener('click', (e) => {
+  e.stopPropagation();
+  renderLeaderboard(); 
+  leaderboardDropdown.classList.toggle('show');
+  loginDropdown.classList.remove('show');
+});
+
+document.addEventListener('click', (e) => {
+  if (!loginDropdown.contains(e.target) && !mainLogoBtn.contains(e.target) && !userAreaText.contains(e.target)) loginDropdown.classList.remove('show');
+  if (!leaderboardDropdown.contains(e.target) && e.target !== leaderboardBtn) leaderboardDropdown.classList.remove('show');
+});
+
+db.ref('users').on('value', (snapshot) => {
+  globalLeaderboardData = [];
+  snapshot.forEach((child) => {
+    const val = child.val();
+    let pScore = 0;
+    if (val.history) { for (let g in val.history) { pScore += val.history[g].highScore || 0; } }
+    globalLeaderboardData.push({ name: child.key, ...val, totalScore: pScore });
+  });
+  globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore);
+  if (leaderboardDropdown.classList.contains('show')) renderLeaderboard();
+});
+
+const catContainer = document.getElementById("categories");
+categories.forEach((c, i) => {
+  const btn = document.createElement("button");
+  btn.className = "cat-btn" + (c.id === "all" ? " active" : "");
+  btn.textContent = c.label;
+  btn.classList.add("fade-up");
+  btn.addEventListener("click", () => {
+    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    currentCat = c.id;
+    document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase();
+    renderGames();
+  });
+  catContainer.appendChild(btn);
+});
+
+const grid = document.getElementById("gamesGrid");
+const emptyState = document.getElementById("emptyState");
+const gameContainer = document.getElementById("gameContainer");
+const gameFrame = document.getElementById("gameFrame");
+const closeGameBtn = document.getElementById("closeGameBtn");
+let currentGameTitle = null;
+
+function renderGames() {
+  const filtered = games.filter(g => currentCat === "all" || g.cat === currentCat);
+  grid.innerHTML = "";
+  if (filtered.length === 0) { emptyState.classList.remove("hidden"); return; }
+  emptyState.classList.add("hidden");
+
+  filtered.forEach((g, i) => {
+    const card = document.createElement("div");
+    card.className = "game-card fade-up";
+    const gameData = userData?.history?.[g.title];
+    const rating = gameData?.rating || 0;
+    const ratingHtml = rating > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${rating}.0</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`;
+        
+    card.innerHTML = `
+      ${g.tag ? `<div class="game-tag">${g.tag}</div>` : ""}
+      ${ratingHtml}
+      <div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div>
+      <div class="play-icon"><i class="fas fa-play"></i></div>
+      <div class="game-title">${g.title}</div>
+    `;
+    card.addEventListener("click", () => {
+      currentGameTitle = g.title;
+      if (userData && userDbRef) {
+        if (!userData.history) userData.history = {};
+        if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 };
+        userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1;
+        userDbRef.child('history').set(userData.history);
+      }
+      gameFrame.src = g.file;
+      gameContainer.classList.add('show');
+      showToast(!userData ? "MODO OFFLINE: Juegas libremente, pero tu progreso no se guardará." : `Iniciando: ${g.title}...`);
+    });
+    grid.appendChild(card);
+  });
+}
+
+closeGameBtn.addEventListener('click', () => {
+  gameContainer.classList.remove('show');
+  gameFrame.src = '';
+  if (userData && currentGameTitle) setTimeout(() => openRatingModal(currentGameTitle), 300);
+});
+
+window.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'gameScore' && userData && userDbRef) {
+    const gameTitle = event.data.game;
+    const score = parseInt(event.data.score);
+    if (!isNaN(score)) {
+      if (!userData.history) userData.history = {};
+      if (!userData.history[gameTitle]) userData.history[gameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 };
+      if (score > (userData.history[gameTitle].highScore || 0)) {
+        userData.history[gameTitle].highScore = score;
+        showToast(`¡Nuevo Récord en ${gameTitle}: ${score} pts!`);
+      }
+      userDbRef.child('history').set(userData.history);
+      renderGames();
+    }
+  }
+});
+
+const ratingToast = document.getElementById("ratingToast");
+let toastTimer;
+
+function openRatingModal(gameTitle) {
+  document.getElementById("toastGameTitle").textContent = gameTitle;
+  tempRating = 0;
+  const currentRating = userData?.history?.[gameTitle]?.rating || 0;
+  
+  const stars = document.querySelectorAll('#starsInputToast i');
+  stars.forEach(s => {
+    s.classList.remove('star-metallic', 'hover');
+    s.classList.add('star-empty');
+    if (currentRating >= parseInt(s.dataset.val)) {
+      s.classList.remove('star-empty');
+      s.classList.add('star-metallic');
+    }
+  });
+  
+  ratingToast.classList.add('show');
+  
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => {
+    ratingToast.classList.remove('show');
+  }, 15000);
+}
+
+async function closeRatingModal() {
+  if (tempRating > 0) {
+    if (!userData.history) userData.history = {};
+    if (!userData.history[currentGameTitle]) userData.history[currentGameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 };
+    userData.history[currentGameTitle].rating = tempRating;
+    if (userData && userDbRef) {
+      await userDbRef.child('history').set(userData.history);
+      showToast(`¡Calificación enviada: ${tempRating} estrellas!`);
+    }
+    renderGames(); 
+  }
+  ratingToast.classList.remove('show');
+  clearTimeout(toastTimer);
+}
+
+document.querySelectorAll('#starsInputToast i').forEach(star => {
+  star.addEventListener('mouseenter', () => {
+    const val = parseInt(star.dataset.val);
+    document.querySelectorAll('#starsInputToast i').forEach(s => {
+      s.classList.remove('hover');
+      if (parseInt(s.dataset.val) <= val) {
+        s.classList.add('hover');
+        s.classList.remove('star-empty');
+        s.classList.add('star-metallic');
+      } else {
+        s.classList.add('star-empty');
+        s.classList.remove('star-metallic');
+      }
+    });
+  });
+
+  star.addEventListener('click', () => {
+    tempRating = parseInt(star.dataset.val);
+    document.querySelectorAll('#starsInputToast i').forEach(s => {
+      s.classList.remove('star-metallic');
+      s.classList.add('star-empty');
+      if (parseInt(s.dataset.val) <= tempRating) {
+        s.classList.remove('star-empty');
+        s.classList.add('star-metallic');
+      }
+    });
+  });
+});
+
+document.getElementById('starsInputToast').addEventListener('mouseleave', () => {
+  document.querySelectorAll('#starsInputToast i').forEach(s => {
+    s.classList.remove('hover');
+    if(!s.classList.contains('star-metallic')) {
+      s.classList.add('star-empty');
+    }
+  });
+});
+
+document.getElementById('closeRatingToast').addEventListener('click', () => {
+  ratingToast.classList.remove('show');
+  clearTimeout(toastTimer);
+});
+
+document.getElementById('sendRatingToast').addEventListener('click', closeRatingModal);
+
+document.getElementById("searchInput").addEventListener("input", (e) => {
+  currentSearch = e.target.value.toLowerCase().trim();
+  renderGames();
+});
+
+const toast = document.getElementById("toast");
+const toastMsg = document.getElementById("toastMsg");
+let toastTimerGeneral;
+function showToast(msg) {
+  toastMsg.textContent = msg;
+  toast.classList.add("show");
+  clearTimeout(toastTimerGeneral);
+  toastTimerGeneral = setTimeout(() => toast.classList.remove("show"), 3000);
+}
+
+function spawnParticle() {
+  const p = document.createElement("div");
+  p.className = "particle";
+  const size = Math.random() * 3 + 1;
+  p.style.width = size + "px"; p.style.height = size + "px";
+  p.style.left = Math.random() * window.innerWidth + "px"; p.style.top = window.innerHeight + "px";
+  document.body.appendChild(p);
+  const duration = 4000 + Math.random() * 3000;
+  p.animate([{ transform: "translate(0, 0)", opacity: 0 }, { opacity: 0.8, offset: 0.1 }, { opacity: 0.8, offset: 0.9 }, { transform: `translate(${(Math.random() - 0.5) * 100}px, -${window.innerHeight + 20}px)`, opacity: 0 }], { duration, easing: "linear" });
+  setTimeout(() => p.remove(), duration);
+}
+setInterval(spawnParticle, 600);
+
+renderUserArea();
+renderGames();
+
+if (userData) {
+  listenToUserData(userData.name);
+}
+
+document.addEventListener("mousemove", (e) => {
+  document.querySelectorAll(".game-card:hover").forEach(card => {
+    const rect = card.getBoundingClientRect();
+    card.style.transform = `translateY(-6px) scale(1.02) perspective(800px) rotateY(${(e.clientX - rect.left) / rect.width - 0.5 * 6}deg) rotateX(${-(e.clientY - rect.top) / rect.height - 0.5 * 6}deg)`;
+  });
+});
+document.addEventListener("mouseleave", () => document.querySelectorAll(".game-card").forEach(c => c.style.transform = ""));
+</script>
+
+</body>
+</html>
