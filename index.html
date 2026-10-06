@@ -293,7 +293,7 @@
 
         <div id="viewRecoveryCode" class="login-view">
           <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Verificar Código</h3>
-          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Revisa tu buzón. Hemos enviado un número del 1 al 100.</p>
+          <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Revisa tu buzón. El código expira en 2 minutos. Tienes 10 intentos.</p>
           
           <label class="form-label">CÓDIGO SECRETO</label>
           <input type="number" id="codeInput" class="modal-input" placeholder="Ej: 42" min="1" max="100">
@@ -503,7 +503,6 @@ const EMAILJS_TEMPLATE_ID = "template_re44dk7";
 
 const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
 
-// ====== JUEGOS Y CATEGORÍAS ACTUALIZADOS ======
 const games = [
   { title: "Juego de la serpiente", cat: "arcade", tag: "NEW", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
   { title: "Juego UNO", cat: "cards", tag: "NEW", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
@@ -514,7 +513,6 @@ const categories = [
   { id: "arcade", label: "Arcade" },
   { id: "cards", label: "Cartas" }
 ];
-// ===============================================
 
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
@@ -762,7 +760,7 @@ setInterval(() => {
   }
 }, 10000);
 
-let recoveryTemp = { email: '', code: 0, userKey: '' };
+let recoveryTemp = { email: '', code: 0, userKey: '', expiry: 0 };
 
 document.getElementById('openRecoveryLink').addEventListener('click', () => {
   loginError.style.display = 'none';
@@ -785,9 +783,21 @@ document.getElementById('sendCodeBtn').addEventListener('click', async () => {
     return;
   }
 
+  // SISTEMA DE BLOQUEO TEMPORAL
+  const safeEmail = email.toLowerCase().replace(/\./g, '_');
+  const lockRef = db.ref('recoveryLocks/' + safeEmail);
+  const lockSnap = await lockRef.once('value');
+  if (lockSnap.exists() && lockSnap.val().lockUntil > Date.now()) {
+    const minsLeft = Math.ceil((lockSnap.val().lockUntil - Date.now()) / 60000);
+    errEl.textContent = `Bloqueado por seguridad. Intenta en ${minsLeft} minutos.`;
+    errEl.style.display = 'block';
+    return;
+  }
+
   recoveryTemp.email = email;
   recoveryTemp.code = Math.floor(Math.random() * 100) + 1;
   recoveryTemp.userKey = Object.keys(snapshot.val())[0];
+  recoveryTemp.expiry = Date.now() + (2 * 60 * 1000); // Expira en 2 minutos
 
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, code: recoveryTemp.code });
@@ -799,15 +809,39 @@ document.getElementById('sendCodeBtn').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('verifyCodeBtn').addEventListener('click', () => {
+document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
   const code = parseInt(document.getElementById('codeInput').value);
   const errEl = document.getElementById('codeError');
+  
+  // VERIFICAR SI EL CÓDIGO HA EXPIRADO
+  if (Date.now() > recoveryTemp.expiry) {
+    errEl.textContent = "El código ha expirado. Vuelve a solicitarlo.";
+    errEl.style.display = 'block';
+    return;
+  }
+
+  const safeEmail = recoveryTemp.email.toLowerCase().replace(/\./g, '_');
+  const lockRef = db.ref('recoveryLocks/' + safeEmail);
+
   if (code === recoveryTemp.code) {
+    // ÉXITO: Limpiar bloqueos y continuar
+    await lockRef.remove(); 
     errEl.style.display = 'none';
     document.getElementById('recUsernameInput').value = recoveryTemp.userKey;
     showLoginView('viewNewPassword');
   } else {
-    errEl.textContent = "Código incorrecto. Verifica tu buzón.";
+    // FALLO: Contar intento y aplicar bloqueo si es necesario
+    const lockSnap = await lockRef.once('value');
+    let attempts = lockSnap.exists() ? (lockSnap.val().attempts || 0) : 0;
+    attempts++;
+
+    if (attempts >= 10) {
+      await lockRef.set({ attempts: attempts, lockUntil: Date.now() + (30 * 60 * 1000) }); // 30 min de bloqueo
+      errEl.textContent = "Demasiados intentos fallidos. Bloqueado por 30 minutos.";
+    } else {
+      await lockRef.set({ attempts: attempts });
+      errEl.textContent = `Código incorrecto. Intentos restantes: ${10 - attempts}`;
+    }
     errEl.style.display = 'block';
   }
 });
