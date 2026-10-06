@@ -94,15 +94,59 @@
   .rank-gold { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #fff3b0 0%, #d4af37 40%, #ffea99 50%, #d4af37 60%, #aa8125 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
   .rank-silver { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #ffffff 0%, #c0c0c0 40%, #f5f5f5 50%, #c0c0c0 60%, #8a8a8a 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
   .rank-bronze { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #f8b88b 0%, #cd7f32 40%, #ffd9b3 50%, #cd7f32 60%, #8c4b1e 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
+  .rank-wood { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #e0c097 0%, #8b5a2b 40%, #c48c4c 50%, #8b5a2b 60%, #5e3a1a 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
 
-  .leaderboard-row { display: grid; grid-template-columns: 50px 1fr auto; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); font-family: 'Oswald', sans-serif; transition: background 0.2s; }
+  .leaderboard-row { display: grid; grid-template-columns: 50px 1fr auto; align-items: center; padding: 12px 15px; border-bottom: 1px solid var(--border); font-family: 'Oswald', sans-serif; transition: background 0.2s; cursor: pointer; }
   .leaderboard-row:last-child { border-bottom: none; }
   .leaderboard-row:hover { background: rgba(200, 16, 46, 0.1); }
   .leaderboard-row.me { background: rgba(200, 16, 46, 0.2); border-left: 4px solid var(--red); }
-  .leaderboard-row.empty { opacity: 0.4; }
+  .leaderboard-row.empty { opacity: 0.4; cursor: default; }
   .rank { font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; text-align: center; }
   .player-name { font-weight: 600; letter-spacing: 0.05em; color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
   .player-score { font-weight: 700; color: var(--red-bright); font-size: 0.9rem; }
+
+  /* BUSCADOR EN TABLA */
+  .lb-search-container { padding: 15px; background: #0d0606; border-top: 2px solid var(--border); }
+  .lb-search-input { 
+    width: 100%; background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); 
+    color: var(--cream); padding: 8px 12px; font-family: 'Oswald', sans-serif; font-weight: 500; outline: none; 
+    clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); text-transform: uppercase; margin-bottom: 5px;
+  }
+  .lb-search-input::placeholder { color: #6a3030; }
+  .lb-search-results { max-height: 200px; overflow-y: auto; }
+  .lb-search-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
+  .lb-search-result:hover { background: rgba(200, 16, 46, 0.2); }
+  .lb-search-result span { font-family: 'Oswald', sans-serif; font-size: 0.9rem; }
+  .lb-search-result .res-rank { width: 40px; text-align: center; font-family: 'ImpactStrive', sans-serif; }
+  .lb-search-result .res-name { flex: 1; padding-left: 10px; }
+  .lb-search-result .res-score { color: var(--red-bright); font-weight: 600; font-size: 0.8rem; }
+
+  /* VISTA PREVIA DE PERFIL FLOTANTE */
+  #lbProfileCard {
+    position: absolute; 
+    width: 250px; 
+    background: var(--bg-2); border: 2px solid var(--red); border-left: 6px solid var(--red);
+    padding: 15px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
+    transform: scale(0.8); opacity: 0; pointer-events: none;
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
+    transform-origin: top right;
+    clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
+    max-height: 350px; overflow-y: auto;
+  }
+  #lbProfileCard.show { transform: scale(1); opacity: 1; pointer-events: auto; }
+  .lbpc-header { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
+  .lbpc-avatar { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.8)); }
+  .lbpc-info h3 { font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; color: var(--cream); margin: 0; line-height: 1; }
+  .lbpc-rank { font-family: 'ImpactStrive', sans-serif; font-size: 0.8rem; margin-top: 4px; }
+  .lbpc-stats { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+  .lbpc-stat { background: var(--panel); border: 1px solid var(--border); padding: 6px; text-align: center; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); }
+  .lbpc-stat span { display: block; font-size: 0.55rem; color: var(--gold); text-transform: uppercase; }
+  .lbpc-stat strong { display: block; font-family: 'ImpactStrive', sans-serif; font-size: 0.9rem; color: var(--cream); }
+  .lbpc-games-title { font-size: 0.7rem; color: var(--gold); text-transform: uppercase; margin-bottom: 4px; }
+  .lbpc-game { display: flex; justify-content: space-between; font-size: 0.75rem; padding: 3px 0; border-bottom: 1px solid rgba(255,255,255,0.05); }
+  .lbpc-game:last-child { border: none; }
+  .lbpc-close { position: absolute; top: 5px; right: 5px; background: transparent; border: none; color: var(--cream); opacity: 0.5; cursor: pointer; font-size: 1rem; }
+  .lbpc-close:hover { opacity: 1; color: var(--red); }
 
   .sidebar-overlay { position: fixed; inset: 0; background: rgba(5, 2, 2, 0.8); backdrop-filter: blur(3px); z-index: 1500; display: none; }
   .sidebar-overlay.show { display: block; }
@@ -210,6 +254,8 @@
     .login-dropdown.show { transform: translateX(-50%) scale(1) translateY(0); }
     .profile-sidebar { width: 100%; }
     #ratingToast { right: 10px; left: 10px; width: auto; bottom: 10px; }
+    #lbProfileCard { left: 10px !important; right: 10px !important; width: auto !important; top: auto !important; bottom: 10px; transform-origin: bottom center; }
+    #lbProfileCard.show { transform: translateY(0) scale(1); }
   }
 
   .particle { position: fixed; pointer-events: none; background: var(--red); border-radius: 50%; opacity: 0; z-index: 0; }
@@ -340,6 +386,10 @@
           <p>Ranking Semanal - Top 100 Jugadores</p>
         </div>
         <div id="leaderboardList" class="max-h-80 overflow-y-auto"></div>
+        <div class="lb-search-container">
+          <input type="text" id="lbSearchInput" class="lb-search-input" placeholder="Buscar jugador...">
+          <div id="lbSearchResults" class="lb-search-results"></div>
+        </div>
       </div>
     </div>
   </div>
@@ -408,6 +458,30 @@
     <div class="strive text-lg hidden sm:block" style="color: var(--cream); text-shadow: 2px 2px 0 #000;">EN JUEGO</div>
   </div>
   <iframe id="gameFrame" class="game-frame" allow="autoplay; fullscreen; gamepad"></iframe>
+</div>
+
+<!-- VISTA PREVIA DE PERFIL FLOTANTE -->
+<div id="lbProfileCard">
+  <button id="closeLbProfileCard" class="lbpc-close"><i class="fas fa-times"></i></button>
+  <div class="lbpc-header">
+    <img id="lbpcAvatar" src="" class="lbpc-avatar" alt="avatar">
+    <div class="lbpc-info">
+      <h3 id="lbpcName">Usuario</h3>
+      <div id="lbpcRank" class="lbpc-rank rank-wood">Rango #100</div>
+    </div>
+  </div>
+  <div class="lbpc-stats">
+    <div class="lbpc-stat">
+      <span>Puntos</span>
+      <strong id="lbpcScore">0</strong>
+    </div>
+    <div class="lbpc-stat">
+      <span>Jugados</span>
+      <strong id="lbpcGames">0</strong>
+    </div>
+  </div>
+  <div class="lbpc-games-title">Mejores Récords</div>
+  <div id="lbpcGamesList"></div>
 </div>
 
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
@@ -503,9 +577,10 @@ const EMAILJS_TEMPLATE_ID = "template_re44dk7";
 
 const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
 
+// LISTA DE JUEGOS (Sin el tag estático)
 const games = [
-  { title: "Juego de la serpiente", cat: "arcade", tag: "NEW", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
-  { title: "Juego UNO", cat: "cards", tag: "NEW", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
+  { title: "Juego de la serpiente", cat: "arcade", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
+  { title: "Juego UNO", cat: "cards", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
 ];
 
 const categories = [
@@ -523,7 +598,8 @@ function getRankClass(index) {
   if (index <= 25) return 'rank-diamond';
   if (index <= 50) return 'rank-gold';
   if (index <= 75) return 'rank-silver';
-  return 'rank-bronze';
+  if (index <= 100) return 'rank-bronze';
+  return 'rank-wood';
 }
 
 function getTotalScore() {
@@ -580,6 +656,7 @@ function openLoginDropdown(e) {
   showLoginView('viewLogin');
   loginDropdown.classList.toggle('show');
   leaderboardDropdown.classList.remove('show');
+  lbProfileCard.classList.remove('show');
 }
 
 function showLoginView(viewId) {
@@ -611,15 +688,29 @@ function updateSidebarData() {
   document.getElementById('sidebarTime').textContent = `${Math.floor(time / 3600)}h ${Math.floor((time % 3600) / 60)}m`;
   
   let myRank = globalLeaderboardData.findIndex(u => u.name === userData.name);
-  myRank = myRank !== -1 ? myRank + 1 : 100;
-  const rankClass = getRankClass(myRank);
-  document.getElementById('sidebarRankText').textContent = `Rango #${myRank}`;
+  let rankText = "Sin Rango";
+  let rankClass = "rank-wood";
+  
+  if (myRank !== -1) {
+    myRank += 1;
+    rankText = `Rango #${myRank}`;
+    rankClass = getRankClass(myRank);
+  }
+  
+  document.getElementById('sidebarRankText').textContent = rankText;
   document.getElementById('sidebarRankText').className = `${rankClass}`;
   
   let histHtml = '';
   if (userData.history && Object.keys(userData.history).length > 0) {
-    for (let title in userData.history) {
-      const stats = userData.history[title];
+    let historyArray = Object.keys(userData.history).map(key => {
+      return { title: key, stats: userData.history[key] };
+    });
+
+    historyArray.sort((a, b) => (b.stats.lastPlayed || 0) - (a.stats.lastPlayed || 0));
+
+    historyArray.forEach(item => {
+      const title = item.title;
+      const stats = item.stats;
       const gameInfo = games.find(g => g.title === title);
       const gameImg = gameInfo ? gameInfo.img : defaultImg;
       
@@ -653,7 +744,7 @@ function updateSidebarData() {
           </div>
         </div>
       `;
-    }
+    });
   } else {
     histHtml = '<div class="history-item empty">Aún no has jugado nada.</div>';
   }
@@ -783,7 +874,6 @@ document.getElementById('sendCodeBtn').addEventListener('click', async () => {
     return;
   }
 
-  // SISTEMA DE BLOQUEO TEMPORAL
   const safeEmail = email.toLowerCase().replace(/\./g, '_');
   const lockRef = db.ref('recoveryLocks/' + safeEmail);
   const lockSnap = await lockRef.once('value');
@@ -797,7 +887,7 @@ document.getElementById('sendCodeBtn').addEventListener('click', async () => {
   recoveryTemp.email = email;
   recoveryTemp.code = Math.floor(Math.random() * 100) + 1;
   recoveryTemp.userKey = Object.keys(snapshot.val())[0];
-  recoveryTemp.expiry = Date.now() + (2 * 60 * 1000); // Expira en 2 minutos
+  recoveryTemp.expiry = Date.now() + (2 * 60 * 1000); 
 
   try {
     await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, code: recoveryTemp.code });
@@ -813,7 +903,6 @@ document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
   const code = parseInt(document.getElementById('codeInput').value);
   const errEl = document.getElementById('codeError');
   
-  // VERIFICAR SI EL CÓDIGO HA EXPIRADO
   if (Date.now() > recoveryTemp.expiry) {
     errEl.textContent = "El código ha expirado. Vuelve a solicitarlo.";
     errEl.style.display = 'block';
@@ -824,19 +913,17 @@ document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
   const lockRef = db.ref('recoveryLocks/' + safeEmail);
 
   if (code === recoveryTemp.code) {
-    // ÉXITO: Limpiar bloqueos y continuar
     await lockRef.remove(); 
     errEl.style.display = 'none';
     document.getElementById('recUsernameInput').value = recoveryTemp.userKey;
     showLoginView('viewNewPassword');
   } else {
-    // FALLO: Contar intento y aplicar bloqueo si es necesario
     const lockSnap = await lockRef.once('value');
     let attempts = lockSnap.exists() ? (lockSnap.val().attempts || 0) : 0;
     attempts++;
 
     if (attempts >= 10) {
-      await lockRef.set({ attempts: attempts, lockUntil: Date.now() + (30 * 60 * 1000) }); // 30 min de bloqueo
+      await lockRef.set({ attempts: attempts, lockUntil: Date.now() + (30 * 60 * 1000) }); 
       errEl.textContent = "Demasiados intentos fallidos. Bloqueado por 30 minutos.";
     } else {
       await lockRef.set({ attempts: attempts });
@@ -904,17 +991,22 @@ function renderSetupView(step, email = '') {
 const leaderboardBtn = document.getElementById("leaderboardBtn");
 const leaderboardDropdown = document.getElementById("leaderboardDropdown");
 const leaderboardList = document.getElementById("leaderboardList");
+const lbSearchInput = document.getElementById("lbSearchInput");
+const lbSearchResults = document.getElementById("lbSearchResults");
+const lbProfileCard = document.getElementById("lbProfileCard");
 
 function renderLeaderboard() {
   let html = '';
   for (let i = 0; i < 100; i++) {
     let isMe = false;
+    let isEmpty = true;
     let name = '---';
     let score = '---';
     let avatar = '';
     
     const player = globalLeaderboardData[i];
     if (player) {
+      isEmpty = false;
       name = player.name;
       let pScore = 0;
       if (player.history) { for (let g in player.history) { pScore += player.history[g].highScore || 0; } }
@@ -926,8 +1018,11 @@ function renderLeaderboard() {
     }
 
     const rankClass = getRankClass(i + 1);
+    let rowClass = isMe ? 'me' : '';
+    if (isEmpty) rowClass += ' empty';
+
     html += `
-      <div class="leaderboard-row ${isMe ? 'me' : 'empty'}">
+      <div class="leaderboard-row ${rowClass}" data-name="${name}">
         <div class="rank ${rankClass}">#${i + 1}</div>
         <div class="player-name">${avatar} ${name}</div>
         <div class="player-score">${score}</div>
@@ -942,11 +1037,120 @@ leaderboardBtn.addEventListener('click', (e) => {
   renderLeaderboard(); 
   leaderboardDropdown.classList.toggle('show');
   loginDropdown.classList.remove('show');
+  lbProfileCard.classList.remove('show');
 });
 
 document.addEventListener('click', (e) => {
   if (!loginDropdown.contains(e.target) && !mainLogoBtn.contains(e.target) && !userAreaText.contains(e.target)) loginDropdown.classList.remove('show');
   if (!leaderboardDropdown.contains(e.target) && e.target !== leaderboardBtn) leaderboardDropdown.classList.remove('show');
+  if (!lbProfileCard.contains(e.target) && !leaderboardList.contains(e.target) && !lbSearchResults.contains(e.target)) lbProfileCard.classList.remove('show');
+});
+
+function showLbProfileCard(name, anchorElement) {
+  const player = globalLeaderboardData.find(p => p.name === name);
+  if (!player) return;
+  
+  const avatarUrl = player.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
+  const playerIndex = globalLeaderboardData.findIndex(p => p.name === name);
+  const rank = playerIndex + 1;
+  const rankClass = getRankClass(rank);
+  
+  let pScore = 0;
+  let gamesPlayed = 0;
+  let topGamesHtml = '';
+  
+  if (player.history) {
+    let gameList = Object.keys(player.history).map(k => ({ title: k, score: player.history[k].highScore || 0 })).sort((a,b) => b.score - a.score);
+    gamesPlayed = gameList.length;
+    pScore = gameList.reduce((acc, g) => acc + g.score, 0);
+    
+    topGamesHtml = gameList.slice(0, 3).map(g => `
+      <div class="lbpc-game"><span>${g.title}</span><span>${g.score.toLocaleString()} pts</span></div>
+    `).join('');
+  }
+  
+  document.getElementById('lbpcAvatar').src = avatarUrl;
+  document.getElementById('lbpcName').textContent = player.name;
+  document.getElementById('lbpcRank').textContent = `Rango #${rank}`;
+  document.getElementById('lbpcRank').className = `lbpc-rank ${rankClass}`;
+  document.getElementById('lbpcScore').textContent = pScore.toLocaleString();
+  document.getElementById('lbpcGames').textContent = gamesPlayed;
+  document.getElementById('lbpcGamesList').innerHTML = topGamesHtml || '<div class="lbpc-game" style="opacity:0.5; justify-content:center;">Sin partidas jugadas</div>';
+  
+  if (anchorElement) {
+    const rect = anchorElement.getBoundingClientRect();
+    const cardWidth = 260; 
+    const cardHeight = lbProfileCard.offsetHeight || 300; 
+    const spaceBelow = window.innerHeight - rect.bottom;
+    
+    let topPos = rect.top + window.scrollY;
+    if (spaceBelow < cardHeight) {
+      topPos = (rect.bottom + window.scrollY) - cardHeight;
+    }
+    
+    let leftPos = rect.left + window.scrollX - cardWidth - 10; 
+    
+    if (leftPos < 10) {
+      leftPos = rect.right + window.scrollX + 10;
+      lbProfileCard.style.transformOrigin = 'top left';
+    } else {
+      lbProfileCard.style.transformOrigin = 'top right';
+    }
+    
+    lbProfileCard.style.top = `${topPos}px`;
+    lbProfileCard.style.left = `${leftPos}px`;
+  }
+  
+  lbProfileCard.classList.add('show');
+}
+
+leaderboardList.addEventListener('click', (e) => {
+  const row = e.target.closest('.leaderboard-row:not(.empty)');
+  if (row && row.dataset.name && row.dataset.name !== '---') {
+    showLbProfileCard(row.dataset.name, row);
+  }
+});
+
+document.getElementById('closeLbProfileCard').addEventListener('click', () => {
+  lbProfileCard.classList.remove('show');
+});
+
+lbSearchInput.addEventListener('input', (e) => {
+  const query = e.target.value.toLowerCase().trim();
+  if (query.length < 2) {
+    lbSearchResults.innerHTML = '';
+    return;
+  }
+  
+  const results = globalLeaderboardData.filter(p => p.name.toLowerCase().includes(query));
+  let html = '';
+  if (results.length > 0) {
+    results.forEach(p => {
+      const playerIndex = globalLeaderboardData.findIndex(pl => pl.name === p.name);
+      const rank = playerIndex + 1;
+      const rankClass = getRankClass(rank);
+      let pScore = 0;
+      if (p.history) { for (let g in p.history) { pScore += p.history[g].highScore || 0; } }
+      
+      html += `
+        <div class="lb-search-result" data-name="${p.name}">
+          <span class="res-rank ${rankClass}">#${rank}</span>
+          <span class="res-name">${p.name}</span>
+          <span class="res-score">${pScore.toLocaleString()} pts</span>
+        </div>
+      `;
+    });
+  } else {
+    html = '<div style="padding: 10px; text-align: center; color: #6a3030; font-size: 0.8rem;">No se encontraron jugadores.</div>';
+  }
+  lbSearchResults.innerHTML = html;
+});
+
+lbSearchResults.addEventListener('click', (e) => {
+  const res = e.target.closest('.lb-search-result');
+  if (res && res.dataset.name) {
+    showLbProfileCard(res.dataset.name, res);
+  }
 });
 
 db.ref('users').on('value', (snapshot) => {
@@ -977,6 +1181,7 @@ db.ref('users').on('value', (snapshot) => {
 
   globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore);
   if (leaderboardDropdown.classList.contains('show')) renderLeaderboard();
+  if (profileSidebar.classList.contains('show')) updateSidebarData();
   renderGames(); 
 });
 
@@ -1013,13 +1218,18 @@ function renderGames() {
     const card = document.createElement("div");
     card.className = "game-card fade-up";
     
+    // LÓGICA DE ETIQUETA "NEW" DINÁMICA
+    const gameData = userData?.history?.[g.title];
+    const hasPlayed = gameData && (gameData.timesPlayed || 0) > 0;
+    const tagHtml = !hasPlayed ? `<div class="game-tag">NEW</div>` : "";
+    
     const globalRating = globalGameRatings[g.title]?.avg || 0;
     const ratingHtml = globalRating > 0 
         ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${globalRating}</div>` 
         : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`;
         
     card.innerHTML = `
-      ${g.tag ? `<div class="game-tag">${g.tag}</div>` : ""}
+      ${tagHtml}
       ${ratingHtml}
       <div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div>
       <div class="play-icon"><i class="fas fa-play"></i></div>
@@ -1031,6 +1241,7 @@ function renderGames() {
         if (!userData.history) userData.history = {};
         if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 };
         userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1;
+        userData.history[g.title].lastPlayed = Date.now(); 
         userDbRef.child('history').set(userData.history);
       }
       gameFrame.src = g.file;
@@ -1064,6 +1275,7 @@ window.addEventListener('message', (event) => {
         userData.history[gameTitle].highScore = score;
         showToast(`¡Nuevo Récord en ${gameTitle}: ${score} pts!`);
       }
+      userData.history[gameTitle].lastPlayed = Date.now(); 
       userDbRef.child('history').set(userData.history);
       renderGames();
     }
