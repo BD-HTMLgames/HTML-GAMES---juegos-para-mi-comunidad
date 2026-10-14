@@ -1,0 +1,1807 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Kirby Come Dulces - Tienda Mejorada</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-user-select: none;
+            -webkit-touch-callout: none;
+        }
+
+        body {
+            font-family: 'Comic Sans MS', cursive, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+            touch-action: none;
+        }
+
+        #gameContainer {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            height: 100vh;
+            max-height: 900px;
+            background: linear-gradient(180deg, #87CEEB 0%, #FFB6C1 100%);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            overflow: hidden;
+        }
+
+        #gameCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 20px;
+        }
+
+        #hud {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 15px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.7) 0%, rgba(0,0,0,0) 100%);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 18px;
+            font-weight: bold;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .hud-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            background: rgba(255, 255, 255, 0.2);
+            padding: 8px 12px;
+            border-radius: 25px;
+            backdrop-filter: blur(10px);
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #shopBtn {
+            position: absolute;
+            top: 80px;
+            right: 15px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 16px;
+            font-weight: bold;
+            cursor: pointer;
+            z-index: 11;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+
+        #shopBtn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(255, 215, 0, 0.6);
+        }
+
+        #shopBtn:active {
+            transform: translateY(0);
+        }
+
+        #controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 20px;
+            z-index: 10;
+        }
+
+        .control-btn {
+            width: 80px;
+            height: 80px;
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            border: 3px solid #FF69B4;
+            border-radius: 50%;
+            font-size: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .control-btn:active {
+            transform: scale(0.9);
+            background: linear-gradient(135deg, #FFB6C1 0%, #FFC0CB 100%);
+        }
+
+        #startScreen, #gameOverScreen, #shopScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: linear-gradient(135deg, rgba(255,182,193,0.95) 0%, rgba(255,192,203,0.95) 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 100;
+            border-radius: 20px;
+            backdrop-filter: blur(10px);
+        }
+
+        .screen-title {
+            font-size: 48px;
+            color: #FF1493;
+            margin-bottom: 20px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.3);
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .btn {
+            background: linear-gradient(135deg, #FF69B4 0%, #FF1493 100%);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 20px;
+            font-weight: bold;
+            border-radius: 30px;
+            cursor: pointer;
+            margin: 10px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(255, 20, 147, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 20px rgba(255, 20, 147, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(-1px);
+        }
+
+        #shopScreen {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        #shopHeader {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 20px;
+            padding: 0 10px;
+        }
+
+        #shopTitle {
+            font-size: 36px;
+            color: #FF1493;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.3);
+        }
+
+        #shopCoins {
+            font-size: 24px;
+            color: #FFD700;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px 20px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        #closeShopBtn {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(255, 255, 255, 0.9);
+            color: #FF1493;
+            border: 2px solid #FF1493;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            font-size: 24px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        #closeShopBtn:hover {
+            background: #FF1493;
+            color: white;
+            transform: rotate(90deg);
+        }
+
+        .skin-categories {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .category-btn {
+            background: rgba(255, 255, 255, 0.8);
+            color: #FF1493;
+            border: 2px solid #FF69B4;
+            padding: 8px 16px;
+            border-radius: 20px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s ease;
+        }
+
+        .category-btn.active {
+            background: #FF69B4;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .category-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 10px rgba(255, 105, 180, 0.3);
+        }
+
+        #shopGrid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 15px;
+            width: 100%;
+            padding: 0 10px;
+        }
+
+        .skin-card {
+            background: linear-gradient(135deg, rgba(255,255,255,0.9) 0%, rgba(255,255,255,0.7) 100%);
+            border: 3px solid #FFB6C1;
+            border-radius: 15px;
+            padding: 15px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .skin-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(45deg, transparent, rgba(255,255,255,0.3), transparent);
+            transform: rotate(45deg);
+            transition: all 0.5s ease;
+            opacity: 0;
+        }
+
+        .skin-card:hover::before {
+            animation: shine 0.5s ease;
+        }
+
+        @keyframes shine {
+            0% { transform: translateX(-100%) translateY(-100%) rotate(45deg); opacity: 0; }
+            50% { opacity: 1; }
+            100% { transform: translateX(100%) translateY(100%) rotate(45deg); opacity: 0; }
+        }
+
+        .skin-card:hover {
+            transform: translateY(-5px) scale(1.05);
+            box-shadow: 0 10px 25px rgba(255, 105, 180, 0.4);
+            border-color: #FF69B4;
+        }
+
+        .skin-card.equipped {
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            border-color: #FFD700;
+            animation: glow 2s ease-in-out infinite;
+        }
+
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 20px rgba(255, 215, 0, 0.5); }
+            50% { box-shadow: 0 0 30px rgba(255, 215, 0, 0.8); }
+        }
+
+        .skin-card.locked {
+            opacity: 0.7;
+            background: linear-gradient(135deg, rgba(200,200,200,0.9) 0%, rgba(150,150,150,0.7) 100%);
+            border-color: #999;
+        }
+
+        .skin-card.locked:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .skin-rarity {
+            position: absolute;
+            top: 5px;
+            right: 5px;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+        }
+
+        .rarity-common { background: #808080; }
+        .rarity-rare { background: #4169E1; }
+        .rarity-epic { background: #9370DB; }
+        .rarity-legendary { background: #FFD700; }
+
+        .skin-preview {
+            font-size: 50px;
+            margin-bottom: 10px;
+            animation: float 3s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .skin-name {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 5px;
+        }
+
+        .skin-price {
+            font-size: 16px;
+            font-weight: bold;
+            color: #FFD700;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .skin-status {
+            background: rgba(0, 0, 0, 0.2);
+            padding: 4px 8px;
+            border-radius: 10px;
+            font-size: 12px;
+            color: white;
+        }
+
+        .new-badge {
+            position: absolute;
+            top: -5px;
+            right: -5px;
+            background: #FF1493;
+            color: white;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: bold;
+            animation: pulse 1s infinite;
+        }
+
+        .purchase-effect {
+            position: fixed;
+            pointer-events: none;
+            z-index: 1000;
+            font-size: 24px;
+            font-weight: bold;
+            color: #FFD700;
+            animation: purchaseFloat 1.5s ease-out forwards;
+        }
+
+        @keyframes purchaseFloat {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-30px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-60px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .score-popup {
+            position: absolute;
+            font-size: 24px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 50;
+            animation: scoreFloat 1s ease-out forwards;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes scoreFloat {
+            0% {
+                transform: translateY(0) scale(0.5);
+                opacity: 0;
+            }
+            50% {
+                transform: translateY(-20px) scale(1.2);
+                opacity: 1;
+            }
+            100% {
+                transform: translateY(-40px) scale(1);
+                opacity: 0;
+            }
+        }
+
+        .warning-effect {
+            position: absolute;
+            font-size: 60px;
+            font-weight: bold;
+            pointer-events: none;
+            z-index: 60;
+            animation: warningShake 0.8s ease-out forwards;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+        }
+
+        @keyframes warningShake {
+            0%, 100% { transform: translate(-50%, -50%) scale(0.5) rotate(0deg); opacity: 0; }
+            25% { transform: translate(-50%, -50%) scale(1.5) rotate(-10deg); opacity: 1; }
+            75% { transform: translate(-50%, -50%) scale(1.5) rotate(10deg); opacity: 1; }
+        }
+
+        .eating-effect {
+            position: absolute;
+            font-size: 40px;
+            pointer-events: none;
+            z-index: 55;
+            animation: eatingBounce 0.5s ease-out forwards;
+        }
+
+        @keyframes eatingBounce {
+            0% { transform: scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: scale(1.5) rotate(180deg); opacity: 1; }
+            100% { transform: scale(1) rotate(360deg); opacity: 0; }
+        }
+
+        .combo-indicator {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 36px;
+            font-weight: bold;
+            color: #FF69B4;
+            pointer-events: none;
+            z-index: 70;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.5);
+            animation: comboZoom 1s ease-out forwards;
+        }
+
+        @keyframes comboZoom {
+            0% { transform: translate(-50%, -50%) scale(0) rotate(0deg); opacity: 0; }
+            50% { transform: translate(-50%, -50%) scale(1.5) rotate(10deg); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(1) rotate(0deg); opacity: 0; }
+        }
+
+        .screen-shake {
+            animation: shake 0.5s;
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            10%, 30%, 50%, 70%, 90% { transform: translateX(-5px); }
+            20%, 40%, 60%, 80% { transform: translateX(5px); }
+        }
+
+        .achievement-popup {
+            position: fixed;
+            top: 20px;
+            right: -400px;
+            background: linear-gradient(135deg, #FFD700 0%, #FFA500 100%);
+            color: white;
+            padding: 15px 20px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+            z-index: 200;
+            transition: right 0.5s ease;
+            max-width: 350px;
+        }
+
+        .achievement-popup.show {
+            right: 20px;
+        }
+
+        .achievement-title {
+            font-size: 18px;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+
+        .achievement-desc {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        #statsPanel {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            color: white;
+            padding: 15px;
+            border-radius: 15px;
+            font-size: 14px;
+            z-index: 15;
+            backdrop-filter: blur(10px);
+        }
+
+        .stat-item {
+            margin: 5px 0;
+            display: flex;
+            justify-content: space-between;
+            gap: 20px;
+        }
+
+        .stat-label {
+            opacity: 0.8;
+        }
+
+        .stat-value {
+            font-weight: bold;
+            color: #FFD700;
+        }
+
+        @media (max-width: 600px) {
+            #gameContainer {
+                border-radius: 0;
+                max-height: 100vh;
+            }
+            
+            #gameCanvas {
+                border-radius: 0;
+            }
+            
+            .control-btn {
+                width: 70px;
+                height: 70px;
+                font-size: 25px;
+            }
+            
+            #shopGrid {
+                grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="hud">
+            <div class="hud-item">
+                <span>🏆</span>
+                <span id="score">0</span>
+            </div>
+            <div class="hud-item">
+                <span>❤️</span>
+                <span id="lives">3</span>
+            </div>
+            <div class="hud-item">
+                <span>⭐</span>
+                <span id="level">1</span>
+            </div>
+            <div class="hud-item">
+                <span>💰</span>
+                <span id="coins">0</span>
+            </div>
+        </div>
+        
+        <button id="shopBtn">🛍️ Tienda</button>
+        
+        <div id="controls">
+            <button class="control-btn" id="leftBtn">⬅️</button>
+            <button class="control-btn" id="rightBtn">➡️</button>
+        </div>
+        
+        <div id="statsPanel">
+            <div class="stat-item">
+                <span class="stat-label">Dulces:</span>
+                <span class="stat-value" id="sweetsCollected">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Basura:</span>
+                <span class="stat-value" id="trashHit">0</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Combo:</span>
+                <span class="stat-value" id="comboDisplay">x1</span>
+            </div>
+        </div>
+        
+        <div id="startScreen">
+            <h1 class="screen-title">🌟 Kirby Come Dulces 🌟</h1>
+            <button class="btn" onclick="startGame()">¡Jugar!</button>
+            <button class="btn" onclick="openShop()">🛍️ Tienda</button>
+            <div style="margin-top: 20px; color: #FF1493; font-weight: bold;">
+                <p>📱 Usa las flechas o botones para moverte</p>
+                <p>🍭 Come dulces para ganar puntos</p>
+                <p>🗑️ Evita la basura</p>
+                <p>💰 Recoge monedas para comprar skins</p>
+            </div>
+        </div>
+        
+        <div id="gameOverScreen" class="hidden">
+            <h2 class="screen-title">¡Game Over!</h2>
+            <div style="color: #FF1493; font-size: 24px; margin: 20px;">
+                <p>Puntuación: <span id="finalScore">0</span></p>
+                <p>Monedas: <span id="finalCoins">0</span></p>
+                <p>Mejor: <span id="bestScore">0</span></p>
+            </div>
+            <button class="btn" onclick="startGame()">Reintentar</button>
+            <button class="btn" onclick="openShop()">🛍️ Tienda</button>
+        </div>
+        
+        <div id="shopScreen" class="hidden">
+            <div id="shopHeader">
+                <h2 id="shopTitle">🛍️ Tienda de Skins</h2>
+                <div id="shopCoins">💰 <span id="shopCoinsAmount">0</span></div>
+            </div>
+            <button id="closeShopBtn" onclick="closeShop()">✖</button>
+            
+            <div class="skin-categories">
+                <button class="category-btn active" onclick="filterCategory('all')">Todos</button>
+                <button class="category-btn" onclick="filterCategory('basic')">Básicos</button>
+                <button class="category-btn" onclick="filterCategory('special')">Especiales</button>
+                <button class="category-btn" onclick="filterCategory('legendary')">Legendarios</button>
+            </div>
+            
+            <div id="shopGrid"></div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const gameArea = document.getElementById('gameContainer');
+        
+        canvas.width = 500;
+        canvas.height = 800;
+        
+        let gameRunning = false;
+        let score = 0;
+        let lives = 3;
+        let level = 1;
+        let gameSpeed = 2;
+        let spawnInterval = 1500;
+        let lastSpawnTime = 0;
+        let animationId = null;
+        let lastTime = 0;
+        let deltaTime = 0;
+        
+        let combo = 0;
+        let multiplier = 1;
+        let lastCatchTime = 0;
+        let sweetsCollected = 0;
+        let trashHit = 0;
+        
+        let coins = 0;
+        let totalCoins = parseInt(localStorage.getItem('totalCoins')) || 0;
+        let highScore = parseInt(localStorage.getItem('highScore')) || 0;
+        
+        let currentCategory = 'all';
+        
+        // Sistema de skins mejorado
+        const skins = {
+            // Básicos
+            normal: {
+                name: 'Kirby Normal',
+                price: 0,
+                emoji: '🌸',
+                category: 'basic',
+                rarity: 'common',
+                url: 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_095547629-removebg-preview.png?updatedAt=1772805449791',
+                unlocked: true,
+                description: 'El Kirby clásico'
+            },
+            fire: {
+                name: 'Kirby Fuego',
+                price: 100,
+                emoji: '🔥',
+                category: 'basic',
+                rarity: 'common',
+                url: 'https://ejemplo.com/kirby-fuego.png',
+                unlocked: false,
+                description: 'Quema todo a su paso'
+            },
+            ice: {
+                name: 'Kirby Hielo',
+                price: 150,
+                emoji: '❄️',
+                category: 'basic',
+                rarity: 'common',
+                url: 'https://ejemplo.com/kirby-hielo.png',
+                unlocked: false,
+                description: 'Congela a sus enemigos'
+            },
+            
+            // Especiales
+            star: {
+                name: 'Kirby Estrella',
+                price: 200,
+                emoji: '⭐',
+                category: 'special',
+                rarity: 'rare',
+                url: 'https://ejemplo.com/kirby-estrella.png',
+                unlocked: false,
+                description: 'Brilla como una estrella'
+            },
+            rainbow: {
+                name: 'Kirby Arcoíris',
+                price: 300,
+                emoji: '🌈',
+                category: 'special',
+                rarity: 'rare',
+                url: 'https://ejemplo.com/kirby-arcoiris.png',
+                unlocked: false,
+                description: 'Colores mágicos'
+            },
+            golden: {
+                name: 'Kirby Dorado',
+                price: 500,
+                emoji: '👑',
+                category: 'special',
+                rarity: 'epic',
+                url: 'https://ejemplo.com/kirby-dorado.png',
+                unlocked: false,
+                description: 'El rey de los dulces'
+            },
+            ninja: {
+                name: 'Kirby Ninja',
+                price: 400,
+                emoji: '🥷',
+                category: 'special',
+                rarity: 'epic',
+                url: 'https://ejemplo.com/kirby-ninja.png',
+                unlocked: false,
+                description: 'Rápido y sigiloso'
+            },
+            robot: {
+                name: 'Kirby Robot',
+                price: 350,
+                emoji: '🤖',
+                category: 'special',
+                rarity: 'rare',
+                url: 'https://ejemplo.com/kirby-robot.png',
+                unlocked: false,
+                description: 'Tecnología avanzada'
+            },
+            wizard: {
+                name: 'Kirby Mago',
+                price: 450,
+                emoji: '🧙',
+                category: 'special',
+                rarity: 'epic',
+                url: 'https://ejemplo.com/kirby-mago.png',
+                unlocked: false,
+                description: 'Hechizos dulces'
+            },
+            
+            // Legendarios
+            pirate: {
+                name: 'Kirby Pirata',
+                price: 600,
+                emoji: '🏴‍☠️',
+                category: 'legendary',
+                rarity: 'legendary',
+                url: 'https://ejemplo.com/kirby-pirata.png',
+                unlocked: false,
+                description: 'El capitán de los mares'
+            },
+            superhero: {
+                name: 'Kirby Superhéroe',
+                price: 800,
+                emoji: '🦸',
+                category: 'legendary',
+                rarity: 'legendary',
+                url: 'https://ejemplo.com/kirby-superheroe.png',
+                unlocked: false,
+                description: 'Salva el mundo de dulces'
+            },
+            galaxy: {
+                name: 'Kirby Galaxia',
+                price: 1000,
+                emoji: '🌌',
+                category: 'legendary',
+                rarity: 'legendary',
+                url: 'https://ejemplo.com/kirby-galaxia.png',
+                unlocked: false,
+                description: 'Poder cósmico infinito',
+                isNew: true
+            }
+        };
+        
+        // Cargar skins desbloqueados
+        const savedSkins = localStorage.getItem('unlockedSkins');
+        if (savedSkins) {
+            const unlocked = JSON.parse(savedSkins);
+            Object.keys(unlocked).forEach(skinId => {
+                if (skins[skinId]) {
+                    skins[skinId].unlocked = unlocked[skinId];
+                }
+            });
+        }
+        
+        let currentSkin = localStorage.getItem('currentSkin') || 'normal';
+        if (!skins[currentSkin]) currentSkin = 'normal';
+        
+        // Imágenes de Kirby
+        const kirbyImages = {
+            normal: new Image(),
+            eating: new Image(),
+            sick: new Image(),
+            trash: new Image(),
+            lose: new Image(),
+            moving: new Image()
+        };
+        
+        // Cargar imágenes base
+        kirbyImages.normal.src = skins[currentSkin].url;
+        kirbyImages.eating.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_101228185-removebg-preview.png?updatedAt=1772810230722';
+        kirbyImages.sick.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_111555159-removebg-preview.png?updatedAt=1772813960229';
+        kirbyImages.trash.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_111555159-removebg-preview.png?updatedAt=1772813960229';
+        kirbyImages.lose.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_110816163-removebg-preview.png?updatedAt=1772813322435';
+        kirbyImages.moving.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-06_115238172-removebg-preview.png?updatedAt=1772816167203';
+        
+        const kirby = {
+            width: 70,
+            height: 70,
+            speed: 7,
+            isMovingLeft: false,
+            isMovingRight: false,
+            animationFrame: 0,
+            floatingOffset: 0,
+            isEating: false,
+            eatingTimer: 0,
+            isSick: false,
+            sickTimer: 0,
+            isTrashEating: false,
+            trashEatingTimer: 0,
+            isLosing: false,
+            losingTimer: 0,
+            isMoving: false,
+            movingTimer: 0,
+            facingRight: true,
+            init() {
+                this.x = canvas.width / 2 - this.width / 2;
+                this.y = canvas.height - this.height - 60;
+                this.facingRight = true;
+            },
+            startEating() {
+                this.isEating = true;
+                this.eatingTimer = 25;
+            },
+            startSick() {
+                this.isSick = true;
+                this.sickTimer = 50;
+            },
+            startTrashEating() {
+                this.isTrashEating = true;
+                this.trashEatingTimer = 50;
+            },
+            startLosing() {
+                this.isLosing = true;
+                this.losingTimer = 80;
+            },
+            startMoving() {
+                this.isMoving = true;
+                this.movingTimer = 8;
+            },
+            updateStates() {
+                if (this.eatingTimer > 0) {
+                    this.eatingTimer--;
+                    if (this.eatingTimer === 0) {
+                        this.isEating = false;
+                    }
+                }
+                if (this.sickTimer > 0) {
+                    this.sickTimer--;
+                    if (this.sickTimer === 0) {
+                        this.isSick = false;
+                    }
+                }
+                if (this.trashEatingTimer > 0) {
+                    this.trashEatingTimer--;
+                    if (this.trashEatingTimer === 0) {
+                        this.isTrashEating = false;
+                    }
+                }
+                if (this.losingTimer > 0) {
+                    this.losingTimer--;
+                    if (this.losingTimer === 0) {
+                        this.isLosing = false;
+                    }
+                }
+                if (this.movingTimer > 0) {
+                    this.movingTimer--;
+                    if (this.movingTimer === 0) {
+                        this.isMoving = false;
+                    }
+                }
+            },
+            updateDirection() {
+                if (this.isMovingLeft) {
+                    this.facingRight = false;
+                } else if (this.isMovingRight) {
+                    this.facingRight = true;
+                }
+            }
+        };
+        
+        let fallingObjects = [];
+        let particles = [];
+        
+        class FallingObject {
+            constructor() {
+                this.width = 40;
+                this.height = 40;
+                this.x = Math.random() * (canvas.width - this.width);
+                this.y = -this.height;
+                this.speed = gameSpeed + Math.random() * 1.5;
+                this.rotation = 0;
+                this.rotationSpeed = Math.random() * 0.08 - 0.04;
+                this.pulsePhase = Math.random() * Math.PI * 2;
+                this.isTrash = false;
+                
+                const rand = Math.random();
+                if (rand < 0.65) {
+                    const sweetType = Math.random();
+                    if (sweetType < 0.2) {
+                        this.type = 'candy';
+                        this.points = 10;
+                        this.coinValue = 2;
+                        this.emoji = '🍬';
+                        this.color = '#FF69B4';
+                    } else if (sweetType < 0.35) {
+                        this.type = 'donut';
+                        this.points = 20;
+                        this.coinValue = 3;
+                        this.emoji = '🍩';
+                        this.color = '#FFB6C1';
+                    } else if (sweetType < 0.5) {
+                        this.type = 'cupcake';
+                        this.points = 30;
+                        this.coinValue = 4;
+                        this.emoji = '🧁';
+                        this.color = '#FFC0CB';
+                    } else if (sweetType < 0.6) {
+                        this.type = 'lollipop';
+                        this.points = 40;
+                        this.coinValue = 5;
+                        this.emoji = '🍭';
+                        this.color = '#FF1493';
+                    } else if (sweetType < 0.7) {
+                        this.type = 'chocolate';
+                        this.points = 50;
+                        this.coinValue = 6;
+                        this.emoji = '🍫';
+                        this.color = '#8B4513';
+                    } else if (sweetType < 0.8) {
+                        this.type = 'icecream';
+                        this.points = 35;
+                        this.coinValue = 4;
+                        this.emoji = '🍦';
+                        this.color = '#87CEEB';
+                    } else if (sweetType < 0.9) {
+                        this.type = 'cake';
+                        this.points = 60;
+                        this.coinValue = 7;
+                        this.emoji = '🍰';
+                        this.color = '#DDA0DD';
+                    } else {
+                        this.type = 'cookie';
+                        this.points = 25;
+                        this.coinValue = 3;
+                        this.emoji = '🍪';
+                        this.color = '#F4A460';
+                    }
+                } else {
+                    this.isTrash = true;
+                    const trashType = Math.random();
+                    if (trashType < 0.1) {
+                        this.type = 'bomb';
+                        this.points = -1;
+                        this.emoji = '💣';
+                        this.color = '#FF0000';
+                    } else if (trashType < 0.2) {
+                        this.type = 'poison';
+                        this.points = -1;
+                        this.emoji = '🍄';
+                        this.color = '#8B008B';
+                    } else if (trashType < 0.3) {
+                        this.type = 'trash';
+                        this.points = -1;
+                        this.emoji = '🗑️';
+                        this.color = '#696969';
+                    } else if (trashType < 0.4) {
+                        this.type = 'bin';
+                        this.points = -1;
+                        this.emoji = '🚮';
+                        this.color = '#708090';
+                    } else if (trashType < 0.5) {
+                        this.type = 'bone';
+                        this.points = -1;
+                        this.emoji = '🦴';
+                        this.color = '#F5F5DC';
+                    } else if (trashType < 0.6) {
+                        this.type = 'sponge';
+                        this.points = -1;
+                        this.emoji = '🧽';
+                        this.color = '#FFA500';
+                    } else if (trashType < 0.7) {
+                        this.type = 'worm';
+                        this.points = -1;
+                        this.emoji = '🪱';
+                        this.color = '#8B4513';
+                    } else if (trashType < 0.8) {
+                        this.type = 'fly';
+                        this.points = -1;
+                        this.emoji = '🦟';
+                        this.color = '#000000';
+                    } else if (trashType < 0.9) {
+                        this.type = 'spider';
+                        this.points = -1;
+                        this.emoji = '🕷️';
+                        this.color = '#000000';
+                    } else {
+                        this.type = 'poop';
+                        this.points = -1;
+                        this.emoji = '💩';
+                        this.color = '#8B4513';
+                    }
+                }
+            }
+            
+            update(deltaTime) {
+                this.y += this.speed * (deltaTime / 16);
+                this.rotation += this.rotationSpeed;
+                this.pulsePhase += 0.08;
+            }
+            
+            draw() {
+                ctx.save();
+                ctx.translate(this.x + this.width/2, this.y + this.height/2);
+                ctx.rotate(this.rotation);
+                
+                if (this.isTrash) {
+                    const pulseScale = 1 + Math.sin(this.pulsePhase) * 0.08;
+                    ctx.scale(pulseScale, pulseScale);
+                    
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.width/2);
+                    gradient.addColorStop(0, 'rgba(255, 100, 100, 0.15)');
+                    gradient.addColorStop(0.5, 'rgba(255, 150, 100, 0.08)');
+                    gradient.addColorStop(1, 'rgba(255, 200, 100, 0.03)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.width/2);
+                    gradient.addColorStop(0, 'rgba(255,255,255,0.4)');
+                    gradient.addColorStop(0.5, 'rgba(255,255,255,0.15)');
+                    gradient.addColorStop(1, 'rgba(255,255,255,0)');
+                    ctx.fillStyle = gradient;
+                    ctx.beginPath();
+                    ctx.arc(0, 0, this.width/2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                
+                ctx.font = '30px Arial';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(this.emoji, 0, 0);
+                
+                ctx.restore();
+            }
+        }
+        
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.size = Math.random() * 5 + 1.5;
+                this.speedX = Math.random() * 4 - 2;
+                this.speedY = Math.random() * 4 - 2;
+                this.color = color;
+                this.alpha = 1;
+                this.decay = 0.02;
+                this.gravity = 0.06;
+                this.rotation = Math.random() * Math.PI * 2;
+                this.rotationSpeed = Math.random() * 0.15 - 0.075;
+            }
+            
+            update(deltaTime) {
+                const dt = deltaTime / 16;
+                this.x += this.speedX * dt;
+                this.y += this.speedY * dt;
+                this.speedY += this.gravity * dt;
+                this.alpha -= this.decay * dt;
+                this.size *= 0.98;
+                this.rotation += this.rotationSpeed * dt;
+            }
+            
+            draw() {
+                if (this.alpha <= 0) return;
+                ctx.save();
+                ctx.globalAlpha = this.alpha;
+                ctx.translate(this.x, this.y);
+                ctx.rotate(this.rotation);
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                
+                if (Math.random() > 0.5) {
+                    for (let i = 0; i < 5; i++) {
+                        const angle = (i * Math.PI * 2) / 5 - Math.PI / 2;
+                        const x = Math.cos(angle) * this.size;
+                        const y = Math.sin(angle) * this.size;
+                        if (i === 0) ctx.moveTo(x, y);
+                        else ctx.lineTo(x, y);
+                    }
+                    ctx.closePath();
+                } else {
+                    const gradient = ctx.createRadialGradient(0, 0, 0, 0, 0, this.size);
+                    gradient.addColorStop(0, this.color);
+                    gradient.addColorStop(1, 'rgba(255,255,255,0.5)');
+                    ctx.fillStyle = gradient;
+                    ctx.arc(0, 0, this.size, 0, Math.PI * 2);
+                }
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        function drawBackground() {
+            const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            gradient.addColorStop(0, '#FFB6C1');
+            gradient.addColorStop(0.2, '#FFC0CB');
+            gradient.addColorStop(0.5, '#FFE4E1');
+            gradient.addColorStop(0.8, '#FFF0F5');
+            gradient.addColorStop(1, '#F0E68C');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.02)';
+            for (let i = 0; i < 3; i++) {
+                ctx.beginPath();
+                ctx.arc(
+                    Math.random() * canvas.width,
+                    Math.random() * canvas.height,
+                    Math.random() * 2 + 1,
+                    0,
+                    Math.PI * 2
+                );
+                ctx.fill();
+            }
+        }
+        
+        function drawKirby() {
+            kirby.animationFrame += 0.04;
+            kirby.floatingOffset = Math.sin(kirby.animationFrame) * 2.5;
+            kirby.updateStates();
+            kirby.updateDirection();
+            
+            if ((kirby.isMovingLeft || kirby.isMovingRight) && !kirby.isMoving) {
+                kirby.startMoving();
+            }
+            
+            const centerX = kirby.x + kirby.width/2;
+            const centerY = kirby.y + kirby.height/2 + kirby.floatingOffset;
+            
+            ctx.fillStyle = 'rgba(255, 105, 180, 0.15)';
+            ctx.beginPath();
+            ctx.ellipse(centerX, kirby.y + kirby.height + 3, 
+                       kirby.width/2, 5, 0, 0, Math.PI * 2);
+            ctx.fill();
+            
+            if (kirby.isEating) {
+                const suctionGradient = ctx.createRadialGradient(centerX, centerY, 0, centerX, centerY, kirby.width);
+                suctionGradient.addColorStop(0, 'rgba(255, 182, 193, 0.3)');
+                suctionGradient.addColorStop(0.5, 'rgba(255, 192, 203, 0.15)');
+                suctionGradient.addColorStop(1, 'rgba(255, 240, 245, 0)');
+                ctx.fillStyle = suctionGradient;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, kirby.width, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            let currentImage = kirbyImages.normal;
+            
+            if (kirby.isLosing) {
+                currentImage = kirbyImages.lose;
+            } else if (kirby.isTrashEating) {
+                currentImage = kirbyImages.trash;
+            } else if (kirby.isSick) {
+                currentImage = kirbyImages.sick;
+            } else if (kirby.isEating) {
+                currentImage = kirbyImages.eating;
+            } else if (kirby.isMoving) {
+                currentImage = kirbyImages.moving;
+            }
+            
+            if (currentImage.complete && currentImage.naturalHeight > 0) {
+                ctx.save();
+                
+                let drawWidth = kirby.width;
+                let drawHeight = kirby.height;
+                
+                if (kirby.isTrashEating) {
+                    drawWidth = kirby.width * 0.9;
+                    drawHeight = kirby.height * 0.9;
+                }
+                
+                if (!kirby.facingRight) {
+                    ctx.translate(centerX, centerY);
+                    ctx.scale(-1, 1);
+                    ctx.translate(-centerX, -centerY);
+                }
+                
+                ctx.drawImage(
+                    currentImage,
+                    centerX - drawWidth/2,
+                    centerY - drawHeight/2,
+                    drawWidth,
+                    drawHeight
+                );
+                
+                ctx.restore();
+            } else {
+                ctx.fillStyle = '#FFB6C1';
+                ctx.beginPath();
+                ctx.arc(centerX, centerY, kirby.width/2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'black';
+                ctx.beginPath();
+                ctx.arc(centerX - 7, centerY - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(centerX + 7, centerY - 3, 2, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FF1493';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.arc(centerX, centerY + 3, 7, 0.2 * Math.PI, 0.8 * Math.PI);
+                ctx.stroke();
+            }
+        }
+        
+        function createExplosion(x, y, color, count = 12) {
+            for (let i = 0; i < count; i++) {
+                particles.push(new Particle(x, y, color));
+            }
+        }
+        
+        function showScorePopup(x, y, points, coinValue = 0) {
+            const popup = document.createElement('div');
+            popup.className = 'score-popup';
+            popup.style.left = `${x}px`;
+            popup.style.top = `${y}px`;
+            popup.style.color = points > 0 ? '#FF69B4' : '#FF1493';
+            
+            if (points > 0) {
+                popup.textContent = `+${points * multiplier}`;
+                if (multiplier > 1) {
+                    popup.textContent += ` x${multiplier}`;
+                }
+                if (coinValue > 0) {
+                    popup.textContent += ` 💰+${coinValue}`;
+                }
+            } else {
+                popup.textContent = '¡Asco!';
+            }
+            
+            gameArea.appendChild(popup);
+            
+            setTimeout(() => {
+                if (gameArea.contains(popup)) {
+                    gameArea.removeChild(popup);
+                }
+            }, 1000);
+        }
+        
+        function showWarningEffect(emoji) {
+            const warning = document.createElement('div');
+            warning.className = 'warning-effect';
+            warning.textContent = emoji;
+            warning.style.left = '50%';
+            warning.style.top = '50%';
+            gameArea.appendChild(warning);
+            
+            setTimeout(() => {
+                if (gameArea.contains(warning)) {
+                    gameArea.removeChild(warning);
+                }
+            }, 800);
+        }
+        
+        function showCombo() {
+            if (combo >= 5) {
+                const comboDiv = document.createElement('div');
+                comboDiv.className = 'combo-indicator';
+                comboDiv.textContent = `${combo}x DULCES!`;
+                gameArea.appendChild(comboDiv);
+                
+                setTimeout(() => {
+                    if (gameArea.contains(comboDiv)) {
+                        gameArea.removeChild(comboDiv);
+                    }
+                }, 1000);
+            }
+        }
+        
+        function showEatingEffect(x, y) {
+            const effect = document.createElement('div');
+            effect.className = 'eating-effect';
+            effect.textContent = '😋';
+            effect.style.left = `${x}px`;
+            effect.style.top = `${y}px`;
+            gameArea.appendChild(effect);
+            
+            setTimeout(() => {
+                if (gameArea.contains(effect)) {
+                    gameArea.removeChild(effect);
+                }
+            }, 500);
+        }
+        
+        function updateMultiplier() {
+            if (combo >= 3) {
+                multiplier = 2;
+            } else if (combo >= 5) {
+                multiplier = 3;
+            } else if (combo >= 10) {
+                multiplier = 5;
+            }
+            
+            if (combo >= 3) {
+                setTimeout(() => {
+                    multiplier = 1;
+                    combo = 0;
+                }, 3000);
+            }
+        }
+        
+        function updateLevel() {
+            const newLevel = Math.floor(score / 100) + 1;
+            if (newLevel !== level) {
+                level = newLevel;
+                gameSpeed = 2 + (level - 1) * 0.4;
+                spawnInterval = Math.max(700, 1500 - (level - 1) * 120);
+                document.getElementById('level').textContent = level;
+                
+                createExplosion(canvas.width/2, canvas.height/2, '#FF69B4', 20);
+            }
+        }
+        
+        function updateLives() {
+            document.getElementById('lives').textContent = lives;
+        }
+        
+        function updateCoins() {
+            document.getElementById('coins').textContent = coins;
+            document.getElementById('shopCoinsAmount').textContent = totalCoins;
+        }
+        
+        function updateStats() {
+            document.getElementById('sweetsCollected').textContent = sweetsCollected;
+            document.getElementById('trashHit').textContent = trashHit;
+            document.getElementById('comboDisplay').textContent = `x${multiplier}`;
+        }
+        
+        function filterCategory(category) {
+            currentCategory = category;
+            
+            document.querySelectorAll('.category-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            event.target.classList.add('active');
+            
+            renderShop();
+        }
+        
+        function renderShop() {
+            const shopGrid = document.getElementById('shopGrid');
+            shopGrid.innerHTML = '';
+            
+            Object.keys(skins).forEach(skinId => {
+                const skin = skins[skinId];
+                
+                if (currentCategory !== 'all' && skin.category !== currentCategory) {
+                    return;
+                }
+                
+                const card = document.createElement('div');
+                card.className = 'skin-card';
+                
+                if (skinId === currentSkin) {
+                    card.classList.add('equipped');
+                }
+                
+                if (!skin.unlocked && skin.price > 0) {
+                    card.classList.add('locked');
+                }
+                
+                // Indicador de rareza
+                const rarityIndicator = document.createElement('div');
+                rarityIndicator.className = `skin-rarity rarity-${skin.rarity}`;
+                card.appendChild(rarityIndicator);
+                
+                // Badge de nuevo
+                if (skin.isNew && !skin.unlocked) {
+                    const newBadge = document.createElement('div');
+                    newBadge.className = 'new-badge';
+                    newBadge.textContent = '¡NUEVO!';
+                    card.appendChild(newBadge);
+                }
+                
+                const preview = document.createElement('div');
+                preview.className = 'skin-preview';
+                preview.textContent = skin.emoji;
+                
+                const name = document.createElement('div');
+                name.className = 'skin-name';
+                name.textContent = skin.name;
+                
+                const desc = document.createElement('div');
+                desc.style.fontSize = '11px';
+                desc.style.color = '#666';
+                desc.style.marginBottom = '5px';
+                desc.textContent = skin.description;
+                
+                const price = document.createElement('div');
+                price.className = 'skin-price';
+                
+                if (skin.unlocked) {
+                    if (skinId === currentSkin) {
+                        price.innerHTML = '<span class="skin-status">USANDO</span>';
+                    } else {
+                        price.innerHTML = '<span class="skin-status">DESBLOQUEADO</span>';
+                    }
+                } else {
+                    price.innerHTML = `💰 ${skin.price}`;
+                }
+                
+                card.appendChild(preview);
+                card.appendChild(name);
+                card.appendChild(desc);
+                card.appendChild(price);
+                
+                card.addEventListener('click', () => {
+                    if (skin.unlocked) {
+                        if (skinId !== currentSkin) {
+                            currentSkin = skinId;
+                            localStorage.setItem('currentSkin', currentSkin);
+                            kirbyImages.normal.src = skins[currentSkin].url;
+                            renderShop();
+                            showAchievement('Skin Equipado', `Ahora estás usando ${skin.name}`);
+                        }
+                    } else if (totalCoins >= skin.price) {
+                        totalCoins -= skin.price;
+                        skin.unlocked = true;
+                        localStorage.setItem('totalCoins', totalCoins);
+                        
+                        const unlockedSkins = {};
+                        Object.keys(skins).forEach(id => {
+                            unlockedSkins[id] = skins[id].unlocked;
+                        });
+                        localStorage.setItem('unlockedSkins', JSON.stringify(unlockedSkins));
+                        
+                        updateCoins();
+                        renderShop();
+                        
+                        // Efecto de compra
+                        showPurchaseEffect(card);
+                        showAchievement('¡Skin Desbloqueado!', `${skin.name} es tuyo ahora`);
+                    } else {
+                        // Efecto de no tener monedas
+                        card.style.animation = 'shake 0.5s';
+                        setTimeout(() => {
+                            card.style.animation = '';
+                        }, 500);
+                    }
+                });
+                
+                shopGrid.appendChild(card);
+            });
+        }
+        
+        function showPurchaseEffect(element) {
+            const rect = element.getBoundingClientRect();
+            const effect = document.createElement('div');
+            effect.className = 'purchase-effect';
+            effect.textContent = '¡COMPRADO!';
+            effect.style.left = rect.left + rect.width / 2 + 'px';
+            effect.style.top = rect.top + 'px';
+            document.body.appendChild(effect);
+            
+            setTimeout(() => {
+                document.body.removeChild(effect);
+            }, 1500);
+        }
+        
+        function showAchievement(title, description) {
+            const popup = document.createElement('div');
+            popup.className = 'achievement-popup';
+            popup.innerHTML = `
+                <div class="achievement-title">🏆 ${title}</div>
+                <div class="achievement-desc">${description}</div>
+            `;
+            document.body.appendChild(popup);
+            
+            setTimeout(() => {
+                popup.classList.add('show');
+            }, 100);
+            
+            setTimeout(() => {
+                popup.classList.remove('show');
+                setTimeout(() => {
+                    document.body.removeChild(popup);
+                }, 500);
+            }, 3000);
+        }
+        
+        function openShop() {
+            document.getElementById('shopScreen').classList.remove('hidden');
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            renderShop();
+            updateCoins();
+        }
+        
+        function closeShop() {
+            document.getElementById('shopScreen').classList.add('hidden');
+            if (!gameRunning) {
+                document.getElementById('startScreen').classList.remove('hidden');
+            }
+        }
+        
+        function update(timestamp) {
+            if (!gameRunning) return;
+            
+            deltaTime = timestamp - lastTime;
+            lastTime = timestamp;
+            deltaTime = Math.min(deltaTime, 32);
+            
+            drawBackground();
+            
+            if (kirby.isMovingLeft && kirby.x > 0) {
+                kirby.x -= kirby.speed * (deltaTime / 16);
+            }
+            if (kirby.isMovingRight && kirby.x < canvas.width - kirby.width) {
+                kirby.x += kirby.speed * (deltaTime / 16);
+            }
+            
+            if (timestamp - lastSpawnTime > spawnInterval) {
+                fallingObjects.push(new FallingObject());
+                lastSpawnTime = timestamp;
+            }
+            
+            for (let i = fallingObjects.length - 1; i >= 0; i--) {
+                const obj = fallingObjects[i];
+                obj.update(deltaTime);
+                obj.draw();
+                
+                if (
+                    obj.x < kirby.x + kirby.width &&
+                    obj.x + obj.width > kirby.x &&
+                    obj.y < kirby.y + kirby.height &&
+                    obj.y + obj.height > kirby.y
+                ) {
+                    if (obj.points > 0) {
+                        kirby.startEating();
+                        showEatingEffect(obj.x + obj.width/2, obj.y);
+                        
+                        const currentTime = Date.now();
+                        if (currentTime - lastCatchTime < 2000) {
+                            combo++;
+                            updateMultiplier();
+                            showCombo();
+                        } else {
+                            combo = 1;
+                            multiplier = 1;
+                        }
+                        lastCatchTime = currentTime;
+                        
+                        score += obj.points * multiplier;
+                        coins += obj.coinValue;
+                        totalCoins += obj.coinValue;
+                        
+                        document.getElementById('score').textContent = score;
+                        updateCoins();
+                        updateStats();
+                        sweetsCollected++;
+                        
+                        createExplosion(obj.x + obj.width/2, obj.y + obj.height/2, obj.color, 15);
+                        showScorePopup(obj.x + obj.width/2, obj.y, obj.points, obj.coinValue);
+                        updateLevel();
+                    } else {
+                        kirby.startTrashEating();
+                        showWarningEffect(obj.emoji);
+                        gameArea.classList.add('screen-shake');
+                        setTimeout(() => gameArea.classList.remove('screen-shake'), 500);
+                        
+                        lives--;
+                        combo = 0;
+                        multiplier = 1;
+                        trashHit++;
+                        updateLives();
+                        updateStats();
+                        createExplosion(obj.x + obj.width/2, obj.y + obj.height/2, '#FF1493', 20);
+                        showScorePopup(kirby.x + kirby.width/2, kirby.y, -1);
+                        
+                        if (lives <= 0) {
+                            kirby.startLosing();
+                            gameOver();
+                        }
+                    }
+                    fallingObjects.splice(i, 1);
+                } else if (obj.y > canvas.height) {
+                    fallingObjects.splice(i, 1);
+                }
+            }
+            
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const particle = particles[i];
+                particle.update(deltaTime);
+                particle.draw();
+                
+                if (particle.alpha <= 0 || particle.size <= 0.5) {
+                    particles.splice(i, 1);
+                }
+            }
+            
+            drawKirby();
+            
+            animationId = requestAnimationFrame(update);
+        }
+        
+        function startGame() {
+            gameRunning = true;
+            score = 0;
+            coins = 0;
+            lives = 3;
+            level = 1;
+            gameSpeed = 2;
+            spawnInterval = 1500;
+            combo = 0;
+            multiplier = 1;
+            sweetsCollected = 0;
+            trashHit = 0;
+            fallingObjects = [];
+            particles = [];
+            lastTime = 0;
+            
+            kirby.init();
+            
+            document.getElementById('score').textContent = score;
+            updateCoins();
+            updateLives();
+            updateStats();
+            document.getElementById('level').textContent = level;
+            document.getElementById('startScreen').classList.add('hidden');
+            document.getElementById('gameOverScreen').classList.add('hidden');
+            
+            animationId = requestAnimationFrame(update);
+        }
+        
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(animationId);
+            
+            if (score > highScore) {
+                highScore = score;
+                localStorage.setItem('highScore', highScore);
+                showAchievement('¡Nuevo Récord!', `Puntuación: ${highScore}`);
+            }
+            
+            setTimeout(() => {
+                document.getElementById('finalScore').textContent = score;
+                document.getElementById('finalCoins').textContent = coins;
+                document.getElementById('bestScore').textContent = highScore;
+                document.getElementById('gameOverScreen').classList.remove('hidden');
+            }, 1000);
+        }
+        
+        // Event Listeners
+        document.getElementById('startButton').addEventListener('click', startGame);
+        document.getElementById('restartButton').addEventListener('click', startGame);
+        document.getElementById('shopBtn').addEventListener('click', openShop);
+        document.getElementById('closeShopBtn').addEventListener('click', closeShop);
+        
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning) return;
+            
+            if (e.key === 'ArrowLeft') {
+                kirby.isMovingLeft = true;
+                e.preventDefault();
+            }
+            if (e.key === 'ArrowRight') {
+                kirby.isMovingRight = true;
+                e.preventDefault();
+            }
+        });
+        
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowLeft') {
+                kirby.isMovingLeft = false;
+            }
+            if (e.key === 'ArrowRight') {
+                kirby.isMovingRight = false;
+            }
+        });
+        
+        document.getElementById('leftBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            kirby.isMovingLeft = true;
+        });
+        
+        document.getElementById('leftBtn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            kirby.isMovingLeft = false;
+        });
+        
+        document.getElementById('rightBtn').addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            kirby.isMovingRight = true;
+        });
+        
+        document.getElementById('rightBtn').addEventListener('touchend', (e) => {
+            e.preventDefault();
+            kirby.isMovingRight = false;
+        });
+        
+        document.addEventListener('touchstart', (e) => {
+            if (e.touches.length > 1) {
+                e.preventDefault();
+            }
+        });
+        
+        let lastTouchEnd = 0;
+        document.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            if (now - lastTouchEnd <= 300) {
+                e.preventDefault();
+            }
+            lastTouchEnd = now;
+        });
+        
+        // Inicialización
+        updateCoins();
+        updateStats();
+    </script>
+</body>
+</html>
