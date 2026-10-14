@@ -105,13 +105,8 @@
   .player-name { font-weight: 600; letter-spacing: 0.05em; color: var(--cream); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; display: flex; align-items: center; gap: 8px; }
   .player-score { font-weight: 700; color: var(--red-bright); font-size: 0.9rem; }
 
-  /* BUSCADOR EN TABLA */
   .lb-search-container { padding: 15px; background: #0d0606; border-top: 2px solid var(--border); }
-  .lb-search-input { 
-    width: 100%; background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); 
-    color: var(--cream); padding: 8px 12px; font-family: 'Oswald', sans-serif; font-weight: 500; outline: none; 
-    clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); text-transform: uppercase; margin-bottom: 5px;
-  }
+  .lb-search-input { width: 100%; background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 8px 12px; font-family: 'Oswald', sans-serif; font-weight: 500; outline: none; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); text-transform: uppercase; margin-bottom: 5px; }
   .lb-search-input::placeholder { color: #6a3030; }
   .lb-search-results { max-height: 200px; overflow-y: auto; }
   .lb-search-result { display: flex; justify-content: space-between; align-items: center; padding: 8px 12px; cursor: pointer; border-bottom: 1px solid var(--border); }
@@ -121,18 +116,7 @@
   .lb-search-result .res-name { flex: 1; padding-left: 10px; }
   .lb-search-result .res-score { color: var(--red-bright); font-weight: 600; font-size: 0.8rem; }
 
-  /* VISTA PREVIA DE PERFIL FLOTANTE */
-  #lbProfileCard {
-    position: absolute; 
-    width: 250px; 
-    background: var(--bg-2); border: 2px solid var(--red); border-left: 6px solid var(--red);
-    padding: 15px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.8);
-    transform: scale(0.8); opacity: 0; pointer-events: none;
-    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease;
-    transform-origin: top right;
-    clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
-    max-height: 350px; overflow-y: auto;
-  }
+  #lbProfileCard { position: absolute; width: 250px; background: var(--bg-2); border: 2px solid var(--red); border-left: 6px solid var(--red); padding: 15px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.8); transform: scale(0.8); opacity: 0; pointer-events: none; transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), opacity 0.2s ease; transform-origin: top right; clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%); max-height: 350px; overflow-y: auto; }
   #lbProfileCard.show { transform: scale(1); opacity: 1; pointer-events: auto; }
   .lbpc-header { display: flex; align-items: center; gap: 10px; border-bottom: 2px solid var(--border); padding-bottom: 10px; margin-bottom: 10px; }
   .lbpc-avatar { width: 40px; height: 40px; object-fit: contain; filter: drop-shadow(2px 2px 5px rgba(0,0,0,0.8)); }
@@ -210,13 +194,7 @@
   .toast { position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%) translateY(150%); background: var(--panel); border: 2px solid var(--red); border-left: 5px solid var(--red); color: var(--cream); padding: 14px 24px; font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; z-index: 2000; transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1); clip-path: polygon(0 0, 100% 0, 98% 100%, 2% 100%); box-shadow: 0 0 30px rgba(200, 16, 46, 0.5); display: flex; align-items: center; gap: 12px; max-width: 90vw; }
   .toast.show { transform: translateX(-50%) translateY(0); }
 
-  #ratingToast {
-    position: fixed; bottom: 20px; right: 20px; width: 320px;
-    background: var(--panel); border: 2px solid var(--red); border-left: 5px solid var(--red);
-    padding: 20px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.6);
-    clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%);
-    transform: translateX(120%); transition: transform 0.5s cubic-bezier(0.17, 0.84, 0.44, 1);
-  }
+  #ratingToast { position: fixed; bottom: 20px; right: 20px; width: 320px; background: var(--panel); border: 2px solid var(--red); border-left: 5px solid var(--red); padding: 20px; z-index: 1900; box-shadow: 0 10px 40px rgba(0,0,0,0.6); clip-path: polygon(0 0, 100% 0, 100% 90%, 90% 100%, 0 100%); transform: translateX(120%); transition: transform 0.5s cubic-bezier(0.17, 0.84, 0.44, 1); }
   #ratingToast.show { transform: translateX(0); }
   .rt-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border); padding-bottom: 10px; }
   .rt-title { font-family: 'ImpactStrive', sans-serif; font-size: 1.1rem; color: var(--cream); }
@@ -227,24 +205,46 @@
   
   .stars-input i { font-size: 2rem; cursor: pointer; transition: transform 0.2s; }
   .stars-input i.star-empty { color: #3a1818; }
-  .stars-input i.star-metallic {
-    color: transparent; -webkit-background-clip: text; background-clip: text;
-    background-image: linear-gradient(135deg, #fff3b0 0%, #d4af37 40%, #ffea99 50%, #d4af37 60%, #aa8125 100%);
-    filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8));
-  }
+  .stars-input i.star-metallic { color: transparent; -webkit-background-clip: text; background-clip: text; background-image: linear-gradient(135deg, #fff3b0 0%, #d4af37 40%, #ffea99 50%, #d4af37 60%, #aa8125 100%); filter: drop-shadow(1px 1px 1px rgba(0,0,0,0.8)); }
   .stars-input i.star-metallic:hover, .stars-input i.star-metallic.hover { transform: scale(1.2); }
 
-  .rt-send-btn {
-    width: 100%; background: var(--red); color: white; border: none; padding: 10px;
-    font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; cursor: pointer;
-    transition: background 0.2s; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%);
-  }
+  .rt-send-btn { width: 100%; background: var(--red); color: white; border: none; padding: 10px; font-family: 'ImpactStrive', sans-serif; letter-spacing: 0.05em; cursor: pointer; transition: background 0.2s; clip-path: polygon(5% 0, 100% 0, 95% 100%, 0 100%); }
   .rt-send-btn:hover { background: var(--red-bright); }
 
   .stripe-deco { height: 8px; background: repeating-linear-gradient(45deg, var(--red) 0 12px, #000 12px 24px); opacity: 0.6; }
   ::-webkit-scrollbar { width: 10px; height: 10px; } ::-webkit-scrollbar-track { background: #0a0606; } ::-webkit-scrollbar-thumb { background: var(--red-dark); border: 2px solid #0a0606; } ::-webkit-scrollbar-thumb:hover { background: var(--red); }
   .fade-up { opacity: 0; transform: translateY(20px); animation: fadeUp 0.5s ease forwards; }
   @keyframes fadeUp { to { opacity: 1; transform: translateY(0); } }
+
+  /* VISTA DE DESARROLLO (Estilo Streaming) */
+  .dev-view { position: fixed; inset: 0; background: var(--bg); z-index: 1100; display: none; flex-direction: column; overflow: hidden; }
+  .dev-view.show { display: flex; }
+  .dev-header { display: flex; align-items: center; gap: 20px; padding: 10px 20px; background: linear-gradient(180deg, #0d0606 0%, #1a0a0a 100%); border-bottom: 3px solid var(--red); }
+  .dev-title { font-family: 'ImpactStrive', sans-serif; font-size: 1.5rem; color: var(--cream); text-shadow: 2px 2px 0 #000; }
+  .dev-title span { color: var(--gold); font-size: 0.7rem; letter-spacing: 2px; vertical-align: middle; margin-left: 10px; }
+  .dev-grid-state { flex: 1; overflow-y: auto; padding: 20px; }
+  .dev-player-state { flex: 1; display: none; flex-direction: row; overflow: hidden; padding: 15px; gap: 15px; }
+  .dev-player-state.show { display: flex; }
+  .dev-player-main { flex: 1; display: flex; flex-direction: column; gap: 10px; min-width: 0; }
+  .dev-selector-bar { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 5px; border-bottom: 2px solid var(--border); flex-shrink: 0; align-items: center; }
+  .dev-selector-item { min-width: 120px; height: 70px; border: 2px solid var(--border); cursor: pointer; position: relative; background-size: cover; background-position: center; clip-path: polygon(0 0, 100% 0, 100% 80%, 90% 100%, 0 100%); transition: all 0.2s; }
+  .dev-selector-item:hover { border-color: var(--red-dark); }
+  .dev-selector-item.active { border-color: var(--gold); box-shadow: 0 0 10px rgba(212,175,55,0.4); }
+  .dev-selector-item span { position: absolute; bottom: 0; left: 0; right: 0; background: rgba(0,0,0,0.8); font-size: 0.7rem; padding: 2px 5px; font-family: 'ImpactStrive'; color: #fff; text-align: center; }
+  .dev-grid-icon { min-width: 40px; height: 70px; background: var(--panel); display: flex; align-items: center; justify-content: center; font-size: 1.2rem; color: var(--gold); border: 2px solid var(--border); clip-path: polygon(0 0, 100% 0, 100% 80%, 90% 100%, 0 100%); }
+  .dev-grid-icon:hover { border-color: var(--red); color: #fff; }
+  .dev-iframe-wrap { flex: 1; min-height: 0; border: 2px solid var(--red); position: relative; overflow: hidden; clip-path: polygon(0 0, 100% 0, 100% 95%, 95% 100%, 0 100%); background: #000; }
+  .dev-comments-sidebar { width: 320px; background: var(--bg-2); border: 2px solid var(--border); border-top: 4px solid var(--red); display: flex; flex-direction: column; flex-shrink: 0; clip-path: polygon(0 0, 100% 0, 100% 98%, 95% 100%, 0 100%); }
+  .dev-comments-header { padding: 15px; border-bottom: 2px solid var(--border); font-family: 'ImpactStrive'; color: var(--gold); text-transform: uppercase; letter-spacing: 0.1em; font-size: 1rem; display: flex; justify-content: space-between; align-items: center; }
+  .dev-comments-list { flex: 1; overflow-y: auto; padding: 10px; display: flex; flex-direction: column; gap: 8px; }
+  .dev-comment-item { background: var(--panel); border-left: 3px solid var(--gold); padding: 8px 12px; }
+  .dev-comment-item .c-header { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+  .dev-comment-item .c-user { font-family: 'ImpactStrive'; font-size: 0.9rem; color: var(--red-bright); }
+  .dev-comment-item .c-time { font-size: 0.7rem; color: #888; font-weight: normal; }
+  .dev-comment-item .c-text { font-size: 0.9rem; color: var(--cream); margin: 0; line-height: 1.3; word-wrap: break-word; }
+  .dev-comment-input-wrap { padding: 10px; border-top: 2px solid var(--border); display: flex; gap: 8px; }
+  .dev-comment-input { flex: 1; background: #0a0404; border: 2px solid var(--border); border-left: 4px solid var(--red); color: var(--cream); padding: 10px 14px; font-family: 'Oswald'; font-weight: 500; outline: none; clip-path: polygon(0 0, 100% 0, 98% 100%, 0 100%); }
+  .dev-comment-input::placeholder { color: #6a3030; }
 
   @media (max-width: 768px) {
     .hero { padding: 20px 16px 25px; }
@@ -256,18 +256,19 @@
     #ratingToast { right: 10px; left: 10px; width: auto; bottom: 10px; }
     #lbProfileCard { left: 10px !important; right: 10px !important; width: auto !important; top: auto !important; bottom: 10px; transform-origin: bottom center; }
     #lbProfileCard.show { transform: translateY(0) scale(1); }
+    .dev-player-state { flex-direction: column; padding: 10px; gap: 10px; }
+    .dev-comments-sidebar { width: 100%; height: 200px; border-top: 2px solid var(--red); }
+    .dev-title { font-size: 1rem; }
+    .dev-title span { display: none; }
   }
 
   .particle { position: fixed; pointer-events: none; background: var(--red); border-radius: 50%; opacity: 0; z-index: 0; }
   .contact-icon { width: 50px; height: 50px; border-radius: 8px; border: 2px solid var(--red); box-shadow: 0 0 15px rgba(200, 16, 46, 0.4); object-fit: cover; transition: all 0.3s ease; margin-top: 15px; }
   .contact-icon:hover { transform: scale(1.1) rotate(-5deg); box-shadow: 0 0 25px rgba(255, 26, 46, 0.8); }
-
-  .login-view { display: none; }
-  .login-view.active { display: block; }
+  .login-view { display: none; } .login-view.active { display: block; }
   .forgot-link { text-align: center; margin-top: 15px; }
   .forgot-link a { color: var(--cream); opacity: 0.6; font-size: 0.8rem; text-decoration: underline; cursor: pointer; }
   .forgot-link a:hover { opacity: 1; color: var(--red-bright); }
-  
   .recovery-section { padding: 20px; border-top: 2px solid var(--border); margin-top: 20px; text-align: center; }
   .recovery-text { font-size: 0.8rem; color: var(--cream); opacity: 0.7; margin-bottom: 10px; line-height: 1.4; }
   .recovery-link { color: var(--gold); font-weight: 700; cursor: pointer; text-decoration: underline; }
@@ -279,112 +280,75 @@
 
 <header class="top-bar">
   <div class="max-w-7xl mx-auto px-4 py-3 flex items-center gap-4 flex-wrap">
-    
     <div class="flex items-center gap-3 relative">
       <div id="mainLogoBtn" class="logo-mark">
         <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-19_110645964-removebg-preview.png?updatedAt=1773936429844" alt="logo">
       </div>
       <div id="userAreaText">
-        <button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm">
-          <i class="fas fa-user mr-2"></i> INICIAR SESIÓN
-        </button>
+        <button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm"><i class="fas fa-user mr-2"></i> INICIAR SESIÓN</button>
       </div>
-      
       <div id="loginDropdown" class="dropdown-panel login-dropdown">
-        
         <div id="viewLogin" class="login-view active">
           <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Crea tu cuenta o ingresa</h3>
           <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Tus datos se guardarán para la próxima vez</p>
-          
           <form id="loginForm" autocomplete="on">
             <label class="form-label">USUARIO</label>
             <input type="text" id="usernameInput" class="modal-input" placeholder="Ej: Tu_User_Preferido" maxlength="16" autocomplete="username">
-            
             <label class="form-label">CONTRASEÑA</label>
             <input type="password" id="passwordInput" class="modal-input" placeholder="••••••••" autocomplete="current-password">
           </form>
-          
           <label class="form-label">ICONO</label>
           <div class="gender-options">
-            <div id="genderBoy" class="gender-btn" data-val="boy">
-              <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" alt="boy"><span>CHICO</span>
-            </div>
-            <div id="genderGirl" class="gender-btn" data-val="girl">
-              <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" alt="girl"><span>CHICA</span>
-            </div>
+            <div id="genderBoy" class="gender-btn" data-val="boy"><img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" alt="boy"><span>CHICO</span></div>
+            <div id="genderGirl" class="gender-btn" data-val="girl"><img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" alt="girl"><span>CHICA</span></div>
           </div>
-          
           <div id="loginError" class="login-error">Error de credenciales.</div>
-          
           <button id="confirmLogin" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">CONFIRMAR</button>
           <button id="closeLogin" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
-          
-          <div class="forgot-link">
-            <a id="openRecoveryLink">¿Olvidaste tu contraseña?</a>
-          </div>
+          <div class="forgot-link"><a id="openRecoveryLink">¿Olvidaste tu contraseña?</a></div>
         </div>
-
         <div id="viewRecoveryEmail" class="login-view">
           <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Recuperar Contraseña</h3>
           <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Ingresa tu correo registrado para enviarte un código</p>
-          
           <label class="form-label">CORREO</label>
           <input type="email" id="recEmailInput" class="modal-input" placeholder="tu_correo@gmail.com">
-          
           <div id="recEmailError" class="login-error"></div>
-          
           <button id="sendCodeBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">ENVIAR CÓDIGO</button>
           <button id="cancelRecBtn" class="cat-btn w-full" style="margin-top: 10px;">VOLVER</button>
         </div>
-
         <div id="viewRecoveryCode" class="login-view">
           <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Verificar Código</h3>
           <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Revisa tu buzón. El código expira en 2 minutos. Tienes 10 intentos.</p>
-          
           <label class="form-label">CÓDIGO SECRETO</label>
           <input type="number" id="codeInput" class="modal-input" placeholder="Ej: 42" min="1" max="100">
-          
           <div id="codeError" class="login-error"></div>
-          
           <button id="verifyCodeBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">VERIFICAR</button>
           <button id="cancelCodeBtn" class="cat-btn w-full" style="margin-top: 10px;">VOLVER</button>
         </div>
-
         <div id="viewNewPassword" class="login-view">
           <h3 class="strive text-xl mb-1 text-center" style="color: var(--cream);">Nueva Contraseña</h3>
           <p class="text-xs text-center mb-4" style="color: var(--gold); letter-spacing: 0.1em;">Identidad verificada. Crea tu nueva clave.</p>
-          
           <label class="form-label">USUARIO</label>
           <input type="text" id="recUsernameInput" class="modal-input disabled" readonly>
-
           <label class="form-label">NUEVA CONTRASEÑA</label>
           <input type="password" id="newPassInput" class="modal-input" placeholder="••••••••">
-          
           <div id="newPassError" class="login-error"></div>
-          
           <button id="saveNewPassBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">GUARDAR Y ENTRAR</button>
           <button id="cancelNewPassBtn" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
         </div>
-
       </div>
     </div>
-
     <div class="flex-1 min-w-[200px] max-w-md mx-auto order-3 md:order-none w-full md:w-auto">
       <div class="relative">
         <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2" style="color: var(--red);"></i>
         <input id="searchInput" type="text" placeholder="Buscar juego..." class="search-box pl-12 pr-4">
       </div>
     </div>
-
-    <div class="relative ml-auto">
-      <button id="leaderboardBtn" class="cat-btn !py-2 !px-4 !text-sm w-full flex justify-center items-center">
-        <i class="fas fa-trophy mr-2" style="color: var(--gold);"></i> TABLA GLOBAL
-      </button>
+    <div class="relative ml-auto flex gap-2">
+      <button id="leaderboardBtn" class="cat-btn !py-2 !px-4 !text-sm flex justify-center items-center"><i class="fas fa-trophy mr-2" style="color: var(--gold);"></i> TABLA GLOBAL</button>
+      <button id="devBtn" class="cat-btn !py-2 !px-4 !text-sm flex justify-center items-center"><i class="fas fa-flask mr-2" style="color: var(--gold);"></i> DESARROLLO</button>
       <div id="leaderboardDropdown" class="dropdown-panel lb-dropdown">
-        <div class="lb-header">
-          <h3>TABLA GLOBAL</h3>
-          <p>Ranking Semanal - Top 100 Jugadores</p>
-        </div>
+        <div class="lb-header"><h3>TABLA GLOBAL</h3><p>Ranking Semanal - Top 100 Jugadores</p></div>
         <div id="leaderboardList" class="max-h-80 overflow-y-auto"></div>
         <div class="lb-search-container">
           <input type="text" id="lbSearchInput" class="lb-search-input" placeholder="Buscar jugador...">
@@ -398,12 +362,9 @@
 <section class="hero">
   <div class="max-w-7xl mx-auto relative z-10 flex flex-col md:flex-row items-center justify-between gap-8">
     <h1 class="hero-title text-center md:text-left">HTML GAMES</h1>
-    <p class="max-w-md text-base md:text-lg font-light text-center md:text-right leading-relaxed" style="color: rgba(244, 241, 232, 0.85);">
-      Aquí encontrarás todos los juegos que la comunidad ha pedido que recree. Inicia sesión para guardar tus marcas y récords, y luchar por la cima de la tabla global, la cual se reinicia cada semana.
-    </p>
+    <p class="max-w-md text-base md:text-lg font-light text-center md:text-right leading-relaxed" style="color: rgba(244, 241, 232, 0.85);">Aquí encontrarás todos los juegos que la comunidad ha pedido que recree. Inicia sesión para guardar tus marcas y récords, y luchar por la cima de la tabla global, la cual se reinicia cada semana.</p>
   </div>
 </section>
-
 <div class="stripe-deco"></div>
 
 <section class="max-w-7xl mx-auto px-4 py-4">
@@ -421,18 +382,14 @@
     <h2 class="strive text-2xl" style="color: var(--cream);">SELECCIÓN <span id="resultLabel" style="color: var(--gold); font-size: 0.9rem; letter-spacing: 0.2em;">— TODOS</span></h2>
     <div class="flex-1 h-[2px]" style="background: linear-gradient(90deg, var(--red), transparent);"></div>
   </div>
-
   <div id="gamesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4"></div>
-
   <div id="emptyState" class="hidden text-center py-20">
     <i class="fas fa-skull text-6xl mb-4" style="color: var(--red-dark);"></i>
     <h3 class="strive text-3xl mb-2" style="color: var(--cream);">SIN RESULTADOS</h3>
     <p style="color: var(--gold); opacity: 0.7;">No se encontraron juegos para tu búsqueda.</p>
     <div class="mt-6 flex flex-col items-center justify-center gap-3">
-      <p style="color: rgba(244, 241, 232, 0.8); font-size: 0.95rem;">¿Esperas ver este juego más adelante? ¡Hazmelo saber!</p>
-      <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" title="Escríbeme por TikTok">
-        <img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/icono%20de%20pagina.jpg?updatedAt=1790810103488" alt="Contacto TikTok" class="contact-icon">
-      </a>
+      <p style="color: rgba(244, 241, 232, 0.8); font-size: 0.95rem;">¿Esperos ver este juego más adelante? ¡Hazmelo saber!</p>
+      <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" title="Escríbeme por TikTok"><img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/icono%20de%20pagina.jpg?updatedAt=1790810103488" alt="Contacto TikTok" class="contact-icon"></a>
     </div>
   </div>
 </main>
@@ -440,9 +397,7 @@
 <footer>
   <div class="max-w-7xl mx-auto px-4 text-center">
     <div class="strive text-xl mb-3" style="color: var(--cream);">HTML GAMES</div>
-    <p class="text-sm max-w-lg mx-auto mb-8" style="color: rgba(244,241,232,0.7);">
-      Si quieres algún juego en específico hazmelo saber en mi <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" class="glitch-link">tiktok</a> para que me compartas tu idea
-    </p>
+    <p class="text-sm max-w-lg mx-auto mb-8" style="color: rgba(244,241,232,0.7);">Si quieres algún juego en específico hazmelo saber en mi <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" class="glitch-link">tiktok</a> para que me compartas tu idea</p>
     <div class="pt-6 border-t flex flex-col md:flex-row justify-between items-center gap-3 text-xs" style="border-color: var(--border); color: rgba(244,241,232,0.5);">
       <div class="tracking-widest uppercase">© 2026 HTML GAMES - juegos para mi comunidad</div>
       <div class="tracking-widest uppercase" style="color: var(--gold);">Hecho con las mejores ganas jeje / <a href="https://www.tiktok.com/@html__games?_r=1&_t=ZN-9AB1ypMW8Yw" target="_blank" class="glitch-link">sigueme :)</a></div>
@@ -451,966 +406,203 @@
 </footer>
 
 <div id="gameContainer" class="game-container">
-  <div class="game-header">
-    <button id="closeGameBtn" class="back-btn">
-      <i class="fas fa-arrow-left"></i> VOLVER
-    </button>
-    <div class="strive text-lg hidden sm:block" style="color: var(--cream); text-shadow: 2px 2px 0 #000;">EN JUEGO</div>
-  </div>
+  <div class="game-header"><button id="closeGameBtn" class="back-btn"><i class="fas fa-arrow-left"></i> VOLVER</button><div class="strive text-lg hidden sm:block" style="color: var(--cream); text-shadow: 2px 2px 0 #000;">EN JUEGO</div></div>
   <iframe id="gameFrame" class="game-frame" allow="autoplay; fullscreen; gamepad"></iframe>
 </div>
 
-<!-- VISTA PREVIA DE PERFIL FLOTANTE -->
+<div id="devView" class="dev-view">
+  <div class="dev-header"><button id="closeDevBtn" class="back-btn"><i class="fas fa-arrow-left"></i> VOLVER</button><div class="dev-title">HTML GAMES <span>/ DESARROLLO</span></div></div>
+  <div id="devGridState" class="dev-grid-state">
+    <div class="max-w-7xl mx-auto">
+      <div class="flex items-center gap-3 mb-4"><div class="strive text-xl" style="color: var(--red);">/</div><h2 class="strive text-2xl" style="color: var(--cream);">JUEGOS EN DESARROLLO <span style="color: var(--gold); font-size: 0.9rem; letter-spacing: 0.2em;">— BETA</span></h2><div class="flex-1 h-[2px]" style="background: linear-gradient(90deg, var(--red), transparent);"></div></div>
+      <div id="devGamesGrid" class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3 md:gap-4"></div>
+    </div>
+  </div>
+  <div id="devPlayerState" class="dev-player-state">
+    <div class="dev-player-main">
+      <div id="devSelectorBar" class="dev-selector-bar"></div>
+      <div class="dev-iframe-wrap"><iframe id="devGameFrame" class="game-frame" allow="autoplay; fullscreen; gamepad"></iframe></div>
+    </div>
+    <div class="dev-comments-sidebar">
+      <div class="dev-comments-header">COMENTARIOS <i class="fas fa-comments" style="color: var(--cream); opacity: 0.5;"></i></div>
+      <div id="devCommentsList" class="dev-comments-list"></div>
+      <div class="dev-comment-input-wrap">
+        <input type="text" id="commentInput" class="dev-comment-input" placeholder="Escribe tu sugerencia..." maxlength="200">
+        <button id="sendCommentBtn" class="cat-btn" style="background: var(--red); border-color: var(--red); padding: 10px 15px;">ENVIAR</button>
+      </div>
+    </div>
+  </div>
+</div>
+
 <div id="lbProfileCard">
   <button id="closeLbProfileCard" class="lbpc-close"><i class="fas fa-times"></i></button>
-  <div class="lbpc-header">
-    <img id="lbpcAvatar" src="" class="lbpc-avatar" alt="avatar">
-    <div class="lbpc-info">
-      <h3 id="lbpcName">Usuario</h3>
-      <div id="lbpcRank" class="lbpc-rank rank-wood">Rango #100</div>
-    </div>
-  </div>
-  <div class="lbpc-stats">
-    <div class="lbpc-stat">
-      <span>Puntos</span>
-      <strong id="lbpcScore">0</strong>
-    </div>
-    <div class="lbpc-stat">
-      <span>Jugados</span>
-      <strong id="lbpcGames">0</strong>
-    </div>
-  </div>
-  <div class="lbpc-games-title">Mejores Récords</div>
-  <div id="lbpcGamesList"></div>
+  <div class="lbpc-header"><img id="lbpcAvatar" src="" class="lbpc-avatar" alt="avatar"><div class="lbpc-info"><h3 id="lbpcName">Usuario</h3><div id="lbpcRank" class="lbpc-rank rank-wood">Rango #100</div></div></div>
+  <div class="lbpc-stats"><div class="lbpc-stat"><span>Puntos</span><strong id="lbpcScore">0</strong></div><div class="lbpc-stat"><span>Jugados</span><strong id="lbpcGames">0</strong></div></div>
+  <div class="lbpc-games-title">Mejores Récords</div><div id="lbpcGamesList"></div>
 </div>
 
 <div id="sidebarOverlay" class="sidebar-overlay"></div>
 <div id="profileSidebar" class="profile-sidebar">
-  <div class="sidebar-header">
-    <span class="strive text-lg" style="color: var(--cream);">TU PERFIL</span>
-    <button id="closeSidebarBtn" class="sidebar-close-btn"><i class="fas fa-times"></i></button>
-  </div>
-  <div class="sidebar-profile">
-    <img id="sidebarAvatar" src="" alt="avatar">
-    <h2 id="sidebarName">Usuario</h2>
-    <div class="rank-badge"><span id="sidebarRankText">Rango #100</span></div>
-  </div>
+  <div class="sidebar-header"><span class="strive text-lg" style="color: var(--cream);">TU PERFIL</span><button id="closeSidebarBtn" class="sidebar-close-btn"><i class="fas fa-times"></i></button></div>
+  <div class="sidebar-profile"><img id="sidebarAvatar" src="" alt="avatar"><h2 id="sidebarName">Usuario</h2><div class="rank-badge"><span id="sidebarRankText">Rango #100</span></div></div>
   <div class="sidebar-stats">
-    <div class="stat-box">
-      <i class="fas fa-clock"></i>
-      <strong id="sidebarTime">0h 0m</strong>
-      <span>Tiempo Total</span>
-    </div>
-    <div class="stat-box">
-      <i class="fas fa-gamepad"></i>
-      <strong id="sidebarGamesCount">0</strong>
-      <span>Juegos Jugados</span>
-    </div>
-    <div class="stat-box" style="grid-column: span 2;">
-      <i class="fas fa-star"></i>
-      <strong id="sidebarPoints">0 pts</strong>
-      <span>Score Total Acumulado</span>
-    </div>
+    <div class="stat-box"><i class="fas fa-clock"></i><strong id="sidebarTime">0h 0m</strong><span>Tiempo Total</span></div>
+    <div class="stat-box"><i class="fas fa-gamepad"></i><strong id="sidebarGamesCount">0</strong><span>Juegos Jugados</span></div>
+    <div class="stat-box" style="grid-column: span 2;"><i class="fas fa-star"></i><strong id="sidebarPoints">0 pts</strong><span>Score Total Acumulado</span></div>
   </div>
-  <div class="history-section">
-    <button id="historyToggle" class="history-toggle">
-      <span>HISTORIAL DE JUEGOS</span>
-      <i class="fas fa-chevron-right"></i>
-    </button>
-    <div id="historyList" class="history-list"></div>
-  </div>
-  
+  <div class="history-section"><button id="historyToggle" class="history-toggle"><span>HISTORIAL DE JUEGOS</span><i class="fas fa-chevron-right"></i></button><div id="historyList" class="history-list"></div></div>
   <div class="recovery-section">
     <p class="recovery-text">Si llegas a olvidar tu contraseña en un futuro, puedes recuperarla mediante tu correo preferido.</p>
-    <div id="recoveryContent"></div>
-    <div id="setupDropdown" class="setup-dropdown" style="display: none;"></div>
+    <div id="recoveryContent"></div><div id="setupDropdown" class="setup-dropdown" style="display: none;"></div>
   </div>
 </div>
 
 <div id="ratingToast">
-  <div class="rt-header">
-    <div>
-      <div class="rt-title">¿QUÉ TAL TE HA PARECIDO?</div>
-      <div class="rt-game" id="toastGameTitle">Juego</div>
-    </div>
-    <button id="closeRatingToast" class="rt-close"><i class="fas fa-times"></i></button>
-  </div>
-  <div class="stars-input" id="starsInputToast">
-    <i class="fas fa-star star-empty" data-val="1"></i>
-    <i class="fas fa-star star-empty" data-val="2"></i>
-    <i class="fas fa-star star-empty" data-val="3"></i>
-    <i class="fas fa-star star-empty" data-val="4"></i>
-    <i class="fas fa-star star-empty" data-val="5"></i>
-  </div>
+  <div class="rt-header"><div><div class="rt-title">¿QUÉ TAL TE HA PARECIDO?</div><div class="rt-game" id="toastGameTitle">Juego</div></div><button id="closeRatingToast" class="rt-close"><i class="fas fa-times"></i></button></div>
+  <div class="stars-input" id="starsInputToast"><i class="fas fa-star star-empty" data-val="1"></i><i class="fas fa-star star-empty" data-val="2"></i><i class="fas fa-star star-empty" data-val="3"></i><i class="fas fa-star star-empty" data-val="4"></i><i class="fas fa-star star-empty" data-val="5"></i></div>
   <button id="sendRatingToast" class="rt-send-btn">ENVIAR CALIFICACIÓN</button>
 </div>
 
-<div id="toast" class="toast">
-  <i class="fas fa-gamepad" style="color: var(--red-bright);"></i>
-  <span id="toastMsg">Juego seleccionado</span>
-</div>
+<div id="toast" class="toast"><i class="fas fa-gamepad" style="color: var(--red-bright);"></i><span id="toastMsg">Juego seleccionado</span></div>
 
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 
 <script>
-const firebaseConfig = {
-  apiKey: "AIzaSyD4F-dDO0APfcrGNTCugMriwyD53Iyd2FY",
-  authDomain: "bd--htmlgames.firebaseapp.com",
-  databaseURL: "https://bd--htmlgames-default-rtdb.firebaseio.com",
-  projectId: "bd--htmlgames",
-  storageBucket: "bd--htmlgames.firebasestorage.app",
-  messagingSenderId: "950849683455",
-  appId: "1:950849683455:web:270cfd5c66dfc3d914f1ca",
-  measurementId: "G-5K8XWY9SM0"
-};
+// =======================================================================
+// CONFIGURACIÓN OBLIGATORIA: Reemplaza con tus datos reales de GitHub
+// =======================================================================
+const githubUser = "BD-HTMLgames";
+const githubRepo = "JUEGOS-HTML---juegos-para-mi-comunidad";
+// =======================================================================
 
+const firebaseConfig = {
+  apiKey: "AIzaSyD4F-dDO0APfcrGNTCugMriwyD53Iyd2FY", authDomain: "bd--htmlgames.firebaseapp.com",
+  databaseURL: "https://bd--htmlgames-default-rtdb.firebaseio.com", projectId: "bd--htmlgames",
+  storageBucket: "bd--htmlgames.firebasestorage.app", messagingSenderId: "950849683455",
+  appId: "1:950849683455:web:270cfd5c66dfc3d914f1ca", measurementId: "G-5K8XWY9SM0"
+};
 firebase.initializeApp(firebaseConfig);
 const db = firebase.database();
-let globalLeaderboardData = []; 
-let globalGameRatings = {}; 
+let globalLeaderboardData = []; let globalGameRatings = {}; 
 
 emailjs.init({ publicKey: "5PducOYUQMALmJugY" }); 
-const EMAILJS_SERVICE_ID = "service_vwvgqqg"; 
-const EMAILJS_TEMPLATE_ID = "template_re44dk7"; 
+const EMAILJS_SERVICE_ID = "service_vwvgqqg"; const EMAILJS_TEMPLATE_ID = "template_re44dk7"; 
 
 const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
 
-// LISTA DE JUEGOS (Sin el tag estático)
+// Imagen por defecto para juegos Beta
+const defaultBetaImg = "https://ik.imagekit.io/rx3s8imfb/HTML_games/MENUS%20e%20INTERFACES/menuajustes.jfif?updatedAt=1786577234563";
+
 const games = [
   { title: "Juego de la serpiente", cat: "arcade", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
   { title: "Juego UNO", cat: "cards", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
 ];
-
-const categories = [
-  { id: "all", label: "Todos" }, 
-  { id: "arcade", label: "Arcade" },
-  { id: "cards", label: "Cartas" }
-];
-
+const categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }];
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
-let userDbRef = null; 
+let userDbRef = null; let currentDevGame = null; let currentDevCommentRef = null; let devGames = [];
 
-function getRankClass(index) {
-  if (index <= 10) return 'rank-ruby';
-  if (index <= 25) return 'rank-diamond';
-  if (index <= 50) return 'rank-gold';
-  if (index <= 75) return 'rank-silver';
-  if (index <= 100) return 'rank-bronze';
-  return 'rank-wood';
-}
+function getRankClass(index) { if (index <= 10) return 'rank-ruby'; if (index <= 25) return 'rank-diamond'; if (index <= 50) return 'rank-gold'; if (index <= 75) return 'rank-silver'; if (index <= 100) return 'rank-bronze'; return 'rank-wood'; }
+function getTotalScore() { if (!userData || !userData.history) return 0; let t = 0; for (let k in userData.history) t += userData.history[k].highScore || 0; return t; }
+function getPlayedGamesCount() { return userData?.history ? Object.keys(userData.history).length : 0; }
 
-function getTotalScore() {
-  if (!userData || !userData.history) return 0;
-  let total = 0;
-  for (let key in userData.history) { total += userData.history[key].highScore || 0; }
-  return total;
-}
-
-function getPlayedGamesCount() {
-  if (!userData || !userData.history) return 0;
-  return Object.keys(userData.history).length;
-}
-
-const mainLogoBtn = document.getElementById("mainLogoBtn");
-const userAreaText = document.getElementById("userAreaText");
-const profileSidebar = document.getElementById("profileSidebar");
-const sidebarOverlay = document.getElementById("sidebarOverlay");
-
-function renderUserArea() {
-  if (userData) {
-    const avatarUrl = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
-    mainLogoBtn.innerHTML = `<img src="${avatarUrl}" alt="avatar">`;
-    userAreaText.innerHTML = `
-      <div class="flex items-center gap-3">
-        <div class="text-left hidden sm:block">
-          <div class="text-[10px] tracking-[0.2em] uppercase" style="color: var(--gold);">JUGADOR</div>
-          <div class="strive text-lg leading-none" style="color: var(--cream);">${userData.name}</div>
-        </div>
-        <button id="logoutBtn" class="cat-btn !py-2 !px-3 !text-sm" title="Cerrar Sesión">
-          <i class="fas fa-sign-out-alt"></i>
-        </button>
-      </div>`;
-    document.getElementById('logoutBtn').addEventListener('click', () => {
-      if (userDbRef) userDbRef.off();
-      localStorage.removeItem('htmlGamesUser');
-      userData = null;
-      renderUserArea();
-      showToast("Sesión cerrada.");
-    });
-    mainLogoBtn.removeEventListener('click', openLoginDropdown);
-    mainLogoBtn.addEventListener('click', openSidebar);
-  } else {
-    mainLogoBtn.innerHTML = `<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-19_110645964-removebg-preview.png?updatedAt=1773936429844" alt="logo">`;
-    userAreaText.innerHTML = `<button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm"><i class="fas fa-user mr-2"></i> INICIAR SESIÓN</button>`;
-    mainLogoBtn.removeEventListener('click', openSidebar);
-    mainLogoBtn.addEventListener('click', openLoginDropdown);
-    document.getElementById('loginBtn').addEventListener('click', openLoginDropdown);
-  }
-}
-
-function openLoginDropdown(e) {
-  if (e) e.stopPropagation();
-  showLoginView('viewLogin');
-  loginDropdown.classList.toggle('show');
-  leaderboardDropdown.classList.remove('show');
-  lbProfileCard.classList.remove('show');
-}
-
-function showLoginView(viewId) {
-  document.querySelectorAll('.login-view').forEach(v => v.classList.remove('active'));
-  document.getElementById(viewId).classList.add('active');
-}
-
-function openSidebar() {
-  updateSidebarData();
-  profileSidebar.classList.add('show');
-  sidebarOverlay.classList.add('show');
-}
-function closeSidebar() {
-  profileSidebar.classList.remove('show');
-  sidebarOverlay.classList.remove('show');
-}
-document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar);
-sidebarOverlay.addEventListener('click', closeSidebar);
-
-function updateSidebarData() {
-  if (!userData) return;
-  const avatarUrl = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
-  document.getElementById('sidebarAvatar').src = avatarUrl;
-  document.getElementById('sidebarName').textContent = userData.name;
-  document.getElementById('sidebarPoints').textContent = getTotalScore().toLocaleString() + ' pts';
-  document.getElementById('sidebarGamesCount').textContent = getPlayedGamesCount();
-  
-  const time = userData.timeSpent || 0;
-  document.getElementById('sidebarTime').textContent = `${Math.floor(time / 3600)}h ${Math.floor((time % 3600) / 60)}m`;
-  
-  let myRank = globalLeaderboardData.findIndex(u => u.name === userData.name);
-  let rankText = "Sin Rango";
-  let rankClass = "rank-wood";
-  
-  if (myRank !== -1) {
-    myRank += 1;
-    rankText = `Rango #${myRank}`;
-    rankClass = getRankClass(myRank);
-  }
-  
-  document.getElementById('sidebarRankText').textContent = rankText;
-  document.getElementById('sidebarRankText').className = `${rankClass}`;
-  
-  let histHtml = '';
-  if (userData.history && Object.keys(userData.history).length > 0) {
-    let historyArray = Object.keys(userData.history).map(key => {
-      return { title: key, stats: userData.history[key] };
-    });
-
-    historyArray.sort((a, b) => (b.stats.lastPlayed || 0) - (a.stats.lastPlayed || 0));
-
-    historyArray.forEach(item => {
-      const title = item.title;
-      const stats = item.stats;
-      const gameInfo = games.find(g => g.title === title);
-      const gameImg = gameInfo ? gameInfo.img : defaultImg;
-      
-      const stars = stats.rating || 0;
-      let starsHtml = '';
-      for(let i=1; i<=5; i++) { starsHtml += `<i class="fas fa-star" style="color: ${i <= stars ? 'var(--gold)' : '#3a1818'};"></i>`; }
-      
-      histHtml += `
-        <div class="history-game-item" style="background-image: url('${gameImg}');">
-          <div class="hgi-content">
-            <div class="hgi-title">${title}</div>
-            <div class="hgi-stats">
-              <div class="hgi-stat-badge">
-                <i class="fas fa-redo"></i>
-                <div class="hgi-stat-info">
-                  <span>Veces</span>
-                  <strong>${stats.timesPlayed || 0}</strong>
-                </div>
-              </div>
-              <div class="hgi-stat-badge">
-                <i class="fas fa-trophy"></i>
-                <div class="hgi-stat-info">
-                  <span>Récord</span>
-                  <strong>${(stats.highScore || 0).toLocaleString()}</strong>
-                </div>
-              </div>
-              <div class="hgi-stat-badge hgi-stars">
-                ${starsHtml}
-              </div>
-            </div>
-          </div>
-        </div>
-      `;
-    });
-  } else {
-    histHtml = '<div class="history-item empty">Aún no has jugado nada.</div>';
-  }
-  document.getElementById('historyList').innerHTML = histHtml;
-
-  const recoveryContent = document.getElementById('recoveryContent');
-  const setupDropdown = document.getElementById('setupDropdown');
-  setupDropdown.style.display = 'none'; 
-  
-  if (userData.recoveryEmail) {
-    recoveryContent.innerHTML = `<div class="recovery-email-box"><i class="fas fa-envelope"></i> ${userData.recoveryEmail}</div>`;
-  } else {
-    recoveryContent.innerHTML = `<a class="recovery-link" id="setupRecoveryBtn">Configurar correo de recuperación ahora</a>`;
-    document.getElementById('setupRecoveryBtn').addEventListener('click', () => {
-      setupDropdown.style.display = 'block';
-      renderSetupView(1);
-    });
-  }
-}
-document.getElementById('historyToggle').addEventListener('click', function() {
-  this.classList.toggle('open');
-  document.getElementById('historyList').classList.toggle('open');
-});
-
-const loginDropdown = document.getElementById("loginDropdown");
-const usernameInput = document.getElementById("usernameInput");
-const passwordInput = document.getElementById("passwordInput");
-const loginError = document.getElementById("loginError");
-const genderBtns = document.querySelectorAll('.gender-btn');
-let selectedGender = null;
-
-genderBtns.forEach(btn => {
-  btn.addEventListener('click', (e) => {
-    e.stopPropagation();
-    selectedGender = btn.dataset.val;
-    genderBtns.forEach(b => b.classList.remove('active'));
-    btn.classList.add('active');
-  });
-});
-
-document.getElementById('confirmLogin').addEventListener('click', async (e) => {
-  e.stopPropagation();
-  const name = usernameInput.value.trim();
-  const pass = passwordInput.value.trim();
-  
-  if (name.length < 3) { loginError.textContent = "El nombre debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; }
-  if (pass.length < 3) { loginError.textContent = "La contraseña debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; }
-
-  const formattedName = name.toUpperCase().replace(/\s+/g, '_');
-  const userRef = db.ref('users/' + formattedName);
-  const snapshot = await userRef.once('value');
-  
-  if (snapshot.exists()) {
-    const dbData = snapshot.val();
-    if (dbData.password !== pass) {
-      loginError.textContent = "Contraseña incorrecta. Intenta de nuevo.";
-      loginError.style.display = 'block';
-      return;
-    }
-    userData = dbData;
-    userData.name = formattedName;
-  } else {
-    if (!selectedGender) { 
-      loginError.textContent = "Eres nuevo. Elige un icono para registrarte."; 
-      loginError.style.display = 'block'; return; 
-    }
-    userData = {
-      name: formattedName,
-      password: pass,
-      gender: selectedGender,
-      timeSpent: 0,
-      history: {}
-    };
-    await userRef.set(userData);
-  }
-
-  localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
-  listenToUserData(formattedName);
-
-  loginDropdown.classList.remove('show');
-  renderUserArea();
-  showToast(`¡Bienvenido, ${userData.name}!`);
-});
-
+const mainLogoBtn = document.getElementById("mainLogoBtn"); const userAreaText = document.getElementById("userAreaText"); const profileSidebar = document.getElementById("profileSidebar"); const sidebarOverlay = document.getElementById("sidebarOverlay");
+function renderUserArea() { if (userData) { const a = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png"; mainLogoBtn.innerHTML = `<img src="${a}" alt="avatar">`; userAreaText.innerHTML = `<div class="flex items-center gap-3"><div class="text-left hidden sm:block"><div class="text-[10px] tracking-[0.2em] uppercase" style="color: var(--gold);">JUGADOR</div><div class="strive text-lg leading-none" style="color: var(--cream);">${userData.name}</div></div><button id="logoutBtn" class="cat-btn !py-2 !px-3 !text-sm" title="Cerrar Sesión"><i class="fas fa-sign-out-alt"></i></button></div>`; document.getElementById('logoutBtn').addEventListener('click', () => { if (userDbRef) userDbRef.off(); localStorage.removeItem('htmlGamesUser'); userData = null; renderUserArea(); showToast("Sesión cerrada."); }); mainLogoBtn.removeEventListener('click', openLoginDropdown); mainLogoBtn.addEventListener('click', openSidebar); } else { mainLogoBtn.innerHTML = `<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-19_110645964-removebg-preview.png?updatedAt=1773936429844" alt="logo">`; userAreaText.innerHTML = `<button id="loginBtn" class="cat-btn !py-2 !px-4 !text-sm"><i class="fas fa-user mr-2"></i> INICIAR SESIÓN</button>`; mainLogoBtn.removeEventListener('click', openSidebar); mainLogoBtn.addEventListener('click', openLoginDropdown); document.getElementById('loginBtn').addEventListener('click', openLoginDropdown); } }
+function openLoginDropdown(e) { if (e) e.stopPropagation(); showLoginView('viewLogin'); loginDropdown.classList.toggle('show'); leaderboardDropdown.classList.remove('show'); lbProfileCard.classList.remove('show'); }
+function showLoginView(v) { document.querySelectorAll('.login-view').forEach(x => x.classList.remove('active')); document.getElementById(v).classList.add('active'); }
+function openSidebar() { updateSidebarData(); profileSidebar.classList.add('show'); sidebarOverlay.classList.add('show'); }
+function closeSidebar() { profileSidebar.classList.remove('show'); sidebarOverlay.classList.remove('show'); }
+document.getElementById('closeSidebarBtn').addEventListener('click', closeSidebar); sidebarOverlay.addEventListener('click', closeSidebar);
+function updateSidebarData() { if (!userData) return; const a = userData.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png"; document.getElementById('sidebarAvatar').src = a; document.getElementById('sidebarName').textContent = userData.name; document.getElementById('sidebarPoints').textContent = getTotalScore().toLocaleString() + ' pts'; document.getElementById('sidebarGamesCount').textContent = getPlayedGamesCount(); const t = userData.timeSpent || 0; document.getElementById('sidebarTime').textContent = `${Math.floor(t/3600)}h ${Math.floor((t%3600)/60)}m`; let r = globalLeaderboardData.findIndex(u => u.name === userData.name); let rt = "Sin Rango", rc = "rank-wood"; if (r !== -1) { r += 1; rt = `Rango #${r}`; rc = getRankClass(r); } document.getElementById('sidebarRankText').textContent = rt; document.getElementById('sidebarRankText').className = `${rc}`; let hh = ''; if (userData.history && Object.keys(userData.history).length > 0) { let ha = Object.keys(userData.history).map(k => ({ t: k, s: userData.history[k] })); ha.sort((a, b) => (b.s.lastPlayed || 0) - (a.s.lastPlayed || 0)); ha.forEach(i => { const gi = games.find(g => g.title === i.t); const gImg = gi ? gi.img : defaultImg; let sh = ''; for(let x=1; x<=5; x++) sh += `<i class="fas fa-star" style="color: ${x <= (i.s.rating||0) ? 'var(--gold)' : '#3a1818'};"></i>`; hh += `<div class="history-game-item" style="background-image: url('${gImg}');"><div class="hgi-content"><div class="hgi-title">${i.t}</div><div class="hgi-stats"><div class="hgi-stat-badge"><i class="fas fa-redo"></i><div class="hgi-stat-info"><span>Veces</span><strong>${i.s.timesPlayed||0}</strong></div></div><div class="hgi-stat-badge"><i class="fas fa-trophy"></i><div class="hgi-stat-info"><span>Récord</span><strong>${(i.s.highScore||0).toLocaleString()}</strong></div></div><div class="hgi-stat-badge hgi-stars">${sh}</div></div></div></div>`; }); } else hh = '<div class="history-item empty">Aún no has jugado nada.</div>'; document.getElementById('historyList').innerHTML = hh; const rc2 = document.getElementById('recoveryContent'); const sd = document.getElementById('setupDropdown'); sd.style.display = 'none'; if (userData.recoveryEmail) rc2.innerHTML = `<div class="recovery-email-box"><i class="fas fa-envelope"></i> ${userData.recoveryEmail}</div>`; else { rc2.innerHTML = `<a class="recovery-link" id="setupRecoveryBtn">Configurar correo de recuperación ahora</a>`; document.getElementById('setupRecoveryBtn').addEventListener('click', () => { sd.style.display = 'block'; renderSetupView(1); }); } }
+document.getElementById('historyToggle').addEventListener('click', function() { this.classList.toggle('open'); document.getElementById('historyList').classList.toggle('open'); });
+const loginDropdown = document.getElementById("loginDropdown"); const usernameInput = document.getElementById("usernameInput"); const passwordInput = document.getElementById("passwordInput"); const loginError = document.getElementById("loginError"); const genderBtns = document.querySelectorAll('.gender-btn'); let selectedGender = null;
+genderBtns.forEach(b => b.addEventListener('click', e => { e.stopPropagation(); selectedGender = b.dataset.val; genderBtns.forEach(x => x.classList.remove('active')); b.classList.add('active'); }));
+document.getElementById('confirmLogin').addEventListener('click', async e => { e.stopPropagation(); const n = usernameInput.value.trim(), p = passwordInput.value.trim(); if (n.length < 3) { loginError.textContent = "El nombre debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; } if (p.length < 3) { loginError.textContent = "La contraseña debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; } const fn = n.toUpperCase().replace(/\s+/g, '_'); const uRef = db.ref('users/' + fn); const snap = await uRef.once('value'); if (snap.exists()) { const d = snap.val(); if (d.password !== p) { loginError.textContent = "Contraseña incorrecta."; loginError.style.display = 'block'; return; } userData = d; userData.name = fn; } else { if (!selectedGender) { loginError.textContent = "Eres nuevo. Elige un icono."; loginError.style.display = 'block'; return; } userData = { name: fn, password: p, gender: selectedGender, timeSpent: 0, history: {} }; await uRef.set(userData); } localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); listenToUserData(fn); loginDropdown.classList.remove('show'); renderUserArea(); showToast(`¡Bienvenido, ${userData.name}!`); });
 document.getElementById('closeLogin').addEventListener('click', () => loginDropdown.classList.remove('show'));
-
-function listenToUserData(name) {
-  userDbRef = db.ref('users/' + name);
-  userDbRef.on('value', (snapshot) => {
-    if (snapshot.exists()) {
-      userData = snapshot.val();
-      userData.name = name;
-      localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
-      if (profileSidebar.classList.contains('show')) updateSidebarData();
-      renderGames(); 
-    }
-  });
-}
-
-setInterval(() => {
-  if (userData && userDbRef) {
-    userData.timeSpent = (userData.timeSpent || 0) + 10;
-    userDbRef.child('timeSpent').set(userData.timeSpent);
-  }
-}, 10000);
-
+function listenToUserData(n) { userDbRef = db.ref('users/' + n); userDbRef.on('value', s => { if (s.exists()) { userData = s.val(); userData.name = n; localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); if (profileSidebar.classList.contains('show')) updateSidebarData(); renderGames(); } }); }
+setInterval(() => { if (userData && userDbRef) { userData.timeSpent = (userData.timeSpent || 0) + 10; userDbRef.child('timeSpent').set(userData.timeSpent); } }, 10000);
 let recoveryTemp = { email: '', code: 0, userKey: '', expiry: 0 };
-
-document.getElementById('openRecoveryLink').addEventListener('click', () => {
-  loginError.style.display = 'none';
-  showLoginView('viewRecoveryEmail');
-});
-
-document.getElementById('cancelRecBtn').addEventListener('click', () => showLoginView('viewLogin'));
-document.getElementById('cancelCodeBtn').addEventListener('click', () => showLoginView('viewLogin'));
-document.getElementById('cancelNewPassBtn').addEventListener('click', () => showLoginView('viewLogin'));
-
-document.getElementById('sendCodeBtn').addEventListener('click', async () => {
-  const email = document.getElementById('recEmailInput').value.trim();
-  const errEl = document.getElementById('recEmailError');
-  if (!email.includes('@') || !email.includes('.')) { errEl.textContent = "Ingresa un correo válido."; errEl.style.display = 'block'; return; }
-  
-  const snapshot = await db.ref('users').orderByChild('recoveryEmail').equalTo(email).once('value');
-  if (!snapshot.exists()) {
-    errEl.textContent = "Este correo no está registrado en nuestra comunidad.";
-    errEl.style.display = 'block';
-    return;
-  }
-
-  const safeEmail = email.toLowerCase().replace(/\./g, '_');
-  const lockRef = db.ref('recoveryLocks/' + safeEmail);
-  const lockSnap = await lockRef.once('value');
-  if (lockSnap.exists() && lockSnap.val().lockUntil > Date.now()) {
-    const minsLeft = Math.ceil((lockSnap.val().lockUntil - Date.now()) / 60000);
-    errEl.textContent = `Bloqueado por seguridad. Intenta en ${minsLeft} minutos.`;
-    errEl.style.display = 'block';
-    return;
-  }
-
-  recoveryTemp.email = email;
-  recoveryTemp.code = Math.floor(Math.random() * 100) + 1;
-  recoveryTemp.userKey = Object.keys(snapshot.val())[0];
-  recoveryTemp.expiry = Date.now() + (2 * 60 * 1000); 
-
-  try {
-    await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: email, code: recoveryTemp.code });
-    errEl.style.display = 'none';
-    showLoginView('viewRecoveryCode');
-  } catch (error) {
-    errEl.textContent = "Error al enviar el correo. Intenta más tarde.";
-    errEl.style.display = 'block';
-  }
-});
-
-document.getElementById('verifyCodeBtn').addEventListener('click', async () => {
-  const code = parseInt(document.getElementById('codeInput').value);
-  const errEl = document.getElementById('codeError');
-  
-  if (Date.now() > recoveryTemp.expiry) {
-    errEl.textContent = "El código ha expirado. Vuelve a solicitarlo.";
-    errEl.style.display = 'block';
-    return;
-  }
-
-  const safeEmail = recoveryTemp.email.toLowerCase().replace(/\./g, '_');
-  const lockRef = db.ref('recoveryLocks/' + safeEmail);
-
-  if (code === recoveryTemp.code) {
-    await lockRef.remove(); 
-    errEl.style.display = 'none';
-    document.getElementById('recUsernameInput').value = recoveryTemp.userKey;
-    showLoginView('viewNewPassword');
-  } else {
-    const lockSnap = await lockRef.once('value');
-    let attempts = lockSnap.exists() ? (lockSnap.val().attempts || 0) : 0;
-    attempts++;
-
-    if (attempts >= 10) {
-      await lockRef.set({ attempts: attempts, lockUntil: Date.now() + (30 * 60 * 1000) }); 
-      errEl.textContent = "Demasiados intentos fallidos. Bloqueado por 30 minutos.";
-    } else {
-      await lockRef.set({ attempts: attempts });
-      errEl.textContent = `Código incorrecto. Intentos restantes: ${10 - attempts}`;
-    }
-    errEl.style.display = 'block';
-  }
-});
-
-document.getElementById('saveNewPassBtn').addEventListener('click', async () => {
-  const newPass = document.getElementById('newPassInput').value.trim();
-  const errEl = document.getElementById('newPassError');
-  if (newPass.length < 3) { errEl.textContent = "La contraseña debe tener al menos 3 caracteres."; errEl.style.display = 'block'; return; }
-
-  await db.ref('users/' + recoveryTemp.userKey + '/password').set(newPass);
-  
-  const snapshot = await db.ref('users/' + recoveryTemp.userKey).once('value');
-  userData = snapshot.val();
-  userData.name = recoveryTemp.userKey;
-  localStorage.setItem('htmlGamesUser', JSON.stringify(userData));
-  listenToUserData(userData.name);
-  
-  loginDropdown.classList.remove('show');
-  renderUserArea();
-  showToast("¡Contraseña actualizada! Bienvenido de vuelta.");
-});
-
-function renderSetupView(step, email = '') {
-  const setupDropdown = document.getElementById('setupDropdown');
-  if (step === 1) {
-    setupDropdown.innerHTML = `
-      <label class="form-label" style="margin-top: 0;">CORREO</label>
-      <input type="email" id="setupEmailInput" class="modal-input" placeholder="tu_correo@gmail.com" style="margin-bottom: 10px;">
-      <div id="setupError" class="login-error"></div>
-      <button id="setupNextBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 5px;">SIGUIENTE</button>
-      <button id="setupCancelBtn" class="cat-btn w-full" style="margin-top: 10px;">CANCELAR</button>
-    `;
-    document.getElementById('setupCancelBtn').addEventListener('click', () => setupDropdown.style.display = 'none');
-    document.getElementById('setupNextBtn').addEventListener('click', () => {
-      const emailVal = document.getElementById('setupEmailInput').value.trim();
-      const errEl = document.getElementById('setupError');
-      if (!emailVal.includes('@') || !emailVal.includes('.')) { errEl.textContent = "Ingresa un correo válido."; errEl.style.display = 'block'; return; }
-      renderSetupView(2, emailVal);
-    });
-  } else if (step === 2) {
-    setupDropdown.innerHTML = `
-      <div style="border: 1px solid var(--red); padding: 10px; margin-bottom: 15px; font-size: 0.8rem; color: var(--cream); line-height: 1.4; text-transform: none; letter-spacing: 0;">
-        Este correo quedará registrado como principal para recuperar tu contraseña y <strong style="color: var(--red-bright);">no podrás cambiarlo</strong>. Verifica que esté bien escrito antes de seguir.
-      </div>
-      <div style="font-family: monospace; font-size: 1.1rem; color: var(--gold); margin: 15px 0; text-align: center;">${email}</div>
-      <button id="setupEditBtn" class="cat-btn w-full" style="margin-top: 5px;">EDITAR</button>
-      <button id="setupSaveBtn" class="cat-btn w-full" style="background: var(--red); border-color: var(--red); margin-top: 10px;">CONTINUAR</button>
-    `;
-    document.getElementById('setupEditBtn').addEventListener('click', () => renderSetupView(1));
-    document.getElementById('setupSaveBtn').addEventListener('click', async () => {
-      if (userDbRef) {
-        await userDbRef.child('recoveryEmail').set(email);
-        showToast("Correo de recuperación guardado.");
-        updateSidebarData();
-      }
-    });
-  }
-}
-
-const leaderboardBtn = document.getElementById("leaderboardBtn");
-const leaderboardDropdown = document.getElementById("leaderboardDropdown");
-const leaderboardList = document.getElementById("leaderboardList");
-const lbSearchInput = document.getElementById("lbSearchInput");
-const lbSearchResults = document.getElementById("lbSearchResults");
-const lbProfileCard = document.getElementById("lbProfileCard");
-
-function renderLeaderboard() {
-  let html = '';
-  for (let i = 0; i < 100; i++) {
-    let isMe = false;
-    let isEmpty = true;
-    let name = '---';
-    let score = '---';
-    let avatar = '';
-    
-    const player = globalLeaderboardData[i];
-    if (player) {
-      isEmpty = false;
-      name = player.name;
-      let pScore = 0;
-      if (player.history) { for (let g in player.history) { pScore += player.history[g].highScore || 0; } }
-      score = pScore.toLocaleString() + ' pts';
-      avatar = player.gender === 'girl' 
-        ? '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" class="w-6 h-6 object-contain" alt="avatar">'
-        : '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" class="w-6 h-6 object-contain" alt="avatar">';
-      if (userData && player.name === userData.name) isMe = true;
-    }
-
-    const rankClass = getRankClass(i + 1);
-    let rowClass = isMe ? 'me' : '';
-    if (isEmpty) rowClass += ' empty';
-
-    html += `
-      <div class="leaderboard-row ${rowClass}" data-name="${name}">
-        <div class="rank ${rankClass}">#${i + 1}</div>
-        <div class="player-name">${avatar} ${name}</div>
-        <div class="player-score">${score}</div>
-      </div>
-    `;
-  }
-  leaderboardList.innerHTML = html;
-}
-
-leaderboardBtn.addEventListener('click', (e) => {
-  e.stopPropagation();
-  renderLeaderboard(); 
-  leaderboardDropdown.classList.toggle('show');
-  loginDropdown.classList.remove('show');
-  lbProfileCard.classList.remove('show');
-});
-
-document.addEventListener('click', (e) => {
-  if (!loginDropdown.contains(e.target) && !mainLogoBtn.contains(e.target) && !userAreaText.contains(e.target)) loginDropdown.classList.remove('show');
-  if (!leaderboardDropdown.contains(e.target) && e.target !== leaderboardBtn) leaderboardDropdown.classList.remove('show');
-  if (!lbProfileCard.contains(e.target) && !leaderboardList.contains(e.target) && !lbSearchResults.contains(e.target)) lbProfileCard.classList.remove('show');
-});
-
-function showLbProfileCard(name, anchorElement) {
-  const player = globalLeaderboardData.find(p => p.name === name);
-  if (!player) return;
-  
-  const avatarUrl = player.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png";
-  const playerIndex = globalLeaderboardData.findIndex(p => p.name === name);
-  const rank = playerIndex + 1;
-  const rankClass = getRankClass(rank);
-  
-  let pScore = 0;
-  let gamesPlayed = 0;
-  let topGamesHtml = '';
-  
-  if (player.history) {
-    let gameList = Object.keys(player.history).map(k => ({ title: k, score: player.history[k].highScore || 0 })).sort((a,b) => b.score - a.score);
-    gamesPlayed = gameList.length;
-    pScore = gameList.reduce((acc, g) => acc + g.score, 0);
-    
-    topGamesHtml = gameList.slice(0, 3).map(g => `
-      <div class="lbpc-game"><span>${g.title}</span><span>${g.score.toLocaleString()} pts</span></div>
-    `).join('');
-  }
-  
-  document.getElementById('lbpcAvatar').src = avatarUrl;
-  document.getElementById('lbpcName').textContent = player.name;
-  document.getElementById('lbpcRank').textContent = `Rango #${rank}`;
-  document.getElementById('lbpcRank').className = `lbpc-rank ${rankClass}`;
-  document.getElementById('lbpcScore').textContent = pScore.toLocaleString();
-  document.getElementById('lbpcGames').textContent = gamesPlayed;
-  document.getElementById('lbpcGamesList').innerHTML = topGamesHtml || '<div class="lbpc-game" style="opacity:0.5; justify-content:center;">Sin partidas jugadas</div>';
-  
-  if (anchorElement) {
-    const rect = anchorElement.getBoundingClientRect();
-    const cardWidth = 260; 
-    const cardHeight = lbProfileCard.offsetHeight || 300; 
-    const spaceBelow = window.innerHeight - rect.bottom;
-    
-    let topPos = rect.top + window.scrollY;
-    if (spaceBelow < cardHeight) {
-      topPos = (rect.bottom + window.scrollY) - cardHeight;
-    }
-    
-    let leftPos = rect.left + window.scrollX - cardWidth - 10; 
-    
-    if (leftPos < 10) {
-      leftPos = rect.right + window.scrollX + 10;
-      lbProfileCard.style.transformOrigin = 'top left';
-    } else {
-      lbProfileCard.style.transformOrigin = 'top right';
-    }
-    
-    lbProfileCard.style.top = `${topPos}px`;
-    lbProfileCard.style.left = `${leftPos}px`;
-  }
-  
-  lbProfileCard.classList.add('show');
-}
-
-leaderboardList.addEventListener('click', (e) => {
-  const row = e.target.closest('.leaderboard-row:not(.empty)');
-  if (row && row.dataset.name && row.dataset.name !== '---') {
-    showLbProfileCard(row.dataset.name, row);
-  }
-});
-
-document.getElementById('closeLbProfileCard').addEventListener('click', () => {
-  lbProfileCard.classList.remove('show');
-});
-
-lbSearchInput.addEventListener('input', (e) => {
-  const query = e.target.value.toLowerCase().trim();
-  if (query.length < 2) {
-    lbSearchResults.innerHTML = '';
-    return;
-  }
-  
-  const results = globalLeaderboardData.filter(p => p.name.toLowerCase().includes(query));
-  let html = '';
-  if (results.length > 0) {
-    results.forEach(p => {
-      const playerIndex = globalLeaderboardData.findIndex(pl => pl.name === p.name);
-      const rank = playerIndex + 1;
-      const rankClass = getRankClass(rank);
-      let pScore = 0;
-      if (p.history) { for (let g in p.history) { pScore += p.history[g].highScore || 0; } }
-      
-      html += `
-        <div class="lb-search-result" data-name="${p.name}">
-          <span class="res-rank ${rankClass}">#${rank}</span>
-          <span class="res-name">${p.name}</span>
-          <span class="res-score">${pScore.toLocaleString()} pts</span>
-        </div>
-      `;
-    });
-  } else {
-    html = '<div style="padding: 10px; text-align: center; color: #6a3030; font-size: 0.8rem;">No se encontraron jugadores.</div>';
-  }
-  lbSearchResults.innerHTML = html;
-});
-
-lbSearchResults.addEventListener('click', (e) => {
-  const res = e.target.closest('.lb-search-result');
-  if (res && res.dataset.name) {
-    showLbProfileCard(res.dataset.name, res);
-  }
-});
-
-db.ref('users').on('value', (snapshot) => {
-  globalLeaderboardData = [];
-  globalGameRatings = {}; 
-  const tempRatings = {}; 
-
-  snapshot.forEach((child) => {
-    const val = child.val();
-    let pScore = 0;
-    if (val.history) {
-      for (let g in val.history) {
-        pScore += val.history[g].highScore || 0;
-        if (val.history[g].rating > 0) {
-          if (!tempRatings[g]) tempRatings[g] = [];
-          tempRatings[g].push(val.history[g].rating);
-        }
-      }
-    }
-    globalLeaderboardData.push({ name: child.key, ...val, totalScore: pScore });
-  });
-
-  for (let g in tempRatings) {
-    const sum = tempRatings[g].reduce((a, b) => a + b, 0);
-    const avg = sum / tempRatings[g].length;
-    globalGameRatings[g] = { avg: avg.toFixed(1), count: tempRatings[g].length };
-  }
-
-  globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore);
-  if (leaderboardDropdown.classList.contains('show')) renderLeaderboard();
-  if (profileSidebar.classList.contains('show')) updateSidebarData();
-  renderGames(); 
-});
-
+document.getElementById('openRecoveryLink').addEventListener('click', () => { loginError.style.display = 'none'; showLoginView('viewRecoveryEmail'); });
+document.getElementById('cancelRecBtn').addEventListener('click', () => showLoginView('viewLogin')); document.getElementById('cancelCodeBtn').addEventListener('click', () => showLoginView('viewLogin')); document.getElementById('cancelNewPassBtn').addEventListener('click', () => showLoginView('viewLogin'));
+document.getElementById('sendCodeBtn').addEventListener('click', async () => { const e = document.getElementById('recEmailInput').value.trim(); const er = document.getElementById('recEmailError'); if (!e.includes('@') || !e.includes('.')) { er.textContent = "Correo inválido."; er.style.display = 'block'; return; } const s = await db.ref('users').orderByChild('recoveryEmail').equalTo(e).once('value'); if (!s.exists()) { er.textContent = "Correo no registrado."; er.style.display = 'block'; return; } const se = e.toLowerCase().replace(/\./g, '_'); const lR = db.ref('recoveryLocks/' + se); const lS = await lR.once('value'); if (lS.exists() && lS.val().lockUntil > Date.now()) { er.textContent = `Bloqueado. Intenta en ${Math.ceil((lS.val().lockUntil-Date.now())/60000)} min.`; er.style.display = 'block'; return; } recoveryTemp.email = e; recoveryTemp.code = Math.floor(Math.random()*100)+1; recoveryTemp.userKey = Object.keys(s.val())[0]; recoveryTemp.expiry = Date.now() + 120000; try { await emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, { to_email: e, code: recoveryTemp.code }); er.style.display = 'none'; showLoginView('viewRecoveryCode'); } catch (ex) { er.textContent = "Error al enviar."; er.style.display = 'block'; } });
+document.getElementById('verifyCodeBtn').addEventListener('click', async () => { const c = parseInt(document.getElementById('codeInput').value); const er = document.getElementById('codeError'); if (Date.now() > recoveryTemp.expiry) { er.textContent = "Código expirado."; er.style.display = 'block'; return; } const se = recoveryTemp.email.toLowerCase().replace(/\./g, '_'); const lR = db.ref('recoveryLocks/' + se); if (c === recoveryTemp.code) { await lR.remove(); er.style.display = 'none'; document.getElementById('recUsernameInput').value = recoveryTemp.userKey; showLoginView('viewNewPassword'); } else { const lS = await lR.once('value'); let a = lS.exists() ? (lS.val().attempts||0) : 0; a++; if (a >= 10) { await lR.set({ attempts: a, lockUntil: Date.now() + 1800000 }); er.textContent = "Bloqueado 30 min."; } else { await lR.set({ attempts: a }); er.textContent = `Incorrecto. Intentos: ${10-a}`; } er.style.display = 'block'; } });
+document.getElementById('saveNewPassBtn').addEventListener('click', async () => { const np = document.getElementById('newPassInput').value.trim(); const er = document.getElementById('newPassError'); if (np.length < 3) { er.textContent = "Mínimo 3 caracteres."; er.style.display = 'block'; return; } await db.ref('users/' + recoveryTemp.userKey + '/password').set(np); const s = await db.ref('users/' + recoveryTemp.userKey).once('value'); userData = s.val(); userData.name = recoveryTemp.userKey; localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); listenToUserData(userData.name); loginDropdown.classList.remove('show'); renderUserArea(); showToast("Contraseña actualizada."); });
+function renderSetupView(st, em='') { const sd = document.getElementById('setupDropdown'); if (st===1) { sd.innerHTML = `<label class="form-label" style="margin-top:0;">CORREO</label><input type="email" id="setupEmailInput" class="modal-input" placeholder="tu_correo@gmail.com" style="margin-bottom:10px;"><div id="setupError" class="login-error"></div><button id="setupNextBtn" class="cat-btn w-full" style="background:var(--red);border-color:var(--red);margin-top:5px;">SIGUIENTE</button><button id="setupCancelBtn" class="cat-btn w-full" style="margin-top:10px;">CANCELAR</button>`; document.getElementById('setupCancelBtn').addEventListener('click', () => sd.style.display='none'); document.getElementById('setupNextBtn').addEventListener('click', () => { const ev = document.getElementById('setupEmailInput').value.trim(); const er = document.getElementById('setupError'); if (!ev.includes('@')||!ev.includes('.')) { er.textContent="Inválido."; er.style.display='block'; return; } renderSetupView(2, ev); }); } else if (st===2) { sd.innerHTML = `<div style="border:1px solid var(--red);padding:10px;margin-bottom:15px;font-size:0.8rem;color:var(--cream);line-height:1.4;">Correo principal para recuperar cuenta. <strong style="color:var(--red-bright);">No podrás cambiarlo.</strong></div><div style="font-family:monospace;font-size:1.1rem;color:var(--gold);margin:15px 0;text-align:center;">${em}</div><button id="setupEditBtn" class="cat-btn w-full" style="margin-top:5px;">EDITAR</button><button id="setupSaveBtn" class="cat-btn w-full" style="background:var(--red);border-color:var(--red);margin-top:10px;">CONTINUAR</button>`; document.getElementById('setupEditBtn').addEventListener('click', () => renderSetupView(1)); document.getElementById('setupSaveBtn').addEventListener('click', async () => { if (userDbRef) { await userDbRef.child('recoveryEmail').set(em); showToast("Correo guardado."); updateSidebarData(); } }); } }
+const leaderboardBtn = document.getElementById("leaderboardBtn"); const leaderboardDropdown = document.getElementById("leaderboardDropdown"); const leaderboardList = document.getElementById("leaderboardList"); const lbSearchInput = document.getElementById("lbSearchInput"); const lbSearchResults = document.getElementById("lbSearchResults"); const lbProfileCard = document.getElementById("lbProfileCard");
+function renderLeaderboard() { let h = ''; for (let i = 0; i < 100; i++) { let im = false, ie = true, n = '---', s = '---', a = ''; const p = globalLeaderboardData[i]; if (p) { ie = false; n = p.name; let ps = 0; if (p.history) for (let g in p.history) ps += p.history[g].highScore || 0; s = ps.toLocaleString() + ' pts'; a = p.gender === 'girl' ? '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" class="w-6 h-6 object-contain" alt="avatar">' : '<img src="https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png" class="w-6 h-6 object-contain" alt="avatar">'; if (userData && p.name === userData.name) im = true; } const rc = getRankClass(i + 1); let cl = im ? 'me' : ''; if (ie) cl += ' empty'; h += `<div class="leaderboard-row ${cl}" data-name="${n}"><div class="rank ${rc}">#${i + 1}</div><div class="player-name">${a} ${n}</div><div class="player-score">${s}</div></div>`; } leaderboardList.innerHTML = h; }
+leaderboardBtn.addEventListener('click', e => { e.stopPropagation(); renderLeaderboard(); leaderboardDropdown.classList.toggle('show'); loginDropdown.classList.remove('show'); lbProfileCard.classList.remove('show'); });
+document.addEventListener('click', e => { if (!loginDropdown.contains(e.target) && !mainLogoBtn.contains(e.target) && !userAreaText.contains(e.target)) loginDropdown.classList.remove('show'); if (!leaderboardDropdown.contains(e.target) && e.target !== leaderboardBtn) leaderboardDropdown.classList.remove('show'); if (!lbProfileCard.contains(e.target) && !leaderboardList.contains(e.target) && !lbSearchResults.contains(e.target)) lbProfileCard.classList.remove('show'); });
+function showLbProfileCard(n, ae) { const p = globalLeaderboardData.find(x => x.name === n); if (!p) return; const au = p.gender === 'girl' ? "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20girl.png" : "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/creeper%20boy.png"; const pi = globalLeaderboardData.findIndex(x => x.name === n); const r = pi + 1, rc = getRankClass(r); let ps = 0, gp = 0, tgh = ''; if (p.history) { let gl = Object.keys(p.history).map(k => ({ t: k, s: p.history[k].highScore || 0 })).sort((a, b) => b.s - a.s); gp = gl.length; ps = gl.reduce((a, g) => a + g.s, 0); tgh = gl.slice(0, 3).map(g => `<div class="lbpc-game"><span>${g.t}</span><span>${g.s.toLocaleString()} pts</span></div>`).join(''); } document.getElementById('lbpcAvatar').src = au; document.getElementById('lbpcName').textContent = p.name; document.getElementById('lbpcRank').textContent = `Rango #${r}`; document.getElementById('lbpcRank').className = `lbpc-rank ${rc}`; document.getElementById('lbpcScore').textContent = ps.toLocaleString(); document.getElementById('lbpcGames').textContent = gp; document.getElementById('lbpcGamesList').innerHTML = tgh || '<div class="lbpc-game" style="opacity:0.5; justify-content:center;">Sin partidas</div>'; if (ae) { const rect = ae.getBoundingClientRect(); const cw = 260, ch = lbProfileCard.offsetHeight || 300, sb = window.innerHeight - rect.bottom; let tp = rect.top + window.scrollY; if (sb < ch) tp = (rect.bottom + window.scrollY) - ch; let lp = rect.left + window.scrollX - cw - 10; if (lp < 10) { lp = rect.right + window.scrollX + 10; lbProfileCard.style.transformOrigin = 'top left'; } else lbProfileCard.style.transformOrigin = 'top right'; lbProfileCard.style.top = `${tp}px`; lbProfileCard.style.left = `${lp}px`; } lbProfileCard.classList.add('show'); }
+leaderboardList.addEventListener('click', e => { const row = e.target.closest('.leaderboard-row:not(.empty)'); if (row && row.dataset.name && row.dataset.name !== '---') showLbProfileCard(row.dataset.name, row); });
+document.getElementById('closeLbProfileCard').addEventListener('click', () => lbProfileCard.classList.remove('show'));
+lbSearchInput.addEventListener('input', e => { const q = e.target.value.toLowerCase().trim(); if (q.length < 2) { lbSearchResults.innerHTML = ''; return; } const res = globalLeaderboardData.filter(p => p.name.toLowerCase().includes(q)); let h = ''; if (res.length > 0) res.forEach(p => { const pi = globalLeaderboardData.findIndex(x => x.name === p.name); const r = pi + 1, rc = getRankClass(r); let ps = 0; if (p.history) for (let g in p.history) ps += p.history[g].highScore || 0; h += `<div class="lb-search-result" data-name="${p.name}"><span class="res-rank ${rc}">#${r}</span><span class="res-name">${p.name}</span><span class="res-score">${ps.toLocaleString()} pts</span></div>`; }); else h = '<div style="padding: 10px; text-align: center; color: #6a3030; font-size: 0.8rem;">No encontrado.</div>'; lbSearchResults.innerHTML = h; });
+lbSearchResults.addEventListener('click', e => { const r = e.target.closest('.lb-search-result'); if (r && r.dataset.name) showLbProfileCard(r.dataset.name, r); });
+db.ref('users').on('value', s => { globalLeaderboardData = []; globalGameRatings = {}; const tr = {}; s.forEach(c => { const v = c.val(); let ps = 0; if (v.history) for (let g in v.history) { ps += v.history[g].highScore || 0; if (v.history[g].rating > 0) { if (!tr[g]) tr[g] = []; tr[g].push(v.history[g].rating); } } globalLeaderboardData.push({ name: c.key, ...v, totalScore: ps }); }); for (let g in tr) { const sum = tr[g].reduce((a, b) => a + b, 0); globalGameRatings[g] = { avg: (sum / tr[g].length).toFixed(1), count: tr[g].length }; } globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore); if (leaderboardDropdown.classList.contains('show')) renderLeaderboard(); if (profileSidebar.classList.contains('show')) updateSidebarData(); renderGames(); });
 const catContainer = document.getElementById("categories");
-categories.forEach((c, i) => {
-  const btn = document.createElement("button");
-  btn.className = "cat-btn" + (c.id === "all" ? " active" : "");
-  btn.textContent = c.label;
-  btn.classList.add("fade-up");
-  btn.addEventListener("click", () => {
-    document.querySelectorAll(".cat-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    currentCat = c.id;
-    document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase();
-    renderGames();
-  });
-  catContainer.appendChild(btn);
-});
-
-const grid = document.getElementById("gamesGrid");
-const emptyState = document.getElementById("emptyState");
-const gameContainer = document.getElementById("gameContainer");
-const gameFrame = document.getElementById("gameFrame");
-const closeGameBtn = document.getElementById("closeGameBtn");
-let currentGameTitle = null;
-
-function renderGames() {
-  const filtered = games.filter(g => currentCat === "all" || g.cat === currentCat);
-  grid.innerHTML = "";
-  if (filtered.length === 0) { emptyState.classList.remove("hidden"); return; }
-  emptyState.classList.add("hidden");
-
-  filtered.forEach((g, i) => {
-    const card = document.createElement("div");
-    card.className = "game-card fade-up";
-    
-    // LÓGICA DE ETIQUETA "NEW" DINÁMICA
-    const gameData = userData?.history?.[g.title];
-    const hasPlayed = gameData && (gameData.timesPlayed || 0) > 0;
-    const tagHtml = !hasPlayed ? `<div class="game-tag">NEW</div>` : "";
-    
-    const globalRating = globalGameRatings[g.title]?.avg || 0;
-    const ratingHtml = globalRating > 0 
-        ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${globalRating}</div>` 
-        : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`;
-        
-    card.innerHTML = `
-      ${tagHtml}
-      ${ratingHtml}
-      <div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div>
-      <div class="play-icon"><i class="fas fa-play"></i></div>
-      <div class="game-title">${g.title}</div>
-    `;
-    card.addEventListener("click", () => {
-      currentGameTitle = g.title;
-      if (userData && userDbRef) {
-        if (!userData.history) userData.history = {};
-        if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 };
-        userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1;
-        userData.history[g.title].lastPlayed = Date.now(); 
-        userDbRef.child('history').set(userData.history);
-      }
-      gameFrame.src = g.file;
-      gameContainer.classList.add('show');
-      showToast(!userData ? "MODO OFFLINE: Juegas libremente, pero tu progreso no se guardará." : `Iniciando: ${g.title}...`);
-    });
-    grid.appendChild(card);
-  });
-}
-
-closeGameBtn.addEventListener('click', () => {
-  gameContainer.classList.remove('show');
-  gameFrame.src = '';
-  
-  if (userData && currentGameTitle) {
-    const gameData = userData.history?.[currentGameTitle];
-    if (!gameData || !gameData.rating || gameData.rating === 0) {
-      setTimeout(() => openRatingModal(currentGameTitle), 300);
-    }
-  }
-});
-
-window.addEventListener('message', (event) => {
-  if (event.data && event.data.type === 'gameScore' && userData && userDbRef) {
-    const gameTitle = event.data.game;
-    const score = parseInt(event.data.score);
-    if (!isNaN(score)) {
-      if (!userData.history) userData.history = {};
-      if (!userData.history[gameTitle]) userData.history[gameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 };
-      if (score > (userData.history[gameTitle].highScore || 0)) {
-        userData.history[gameTitle].highScore = score;
-        showToast(`¡Nuevo Récord en ${gameTitle}: ${score} pts!`);
-      }
-      userData.history[gameTitle].lastPlayed = Date.now(); 
-      userDbRef.child('history').set(userData.history);
-      renderGames();
-    }
-  }
-});
-
-const ratingToast = document.getElementById("ratingToast");
-let toastTimer;
-
-function openRatingModal(gameTitle) {
-  document.getElementById("toastGameTitle").textContent = gameTitle;
-  tempRating = 0;
-  const currentRating = userData?.history?.[gameTitle]?.rating || 0;
-  
-  const stars = document.querySelectorAll('#starsInputToast i');
-  stars.forEach(s => {
-    s.classList.remove('star-metallic', 'hover');
-    s.classList.add('star-empty');
-    if (currentRating >= parseInt(s.dataset.val)) {
-      s.classList.remove('star-empty');
-      s.classList.add('star-metallic');
-    }
-  });
-  
-  ratingToast.classList.add('show');
-  
-  clearTimeout(toastTimer);
-  toastTimer = setTimeout(() => {
-    ratingToast.classList.remove('show');
-  }, 15000);
-}
-
-async function closeRatingModal() {
-  if (tempRating > 0) {
-    if (!userData.history) userData.history = {};
-    if (!userData.history[currentGameTitle]) userData.history[currentGameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 };
-    userData.history[currentGameTitle].rating = tempRating;
-    if (userData && userDbRef) {
-      await userDbRef.child('history').set(userData.history);
-      showToast(`¡Calificación enviada: ${tempRating} estrellas!`);
-    }
-    renderGames(); 
-  }
-  ratingToast.classList.remove('show');
-  clearTimeout(toastTimer);
-}
-
-document.querySelectorAll('#starsInputToast i').forEach(star => {
-  star.addEventListener('mouseenter', () => {
-    const val = parseInt(star.dataset.val);
-    document.querySelectorAll('#starsInputToast i').forEach(s => {
-      s.classList.remove('hover');
-      if (parseInt(s.dataset.val) <= val) {
-        s.classList.add('hover');
-        s.classList.remove('star-empty');
-        s.classList.add('star-metallic');
-      } else {
-        s.classList.add('star-empty');
-        s.classList.remove('star-metallic');
-      }
-    });
-  });
-
-  star.addEventListener('click', () => {
-    tempRating = parseInt(star.dataset.val);
-    document.querySelectorAll('#starsInputToast i').forEach(s => {
-      s.classList.remove('star-metallic');
-      s.classList.add('star-empty');
-      if (parseInt(s.dataset.val) <= tempRating) {
-        s.classList.remove('star-empty');
-        s.classList.add('star-metallic');
-      }
-    });
-  });
-});
-
-document.getElementById('starsInputToast').addEventListener('mouseleave', () => {
-  document.querySelectorAll('#starsInputToast i').forEach(s => {
-    s.classList.remove('hover');
-    if(!s.classList.contains('star-metallic')) {
-      s.classList.add('star-empty');
-    }
-  });
-});
-
-document.getElementById('closeRatingToast').addEventListener('click', () => {
-  ratingToast.classList.remove('show');
-  clearTimeout(toastTimer);
-});
-
+categories.forEach((c, i) => { const b = document.createElement("button"); b.className = "cat-btn" + (c.id === "all" ? " active" : ""); b.textContent = c.label; b.classList.add("fade-up"); b.addEventListener("click", () => { document.querySelectorAll(".cat-btn").forEach(x => x.classList.remove("active")); b.classList.add("active"); currentCat = c.id; document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase(); renderGames(); }); catContainer.appendChild(b); });
+const grid = document.getElementById("gamesGrid"); const emptyState = document.getElementById("emptyState"); const gameContainer = document.getElementById("gameContainer"); const gameFrame = document.getElementById("gameFrame"); const closeGameBtn = document.getElementById("closeGameBtn"); let currentGameTitle = null;
+function renderGames() { const f = games.filter(g => currentCat === "all" || g.cat === currentCat); grid.innerHTML = ""; if (f.length === 0) { emptyState.classList.remove("hidden"); return; } emptyState.classList.add("hidden"); f.forEach((g, i) => { const c = document.createElement("div"); c.className = "game-card fade-up"; const gd = userData?.history?.[g.title]; const hp = gd && (gd.timesPlayed || 0) > 0; const th = !hp ? `<div class="game-tag">NEW</div>` : ""; const gr = globalGameRatings[g.title]?.avg || 0; const rh = gr > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${gr}</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`; c.innerHTML = `${th}${rh}<div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div><div class="play-icon"><i class="fas fa-play"></i></div><div class="game-title">${g.title}</div>`; c.addEventListener("click", () => { currentGameTitle = g.title; if (userData && userDbRef) { if (!userData.history) userData.history = {}; if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1; userData.history[g.title].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); } gameFrame.src = g.file; gameContainer.classList.add('show'); showToast(!userData ? "MODO OFFLINE." : `Iniciando: ${g.title}...`); }); grid.appendChild(c); }); }
+closeGameBtn.addEventListener('click', () => { gameContainer.classList.remove('show'); gameFrame.src = ''; if (userData && currentGameTitle) { const gd = userData.history?.[currentGameTitle]; if (!gd || !gd.rating || gd.rating === 0) setTimeout(() => openRatingModal(currentGameTitle), 300); } });
+window.addEventListener('message', e => { if (e.data && e.data.type === 'gameScore' && userData && userDbRef) { const gt = e.data.game; const sc = parseInt(e.data.score); if (!isNaN(sc)) { if (!userData.history) userData.history = {}; if (!userData.history[gt]) userData.history[gt] = { timesPlayed: 0, rating: 0, highScore: 0 }; if (sc > (userData.history[gt].highScore || 0)) { userData.history[gt].highScore = sc; showToast(`¡Récord: ${sc} pts!`); } userData.history[gt].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); renderGames(); } } });
+const ratingToast = document.getElementById("ratingToast"); let toastTimer;
+function openRatingModal(gt) { document.getElementById("toastGameTitle").textContent = gt; tempRating = 0; const cr = userData?.history?.[gt]?.rating || 0; const stars = document.querySelectorAll('#starsInputToast i'); stars.forEach(s => { s.classList.remove('star-metallic', 'hover'); s.classList.add('star-empty'); if (cr >= parseInt(s.dataset.val)) { s.classList.remove('star-empty'); s.classList.add('star-metallic'); } }); ratingToast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => ratingToast.classList.remove('show'), 15000); }
+async function closeRatingModal() { if (tempRating > 0) { if (!userData.history) userData.history = {}; if (!userData.history[currentGameTitle]) userData.history[currentGameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[currentGameTitle].rating = tempRating; if (userData && userDbRef) { await userDbRef.child('history').set(userData.history); showToast("Calificación enviada."); } renderGames(); } ratingToast.classList.remove('show'); clearTimeout(toastTimer); }
+document.querySelectorAll('#starsInputToast i').forEach(star => { star.addEventListener('mouseenter', () => { const v = parseInt(star.dataset.val); document.querySelectorAll('#starsInputToast i').forEach(s => { s.classList.remove('hover'); if (parseInt(s.dataset.val) <= v) { s.classList.add('hover'); s.classList.remove('star-empty'); s.classList.add('star-metallic'); } else { s.classList.add('star-empty'); s.classList.remove('star-metallic'); } }); }); star.addEventListener('click', () => { tempRating = parseInt(star.dataset.val); document.querySelectorAll('#starsInputToast i').forEach(s => { s.classList.remove('star-metallic'); s.classList.add('star-empty'); if (parseInt(s.dataset.val) <= tempRating) { s.classList.remove('star-empty'); s.classList.add('star-metallic'); } }); }); });
+document.getElementById('starsInputToast').addEventListener('mouseleave', () => document.querySelectorAll('#starsInputToast i').forEach(s => { s.classList.remove('hover'); if(!s.classList.contains('star-metallic')) s.classList.add('star-empty'); }));
+document.getElementById('closeRatingToast').addEventListener('click', () => { ratingToast.classList.remove('show'); clearTimeout(toastTimer); });
 document.getElementById('sendRatingToast').addEventListener('click', closeRatingModal);
-
-document.getElementById("searchInput").addEventListener("input", (e) => {
-  currentSearch = e.target.value.toLowerCase().trim();
-  renderGames();
-});
-
-const toast = document.getElementById("toast");
-const toastMsg = document.getElementById("toastMsg");
-let toastTimerGeneral;
-function showToast(msg) {
-  toastMsg.textContent = msg;
-  toast.classList.add("show");
-  clearTimeout(toastTimerGeneral);
-  toastTimerGeneral = setTimeout(() => toast.classList.remove("show"), 3000);
-}
-
-function spawnParticle() {
-  const p = document.createElement("div");
-  p.className = "particle";
-  const size = Math.random() * 3 + 1;
-  p.style.width = size + "px"; p.style.height = size + "px";
-  p.style.left = Math.random() * window.innerWidth + "px"; p.style.top = window.innerHeight + "px";
-  document.body.appendChild(p);
-  const duration = 4000 + Math.random() * 3000;
-  p.animate([{ transform: "translate(0, 0)", opacity: 0 }, { opacity: 0.8, offset: 0.1 }, { opacity: 0.8, offset: 0.9 }, { transform: `translate(${(Math.random() - 0.5) * 100}px, -${window.innerHeight + 20}px)`, opacity: 0 }], { duration, easing: "linear" });
-  setTimeout(() => p.remove(), duration);
-}
+document.getElementById("searchInput").addEventListener("input", e => { currentSearch = e.target.value.toLowerCase().trim(); renderGames(); });
+const toast = document.getElementById("toast"); const toastMsg = document.getElementById("toastMsg"); let toastTimerGeneral;
+function showToast(msg) { toastMsg.textContent = msg; toast.classList.add("show"); clearTimeout(toastTimerGeneral); toastTimerGeneral = setTimeout(() => toast.classList.remove("show"), 3000); }
+function spawnParticle() { const p = document.createElement("div"); p.className = "particle"; const s = Math.random() * 3 + 1; p.style.width = s + "px"; p.style.height = s + "px"; p.style.left = Math.random() * window.innerWidth + "px"; p.style.top = window.innerHeight + "px"; document.body.appendChild(p); const d = 4000 + Math.random() * 3000; p.animate([{ transform: "translate(0,0)", opacity: 0 }, { opacity: 0.8, offset: 0.1 }, { opacity: 0.8, offset: 0.9 }, { transform: `translate(${(Math.random()-.5)*100}px, -${window.innerHeight+20}px)`, opacity: 0 }], { d, easing: "linear" }); setTimeout(() => p.remove(), d); }
 setInterval(spawnParticle, 600);
-
-renderUserArea();
-renderGames();
-
-if (userData) {
-  listenToUserData(userData.name);
-}
-
-document.addEventListener("mousemove", (e) => {
-  document.querySelectorAll(".game-card:hover").forEach(card => {
-    const rect = card.getBoundingClientRect();
-    card.style.transform = `translateY(-6px) scale(1.02) perspective(800px) rotateY(${(e.clientX - rect.left) / rect.width - 0.5 * 6}deg) rotateX(${-(e.clientY - rect.top) / rect.height - 0.5 * 6}deg)`;
-  });
-});
+renderUserArea(); renderGames(); if (userData) listenToUserData(userData.name);
+document.addEventListener("mousemove", e => { document.querySelectorAll(".game-card:hover").forEach(c => { const r = c.getBoundingClientRect(); c.style.transform = `translateY(-6px) scale(1.02) perspective(800px) rotateY(${(e.clientX-r.left)/r.width-.5*6}deg) rotateX(${-(e.clientY-r.top)/r.height-.5*6}deg)`; }); });
 document.addEventListener("mouseleave", () => document.querySelectorAll(".game-card").forEach(c => c.style.transform = ""));
-</script>
 
+/* ============ LÓGICA VISTA DE DESARROLLO (AUTO-LECTURA GITHUB) ============ */
+const devBtn = document.getElementById("devBtn"); const devView = document.getElementById("devView"); const closeDevBtn = document.getElementById("closeDevBtn");
+const devGridState = document.getElementById("devGridState"); const devPlayerState = document.getElementById("devPlayerState"); const devGamesGrid = document.getElementById("devGamesGrid");
+const devGameFrame = document.getElementById("devGameFrame"); const devSelectorBar = document.getElementById("devSelectorBar");
+const devCommentsList = document.getElementById("devCommentsList"); const commentInput = document.getElementById("commentInput"); const sendCommentBtn = document.getElementById("sendCommentBtn");
+
+async function fetchDevGames() {
+    const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/JuegosBeta`;
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) throw new Error("No se pudo leer la carpeta");
+        const files = await response.json();
+        devGames = files.filter(f => f.name.endsWith('.html')).map(f => {
+            const niceName = f.name.replace('.html', '').replace(/_/g, ' ').toUpperCase();
+            return { title: niceName, file: `JuegosBeta/${f.name}`, img: defaultBetaImg };
+        });
+    } catch (error) { console.error("Error:", error); devGames = []; }
+}
+function renderDevGamesGrid() {
+  let html = '';
+  if (devGames.length === 0) html = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">Aún no has subido juegos a la carpeta "JuegosBeta" en GitHub.</div>';
+  else devGames.forEach((g, i) => { html += `<div class="game-card fade-up" data-title="${g.title}" data-file="${g.file}" style="animation-delay:${i*0.05}s;"><div class="game-tag gold">BETA</div><div class="thumb-wrap"><img class="game-thumb" src="${g.img||defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div><div class="play-icon"><i class="fas fa-play"></i></div><div class="game-title">${g.title}</div></div>`; });
+  devGamesGrid.innerHTML = html;
+}
+function renderDevSelector(at) {
+  let html = `<div id="backToDevGrid" class="dev-grid-icon" title="Ver todos"><i class="fas fa-th"></i></div>`;
+  devGames.forEach(g => { html += `<div class="dev-selector-item ${at===g.title?'active':''}" data-title="${g.title}" data-file="${g.file}" style="background-image:url('${g.img}')"><span>${g.title}</span></div>`; });
+  devSelectorBar.innerHTML = html;
+}
+function openDevPlayer(g) {
+  currentDevGame = g.title; devGameFrame.src = g.file; devGridState.style.display = 'none'; devPlayerState.classList.add('show'); renderDevSelector(g.title);
+  if (currentDevCommentRef) currentDevCommentRef.off(); currentDevCommentRef = db.ref('devComments/' + g.title);
+  currentDevCommentRef.on('value', s => { let html = '', ca = []; s.forEach(c => ca.push(c.val())); ca.sort((a,b) => b.time-a.time); if (ca.length===0) html = '<div style="text-align:center;color:#6a3030;font-size:0.8rem;padding:20px;">Sé el primero en sugerir.</div>'; else ca.forEach(c => { const d = new Date(c.time); const ts = d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); html += `<div class="dev-comment-item"><div class="c-header"><span class="c-user">${c.user}</span><span class="c-time">${ts}</span></div><p class="c-text">${c.text}</p></div>`; }); devCommentsList.innerHTML = html; devCommentsList.scrollTop = devCommentsList.scrollHeight; });
+}
+function backToDevGridView() { devGameFrame.src = ''; devPlayerState.classList.remove('show'); devGridState.style.display = 'block'; if (currentDevCommentRef) currentDevCommentRef.off(); }
+devBtn.addEventListener('click', async () => { devView.classList.add('show'); devGridState.style.display = 'block'; devPlayerState.classList.remove('show'); devGamesGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">CARGANDO JUEGOS...</div>'; await fetchDevGames(); renderDevGamesGrid(); });
+closeDevBtn.addEventListener('click', () => { devView.classList.remove('show'); devGameFrame.src = ''; if (currentDevCommentRef) currentDevCommentRef.off(); });
+devSelectorBar.addEventListener('click', e => { if (e.target.closest('#backToDevGrid')) { backToDevGridView(); return; } const item = e.target.closest('.dev-selector-item'); if (item) openDevPlayer({ title: item.dataset.title, file: item.dataset.file }); });
+devGamesGrid.addEventListener('click', e => { const card = e.target.closest('.game-card'); if (card) openDevPlayer({ title: card.dataset.title, file: card.dataset.file }); });
+sendCommentBtn.addEventListener('click', async () => { if (!userData) { showToast("Inicia sesión para comentar."); return; } if (!currentDevGame) return; const text = commentInput.value.trim(); if (text.length === 0) return; await db.ref('devComments/' + currentDevGame).push({ user: userData.name, text: text, time: Date.now() }); commentInput.value = ''; showToast("Comentario enviado."); });
+commentInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendCommentBtn.click(); });
+</script>
 </body>
 </html>
