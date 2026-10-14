@@ -497,14 +497,18 @@ const EMAILJS_SERVICE_ID = "service_vwvgqqg"; const EMAILJS_TEMPLATE_ID = "templ
 const defaultImg = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Sonic%20The%20Hedgehog%20Sonic%20Sticker%20-%20Sonic%20The%20Hedgehog%20Sonic%20Sprite%20-%20Descubre%20y%20comparte%20GIF.gif?updatedAt=1772112195977";
 const defaultBetaImg = "https://ik.imagekit.io/rx3s8imfb/HTML_games/MENUS%20e%20INTERFACES/menuajustes.jfif?updatedAt=1786577234563";
 
-const games = [
+let games = [
   { title: "Juego de la serpiente", cat: "arcade", file: "juego1.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20la%20culebrita.png?updatedAt=1790899401762"},
   { title: "Juego UNO", cat: "cards", file: "juego2.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/Juego%20UNO?updatedAt=1791096013285"}
 ];
-const categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }];
+let categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }];
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
 let userDbRef = null; let currentDevGame = null; let currentDevCommentRef = null; let devGames = [];
+
+// Variables para guardar el estado y no perderlo al refrescar
+let savedAppState = localStorage.getItem('htmlGamesAppState') || 'home';
+let savedDevGame = localStorage.getItem('htmlGamesCurrentDevGame') || null;
 
 function getRankClass(index) { if (index <= 10) return 'rank-ruby'; if (index <= 25) return 'rank-diamond'; if (index <= 50) return 'rank-gold'; if (index <= 75) return 'rank-silver'; if (index <= 100) return 'rank-bronze'; return 'rank-wood'; }
 function getTotalScore() { if (!userData || !userData.history) return 0; let t = 0; for (let k in userData.history) t += userData.history[k].highScore || 0; return t; }
@@ -543,7 +547,7 @@ lbSearchInput.addEventListener('input', e => { const q = e.target.value.toLowerC
 lbSearchResults.addEventListener('click', e => { const r = e.target.closest('.lb-search-result'); if (r && r.dataset.name) showLbProfileCard(r.dataset.name, r); });
 db.ref('users').on('value', s => { globalLeaderboardData = []; globalGameRatings = {}; const tr = {}; s.forEach(c => { const v = c.val(); let ps = 0; if (v.history) for (let g in v.history) { ps += v.history[g].highScore || 0; if (v.history[g].rating > 0) { if (!tr[g]) tr[g] = []; tr[g].push(v.history[g].rating); } } globalLeaderboardData.push({ name: c.key, ...v, totalScore: ps }); }); for (let g in tr) { const sum = tr[g].reduce((a, b) => a + b, 0); globalGameRatings[g] = { avg: (sum / tr[g].length).toFixed(1), count: tr[g].length }; } globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore); if (leaderboardDropdown.classList.contains('show')) renderLeaderboard(); if (profileSidebar.classList.contains('show')) updateSidebarData(); renderGames(); });
 const catContainer = document.getElementById("categories");
-categories.forEach((c, i) => { const b = document.createElement("button"); b.className = "cat-btn" + (c.id === "all" ? " active" : ""); b.textContent = c.label; b.classList.add("fade-up"); b.addEventListener("click", () => { document.querySelectorAll(".cat-btn").forEach(x => x.classList.remove("active")); b.classList.add("active"); currentCat = c.id; document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase(); renderGames(); }); catContainer.appendChild(b); });
+function renderCategories() { catContainer.innerHTML = ''; categories.forEach((c, i) => { const b = document.createElement("button"); b.className = "cat-btn" + (c.id === currentCat ? " active" : ""); b.textContent = c.label; b.classList.add("fade-up"); b.addEventListener("click", () => { document.querySelectorAll(".cat-btn").forEach(x => x.classList.remove("active")); b.classList.add("active"); currentCat = c.id; document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase(); renderGames(); }); catContainer.appendChild(b); }); }
 const grid = document.getElementById("gamesGrid"); const emptyState = document.getElementById("emptyState"); const gameContainer = document.getElementById("gameContainer"); const gameFrame = document.getElementById("gameFrame"); const closeGameBtn = document.getElementById("closeGameBtn"); let currentGameTitle = null;
 function renderGames() { const f = games.filter(g => currentCat === "all" || g.cat === currentCat); grid.innerHTML = ""; if (f.length === 0) { emptyState.classList.remove("hidden"); return; } emptyState.classList.add("hidden"); f.forEach((g, i) => { const c = document.createElement("div"); c.className = "game-card fade-up"; const gd = userData?.history?.[g.title]; const hp = gd && (gd.timesPlayed || 0) > 0; const th = !hp ? `<div class="game-tag">NEW</div>` : ""; const gr = globalGameRatings[g.title]?.avg || 0; const rh = gr > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${gr}</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`; c.innerHTML = `${th}${rh}<div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.src='${defaultImg}'"><div class="game-overlay"></div></div><div class="play-icon"><i class="fas fa-play"></i></div><div class="game-title">${g.title}</div>`; c.addEventListener("click", () => { currentGameTitle = g.title; if (userData && userDbRef) { if (!userData.history) userData.history = {}; if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1; userData.history[g.title].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); } gameFrame.src = g.file; gameContainer.classList.add('show'); showToast(!userData ? "MODO OFFLINE." : `Iniciando: ${g.title}...`); }); grid.appendChild(c); }); }
 closeGameBtn.addEventListener('click', () => { gameContainer.classList.remove('show'); gameFrame.src = ''; if (userData && currentGameTitle) { const gd = userData.history?.[currentGameTitle]; if (!gd || !gd.rating || gd.rating === 0) setTimeout(() => openRatingModal(currentGameTitle), 300); } });
@@ -560,7 +564,7 @@ const toast = document.getElementById("toast"); const toastMsg = document.getEle
 function showToast(msg) { toastMsg.textContent = msg; toast.classList.add("show"); clearTimeout(toastTimerGeneral); toastTimerGeneral = setTimeout(() => toast.classList.remove("show"), 3000); }
 function spawnParticle() { const p = document.createElement("div"); p.className = "particle"; const s = Math.random() * 3 + 1; p.style.width = s + "px"; p.style.height = s + "px"; p.style.left = Math.random() * window.innerWidth + "px"; p.style.top = window.innerHeight + "px"; document.body.appendChild(p); const d = 4000 + Math.random() * 3000; p.animate([{ transform: "translate(0,0)", opacity: 0 }, { opacity: 0.8, offset: 0.1 }, { opacity: 0.8, offset: 0.9 }, { transform: `translate(${(Math.random()-.5)*100}px, -${window.innerHeight+20}px)`, opacity: 0 }], { d, easing: "linear" }); setTimeout(() => p.remove(), d); }
 setInterval(spawnParticle, 600);
-renderUserArea(); renderGames(); if (userData) listenToUserData(userData.name);
+renderUserArea(); renderCategories(); renderGames(); if (userData) listenToUserData(userData.name);
 document.addEventListener("mousemove", e => { document.querySelectorAll(".game-card:hover").forEach(c => { const r = c.getBoundingClientRect(); c.style.transform = `translateY(-6px) scale(1.02) perspective(800px) rotateY(${(e.clientX-r.left)/r.width-.5*6}deg) rotateX(${-(e.clientY-r.top)/r.height-.5*6}deg)`; }); });
 document.addEventListener("mouseleave", () => document.querySelectorAll(".game-card").forEach(c => c.style.transform = ""));
 
@@ -570,18 +574,55 @@ const devGridState = document.getElementById("devGridState"); const devPlayerSta
 const devGameFrame = document.getElementById("devGameFrame"); const devSelectorBar = document.getElementById("devSelectorBar");
 const devCommentsList = document.getElementById("devCommentsList"); const commentInput = document.getElementById("commentInput"); const sendCommentBtn = document.getElementById("sendCommentBtn");
 
+// Auto-lectura de juegos Beta desde la carpeta JuegosBeta
 async function fetchDevGames() {
     const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/JuegosBeta`;
     try {
         const response = await fetch(apiUrl);
         if (!response.ok) throw new Error("No se pudo leer la carpeta");
         const files = await response.json();
-        devGames = files.filter(f => f.name.endsWith('.html')).map(f => {
+        const newDevGames = files.filter(f => f.name.endsWith('.html')).map(f => {
             const niceName = f.name.replace('.html', '').replace(/_/g, ' ').toUpperCase();
             return { title: niceName, file: `JuegosBeta/${f.name}`, img: defaultBetaImg };
         });
-    } catch (error) { console.error("Error:", error); devGames = []; }
+        // Solo actualizar si hay cambios para no romper la interfaz
+        if (JSON.stringify(newDevGames) !== JSON.stringify(devGames)) {
+            devGames = newDevGames;
+            if (devGridState.style.display !== 'none') renderDevGamesGrid();
+            if (devPlayerState.classList.contains('show')) renderDevSelector(currentDevGame);
+        }
+    } catch (error) { console.error("Error:", error); }
 }
+
+// Auto-lectura de juegos principales desde la raíz del repo
+async function fetchMainGames() {
+    const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/`;
+    try {
+        const response = await fetch(apiUrl);
+        if (!response.ok) return;
+        const files = await response.json();
+        const fetchedGameFiles = files.filter(f => f.name.endsWith('.html') && f.name.toLowerCase() !== 'index.html').map(f => f.name);
+        const currentGameFiles = games.map(g => g.file);
+        // Verificar si hay nuevos juegos principales
+        const hasNewGames = fetchedGameFiles.length !== currentGameFiles.length || !fetchedGameFiles.every(f => currentGameFiles.includes(f));
+        if (hasNewGames) {
+            const newGamesArray = fetchedGameFiles.map(f => {
+                const niceName = f.replace('.html', '').replace(/_/g, ' ').toUpperCase();
+                const existing = games.find(g => g.file === f);
+                return existing ? existing : { title: niceName, cat: "all", tag: "NEW", file: f, img: defaultImg };
+            });
+            games = newGamesArray;
+            renderGames(); // Actualizar vista si hay cambios
+        }
+    } catch (error) { console.error("Error fetching main games:", error); }
+}
+
+// Polling: revisar GitHub cada 60 segundos
+setInterval(() => {
+    fetchMainGames();
+    fetchDevGames();
+}, 60000);
+
 function renderDevGamesGrid() {
   let html = '';
   if (devGames.length === 0) html = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">Aún no has subido juegos a la carpeta "JuegosBeta" en GitHub.</div>';
@@ -595,16 +636,47 @@ function renderDevSelector(at) {
 }
 function openDevPlayer(g) {
   currentDevGame = g.title; devGameFrame.src = g.file; devGridState.style.display = 'none'; devPlayerState.classList.add('show'); renderDevSelector(g.title);
+  localStorage.setItem('htmlGamesAppState', 'devPlayer');
+  localStorage.setItem('htmlGamesCurrentDevGame', g.title);
   if (currentDevCommentRef) currentDevCommentRef.off(); currentDevCommentRef = db.ref('devComments/' + g.title);
   currentDevCommentRef.on('value', s => { let html = '', ca = []; s.forEach(c => ca.push(c.val())); ca.sort((a,b) => b.time-a.time); if (ca.length===0) html = '<div style="text-align:center;color:#6a3030;font-size:0.8rem;padding:20px;">Sé el primero en sugerir.</div>'; else ca.forEach(c => { const d = new Date(c.time); const ts = d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); html += `<div class="dev-comment-item"><div class="c-header"><span class="c-user">${c.user}</span><span class="c-time">${ts}</span></div><p class="c-text">${c.text}</p></div>`; }); devCommentsList.innerHTML = html; devCommentsList.scrollTop = devCommentsList.scrollHeight; });
 }
-function backToDevGridView() { devGameFrame.src = ''; devPlayerState.classList.remove('show'); devGridState.style.display = 'block'; if (currentDevCommentRef) currentDevCommentRef.off(); }
-devBtn.addEventListener('click', async () => { devView.classList.add('show'); devGridState.style.display = 'block'; devPlayerState.classList.remove('show'); devGamesGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">CARGANDO JUEGOS...</div>'; await fetchDevGames(); renderDevGamesGrid(); });
-closeDevBtn.addEventListener('click', () => { devView.classList.remove('show'); devGameFrame.src = ''; if (currentDevCommentRef) currentDevCommentRef.off(); });
+function backToDevGridView() { devGameFrame.src = ''; devPlayerState.classList.remove('show'); devGridState.style.display = 'block'; if (currentDevCommentRef) currentDevCommentRef.off(); localStorage.setItem('htmlGamesAppState', 'devGrid'); localStorage.removeItem('htmlGamesCurrentDevGame'); }
+devBtn.addEventListener('click', async () => {
+  devView.classList.add('show'); devGridState.style.display = 'block'; devPlayerState.classList.remove('show');
+  devGamesGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">CARGANDO JUEGOS...</div>';
+  localStorage.setItem('htmlGamesAppState', 'devGrid'); localStorage.removeItem('htmlGamesCurrentDevGame');
+  await fetchDevGames(); renderDevGamesGrid();
+});
+closeDevBtn.addEventListener('click', () => { devView.classList.remove('show'); devGameFrame.src = ''; if (currentDevCommentRef) currentDevCommentRef.off(); localStorage.removeItem('htmlGamesAppState'); localStorage.removeItem('htmlGamesCurrentDevGame'); });
 devSelectorBar.addEventListener('click', e => { if (e.target.closest('#backToDevGrid')) { backToDevGridView(); return; } const item = e.target.closest('.dev-selector-item'); if (item) openDevPlayer({ title: item.dataset.title, file: item.dataset.file }); });
 devGamesGrid.addEventListener('click', e => { const card = e.target.closest('.game-card'); if (card) openDevPlayer({ title: card.dataset.title, file: card.dataset.file }); });
 sendCommentBtn.addEventListener('click', async () => { if (!userData) { showToast("Inicia sesión para comentar."); return; } if (!currentDevGame) return; const text = commentInput.value.trim(); if (text.length === 0) return; await db.ref('devComments/' + currentDevGame).push({ user: userData.name, text: text, time: Date.now() }); commentInput.value = ''; showToast("Comentario enviado."); });
 commentInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendCommentBtn.click(); });
+
+/* ============ RESTAURAR ESTADO TRAS REFRESCAR ============ */
+window.addEventListener('load', async () => {
+    if (savedAppState === 'devGrid') {
+        devView.classList.add('show');
+        devGridState.style.display = 'block';
+        devPlayerState.classList.remove('show');
+        devGamesGrid.innerHTML = '<div style="grid-column:1/-1;text-align:center;padding:40px;color:var(--gold);">CARGANDO JUEGOS...</div>';
+        await fetchDevGames();
+        renderDevGamesGrid();
+    } else if (savedAppState === 'devPlayer' && savedDevGame) {
+        devView.classList.add('show');
+        devGridState.style.display = 'none';
+        devPlayerState.classList.add('show');
+        await fetchDevGames();
+        const game = devGames.find(x => x.title === savedDevGame);
+        if (game) {
+            openDevPlayer(game);
+        } else {
+            // Si el juego ya no existe, volver a la cuadrícula
+            backToDevGridView();
+        }
+    }
+});
 </script>
 </body>
 </html>
