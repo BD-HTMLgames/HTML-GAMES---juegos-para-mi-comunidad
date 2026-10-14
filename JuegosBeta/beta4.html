@@ -1,0 +1,1623 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LABERINTO DE LA LOCURA</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            background: #000;
+            color: #0f0;
+            font-family: 'Press Start 2P', cursive;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        #gameContainer {
+            width: 100vw;
+            height: 100vh;
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+        
+        #canvas {
+            border: 2px solid #0f0;
+            box-shadow: 0 0 20px #0f0;
+            image-rendering: pixelated;
+            image-rendering: crisp-edges;
+        }
+        
+        #ui {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+            min-width: 250px;
+        }
+        
+        .ui-row {
+            margin-bottom: 10px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+        }
+        
+        .ui-label {
+            color: #0f0;
+            margin-right: 10px;
+        }
+        
+        .ui-value {
+            color: #fff;
+        }
+        
+        #sanityBar {
+            width: 100%;
+            height: 15px;
+            background: #222;
+            border: 1px solid #0f0;
+            margin-top: 5px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        #sanityFill {
+            height: 100%;
+            background: linear-gradient(90deg, #4a4a4a, #666);
+            transition: width 0.3s ease, background 0.3s ease;
+        }
+        
+        #sanityValue {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 8px;
+            color: #fff;
+            text-shadow: 1px 1px 2px #000;
+        }
+        
+        #controls {
+            position: absolute;
+            bottom: 10px;
+            left: 10px;
+            z-index: 100;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px;
+            border: 2px solid #0f0;
+            border-radius: 5px;
+            font-size: 8px;
+        }
+        
+        .control-row {
+            margin-bottom: 5px;
+            color: #0f0;
+        }
+        
+        #message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.9);
+            padding: 20px;
+            border: 2px solid #f00;
+            border-radius: 5px;
+            text-align: center;
+            z-index: 200;
+            display: none;
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { box-shadow: 0 0 10px #f00; }
+            50% { box-shadow: 0 0 30px #f00, 0 0 50px #f00; }
+        }
+        
+        #startScreen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: #000;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 300;
+        }
+        
+        #title {
+            font-size: 24px;
+            color: #f00;
+            text-shadow: 0 0 10px #f00;
+            margin-bottom: 20px;
+            animation: glitch 2s infinite;
+        }
+        
+        @keyframes glitch {
+            0%, 100% { text-shadow: 0 0 10px #f00; }
+            25% { text-shadow: -2px 0 #0f0, 2px 0 #00f; }
+            50% { text-shadow: 2px 0 #f00, -2px 0 #ff0; }
+            75% { text-shadow: 0 0 20px #f00; }
+        }
+        
+        #startButton {
+            background: #111;
+            color: #0f0;
+            border: 2px solid #0f0;
+            padding: 15px 30px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-top: 20px;
+        }
+        
+        #startButton:hover {
+            background: #0f0;
+            color: #000;
+            box-shadow: 0 0 20px #0f0;
+            transform: scale(1.05);
+        }
+        
+        #loading {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 12px;
+            color: #0f0;
+            z-index: 400;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .loading-dots {
+            margin-top: 10px;
+        }
+        
+        .loading-dots span {
+            animation: blink 1.4s infinite both;
+            font-size: 20px;
+        }
+        
+        .loading-dots span:nth-child(2) {
+            animation-delay: 0.2s;
+        }
+        
+        .loading-dots span:nth-child(3) {
+            animation-delay: 0.4s;
+        }
+        
+        @keyframes blink {
+            0%, 80%, 100% { opacity: 0; }
+            40% { opacity: 1; }
+        }
+        
+        .energyBoost {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #0f0;
+            font-size: 16px;
+            text-shadow: 0 0 10px #0f0;
+            animation: energyPulse 1s ease-out forwards;
+            z-index: 150;
+            pointer-events: none;
+        }
+        
+        @keyframes energyPulse {
+            0% {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(0.5);
+            }
+            100% {
+                opacity: 0;
+                transform: translate(-50%, -100%) scale(1.5);
+            }
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+        
+        #victoryAnimation {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, #0a0a2e 0%, #16213e 50%, #0f3460 100%);
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            overflow: hidden;
+        }
+        
+        #particles {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+        }
+        
+        .particle {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: white;
+            border-radius: 50%;
+            animation: floatUp 10s linear infinite;
+        }
+        
+        @keyframes floatUp {
+            0% {
+                bottom: -10px;
+                opacity: 0;
+            }
+            10% {
+                opacity: 1;
+            }
+            90% {
+                opacity: 1;
+            }
+            100% {
+                bottom: 110%;
+                opacity: 0;
+            }
+        }
+        
+        #victoryContent {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            animation: victoryAppear 1s ease-out;
+        }
+        
+        @keyframes victoryAppear {
+            0% {
+                opacity: 0;
+                transform: scale(0.5) rotate(-10deg);
+            }
+            100% {
+                opacity: 1;
+                transform: scale(1) rotate(0deg);
+            }
+        }
+        
+        #victoryTitle {
+            font-size: 48px;
+            color: #ffd700;
+            text-shadow: 
+                0 0 10px #ffd700,
+                0 0 20px #ffd700,
+                0 0 30px #ffd700,
+                0 0 40px #ff8c00;
+            margin-bottom: 20px;
+            animation: titleGlow 2s ease-in-out infinite alternate;
+        }
+        
+        @keyframes titleGlow {
+            0% {
+                text-shadow: 
+                    0 0 10px #ffd700,
+                    0 0 20px #ffd700,
+                    0 0 30px #ffd700,
+                    0 0 40px #ff8c00;
+            }
+            100% {
+                text-shadow: 
+                    0 0 20px #ffd700,
+                    0 0 30px #ffd700,
+                    0 0 40px #ffd700,
+                    0 0 60px #ff8c00,
+                    0 0 80px #ff4500;
+            }
+        }
+        
+        #victoryMessage {
+            font-size: 16px;
+            color: #fff;
+            margin-bottom: 30px;
+            line-height: 1.8;
+            max-width: 600px;
+        }
+        
+        .victoryLine {
+            opacity: 0;
+            animation: fadeInLine 1s ease-out forwards;
+        }
+        
+        .victoryLine:nth-child(1) { animation-delay: 0.5s; }
+        .victoryLine:nth-child(2) { animation-delay: 1.5s; }
+        .victoryLine:nth-child(3) { animation-delay: 2.5s; }
+        .victoryLine:nth-child(4) { animation-delay: 3.5s; }
+        
+        @keyframes fadeInLine {
+            0% {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            100% {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        #victoryStats {
+            background: rgba(0, 0, 0, 0.7);
+            border: 2px solid #ffd700;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            min-width: 400px;
+        }
+        
+        .statRow {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 10px;
+            font-size: 12px;
+            color: #fff;
+        }
+        
+        .statLabel {
+            color: #ffd700;
+        }
+        
+        .statValue {
+            color: #0f0;
+        }
+        
+        #continueButton {
+            background: linear-gradient(135deg, #ffd700, #ff8c00);
+            color: #000;
+            border: none;
+            padding: 15px 40px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 14px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-radius: 5px;
+            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            animation: buttonPulse 2s infinite;
+        }
+        
+        @keyframes buttonPulse {
+            0%, 100% {
+                transform: scale(1);
+                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
+            }
+            50% {
+                transform: scale(1.05);
+                box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6);
+            }
+        }
+        
+        #continueButton:hover {
+            transform: scale(1.1);
+            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
+        }
+        
+        .achievement {
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            background: linear-gradient(135deg, #8b008b, #4b0082);
+            border: 2px solid #ffd700;
+            border-radius: 5px;
+            padding: 15px;
+            color: #fff;
+            font-size: 10px;
+            z-index: 1001;
+            animation: slideIn 0.5s ease-out;
+            max-width: 250px;
+        }
+        
+        @keyframes slideIn {
+            0% {
+                right: -300px;
+                opacity: 0;
+            }
+            100% {
+                right: 20px;
+                opacity: 1;
+            }
+        }
+        
+        #spaceHint {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #ffd700;
+            font-size: 12px;
+            animation: blink 1.5s infinite;
+            z-index: 20;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .spaceKey {
+            background: rgba(255, 215, 0, 0.2);
+            border: 2px solid #ffd700;
+            padding: 5px 15px;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas"></canvas>
+        
+        <div id="ui">
+            <div class="ui-row">
+                <span class="ui-label">NIVEL:</span>
+                <span class="ui-value" id="level">1</span>
+            </div>
+            <div class="ui-row">
+                <span class="ui-label">SEÑALES:</span>
+                <span class="ui-value" id="signs">0</span>
+            </div>
+            <div class="ui-row">
+                <span class="ui-label">PASOS:</span>
+                <span class="ui-value" id="steps">0</span>
+            </div>
+            <div class="ui-row">
+                <span class="ui-label">CORDURA:</span>
+            </div>
+            <div id="sanityBar">
+                <div id="sanityFill" style="width: 100%"></div>
+                <span id="sanityValue">100%</span>
+            </div>
+        </div>
+        
+        <div id="controls">
+            <div class="control-row">W/A/S/D - MOVERSE</div>
+            <div class="control-row">FLECHAS - GIRAR</div>
+            <div class="control-row">SHIFT - CORRER</div>
+            <div class="control-row">ESC - SALIR</div>
+        </div>
+        
+        <div id="message">
+            <div style="color: #f00; font-size: 14px; margin-bottom: 10px;">¡HAS PERDIDO LA CORDURA!</div>
+            <div style="color: #fff; font-size: 10px;">El laberinto te ha consumido...</div>
+            <div style="color: #fff; font-size: 10px; margin-top: 10px;">Presiona ESPACIO para recuperarte</div>
+        </div>
+        
+        <div id="startScreen">
+            <div id="title">LABERINTO DE LA LOCURA</div>
+            <div style="color: #f00; font-size: 10px; margin-bottom: 20px; text-align: center; max-width: 600px; line-height: 1.5;">
+                Un juego donde tu mente es el enemigo<br>
+                Encuentra la salida antes de perder la cordura<br>
+                Cada paso consume tu energía mental
+            </div>
+            <button id="startButton">COMENZAR EL SUFRIMIENTO</button>
+        </div>
+        
+        <div id="loading">
+            <div>GENERANDO LABERINTO</div>
+            <div class="loading-dots">
+                <span>.</span><span>.</span><span>.</span>
+            </div>
+        </div>
+        
+        <div id="victoryAnimation">
+            <div id="particles"></div>
+            <div id="victoryContent">
+                <div id="victoryTitle">¡LIBERTAD!</div>
+                <div id="victoryMessage">
+                    <div class="victoryLine">HAS SUPERADO LA PRUEBA MÁS DURA</div>
+                    <div class="victoryLine">TU MENTE ES FUERTE</div>
+                    <div class="victoryLine">TU ESPÍRITU INDÓMITO</div>
+                    <div class="victoryLine">NUNCA TE RINDAS</div>
+                </div>
+                <div id="victoryStats">
+                    <div class="statRow">
+                        <span class="statLabel">TIEMPO:</span>
+                        <span class="statValue" id="victoryTime">00:00</span>
+                    </div>
+                    <div class="statRow">
+                        <span class="statLabel">PASOS:</span>
+                        <span class="statValue" id="victorySteps">0</span>
+                    </div>
+                    <div class="statRow">
+                        <span class="statLabel">SEÑALES:</span>
+                        <span class="statValue" id="victorySigns">0</span>
+                    </div>
+                    <div class="statRow">
+                        <span class="statLabel">NIVEL:</span>
+                        <span class="statValue" id="victoryLevel">1</span>
+                    </div>
+                </div>
+                <button id="continueButton">CONTINUAR EL VIAJE</button>
+                <div id="spaceHint">
+                    <span class="spaceKey">ESPACIO</span>
+                    <span>PARA CONTINUAR</span>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        class Game {
+            constructor() {
+                this.canvas = document.getElementById('canvas');
+                this.ctx = this.canvas.getContext('2d');
+                
+                this.setupCanvas();
+                
+                this.level = 1;
+                this.mazeSize = 25;
+                this.maze = [];
+                this.exit = null;
+                this.signs = [];
+                this.energizers = [];
+                this.traps = [];
+                this.specialRooms = [];
+                
+                this.player = {
+                    x: 1.5,
+                    y: 1.5,
+                    angle: 0,
+                    speed: 0.05,
+                    rotSpeed: 0.03,
+                    sanity: 100,
+                    signs: 0,
+                    steps: 0,
+                    stepDistance: 0,
+                    disorientation: 0
+                };
+                
+                this.keys = {};
+                this.fov = Math.PI / 3;
+                this.numRays = 120;
+                this.maxDepth = 20;
+                
+                this.gameRunning = false;
+                this.exitFound = false;
+                this.insaneMode = false;
+                this.startTime = 0;
+                
+                this.setupEventListeners();
+                this.generateDenseMaze();
+            }
+            
+            setupCanvas() {
+                this.canvas.width = window.innerWidth * 0.9;
+                this.canvas.height = window.innerHeight * 0.9;
+                
+                window.addEventListener('resize', () => {
+                    this.canvas.width = window.innerWidth * 0.9;
+                    this.canvas.height = window.innerHeight * 0.9;
+                });
+            }
+            
+            setupEventListeners() {
+                document.addEventListener('keydown', (e) => {
+                    this.keys[e.key.toLowerCase()] = true;
+                    
+                    if (e.key === 'Escape') {
+                        this.resetToStart();
+                    }
+                    
+                    if (e.key === ' ' || e.key === 'Spacebar') {
+                        e.preventDefault();
+                        
+                        if (this.insaneMode) {
+                            this.recoverFromInsanity();
+                        }
+                        
+                        if (this.exitFound) {
+                            this.continueToNextLevel();
+                        }
+                    }
+                });
+                
+                document.addEventListener('keyup', (e) => {
+                    this.keys[e.key.toLowerCase()] = false;
+                });
+                
+                document.getElementById('startButton').addEventListener('click', () => {
+                    this.start();
+                });
+                
+                document.getElementById('continueButton').addEventListener('click', () => {
+                    this.continueToNextLevel();
+                });
+            }
+            
+            resetToStart() {
+                this.gameRunning = false;
+                this.exitFound = false;
+                this.insaneMode = false;
+                document.getElementById('victoryAnimation').style.display = 'none';
+                document.getElementById('startScreen').style.display = 'flex';
+                this.level = 1;
+                this.player.sanity = 100;
+                this.player.signs = 0;
+                this.player.steps = 0;
+                this.player.stepDistance = 0;
+                this.player.disorientation = 0;
+                document.getElementById('level').textContent = '1';
+                document.getElementById('signs').textContent = '0';
+                document.getElementById('steps').textContent = '0';
+                document.getElementById('sanityValue').textContent = '100%';
+                document.getElementById('sanityFill').style.width = '100%';
+                document.getElementById('message').style.display = 'none';
+            }
+            
+            generateDenseMaze() {
+                this.maze = Array(this.mazeSize).fill().map(() => Array(this.mazeSize).fill(1));
+                
+                const stack = [];
+                const startX = 1;
+                const startY = 1;
+                this.maze[startY][startX] = 0;
+                stack.push({x: startX, y: startY});
+                
+                const directions = [
+                    {dx: 0, dy: -2},
+                    {dx: 2, dy: 0},
+                    {dx: 0, dy: 2},
+                    {dx: -2, dy: 0}
+                ];
+                
+                while (stack.length > 0) {
+                    const current = stack[stack.length - 1];
+                    const neighbors = [];
+                    
+                    for (const dir of directions) {
+                        const nx = current.x + dir.dx;
+                        const ny = current.y + dir.dy;
+                        
+                        if (nx > 0 && nx < this.mazeSize - 1 && 
+                            ny > 0 && ny < this.mazeSize - 1 && 
+                            this.maze[ny][nx] === 1) {
+                            neighbors.push({x: nx, y: ny, dx: dir.dx / 2, dy: dir.dy / 2});
+                        }
+                    }
+                    
+                    if (neighbors.length > 0) {
+                        const next = neighbors[Math.floor(Math.random() * neighbors.length)];
+                        this.maze[next.y][next.x] = 0;
+                        this.maze[current.y + next.dy][current.x + next.dx] = 0;
+                        stack.push({x: next.x, y: next.y});
+                    } else {
+                        stack.pop();
+                    }
+                }
+                
+                for (let y = 1; y < this.mazeSize - 1; y++) {
+                    for (let x = 1; x < this.mazeSize - 1; x++) {
+                        if (this.maze[y][x] === 1) {
+                            const adjacentWalls = 
+                                (this.maze[y-1][x] === 1 ? 1 : 0) +
+                                (this.maze[y+1][x] === 1 ? 1 : 0) +
+                                (this.maze[y][x-1] === 1 ? 1 : 0) +
+                                (this.maze[y][x+1] === 1 ? 1 : 0);
+                            
+                            if (adjacentWalls < 2 && Math.random() < 0.3) {
+                                this.maze[y][x] = 0;
+                            }
+                        }
+                    }
+                }
+                
+                this.placeExit();
+                this.placeSigns();
+                this.placeEnergizers();
+                this.placeSpecialRooms();
+                this.placeTraps();
+            }
+            
+            placeExit() {
+                let placed = false;
+                while (!placed) {
+                    const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                    const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                    
+                    if (this.maze[y][x] === 0) {
+                        this.exit = {x, y};
+                        this.maze[y][x] = 0;
+                        placed = true;
+                    }
+                }
+            }
+            
+            placeSigns() {
+                this.signs = [];
+                const numSigns = 3 + Math.floor(this.level / 2);
+                
+                for (let i = 0; i < numSigns; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 100) {
+                        const x = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
+                        const y = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
+                        
+                        if (this.maze[y][x] === 0 && 
+                            !(x === this.exit.x && y === this.exit.y)) {
+                            this.signs.push({
+                                x: x + 0.5,
+                                y: y + 0.5,
+                                collected: false,
+                                message: this.getRandomHint()
+                            });
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+            }
+            
+            placeEnergizers() {
+                this.energizers = [];
+                const numEnergizers = Math.max(1, Math.floor(this.mazeSize / 8));
+                
+                for (let i = 0; i < numEnergizers; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 200) {
+                        const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                        const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                        
+                        let tooClose = false;
+                        for (const energizer of this.energizers) {
+                            const dist = Math.sqrt(Math.pow(x - energizer.x, 2) + Math.pow(y - energizer.y, 2));
+                            if (dist < 5) {
+                                tooClose = true;
+                                break;
+                            }
+                        }
+                        
+                        if (this.maze[y][x] === 0 && !tooClose) {
+                            this.energizers.push({
+                                x: x + 0.5,
+                                y: y + 0.5,
+                                collected: false,
+                                value: 15 + Math.floor(Math.random() * 10)
+                            });
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+            }
+            
+            placeSpecialRooms() {
+                const numRooms = 2 + Math.floor(Math.random() * 2);
+                
+                for (let i = 0; i < numRooms; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 50) {
+                        const roomWidth = 3 + Math.floor(Math.random() * 3);
+                        const roomHeight = 3 + Math.floor(Math.random() * 3);
+                        const x = Math.floor(Math.random() * (this.mazeSize - roomWidth - 2)) + 1;
+                        const y = Math.floor(Math.random() * (this.mazeSize - roomHeight - 2)) + 1;
+                        
+                        let canPlace = true;
+                        for (let ry = y; ry < y + roomHeight; ry++) {
+                            for (let rx = x; rx < x + roomWidth; rx++) {
+                                if (this.maze[ry][rx] === 0) {
+                                    canPlace = false;
+                                    break;
+                                }
+                            }
+                            if (!canPlace) break;
+                        }
+                        
+                        if (canPlace) {
+                            const roomType = Math.random() > 0.5 ? 'forest' : 'cave';
+                            this.specialRooms.push({
+                                x: x,
+                                y: y,
+                                width: roomWidth,
+                                height: roomHeight,
+                                type: roomType
+                            });
+                            
+                            for (let ry = y; ry < y + roomHeight; ry++) {
+                                for (let rx = x; rx < x + roomWidth; rx++) {
+                                    this.maze[ry][rx] = 0;
+                                }
+                            }
+                            
+                            const entranceX = x + Math.floor(Math.random() * roomWidth);
+                            const entranceY = y + Math.floor(Math.random() * roomHeight);
+                            this.maze[entranceY][entranceX] = 0;
+                            
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+            }
+            
+            placeTraps() {
+                const numTraps = 1 + Math.floor(this.level / 3);
+                this.traps = [];
+                
+                for (let i = 0; i < numTraps; i++) {
+                    let placed = false;
+                    let attempts = 0;
+                    while (!placed && attempts < 100) {
+                        const x = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
+                        const y = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
+                        
+                        if (this.maze[y][x] === 0 && 
+                            Math.abs(x - this.exit.x) + Math.abs(y - this.exit.y) > 3) {
+                            this.traps.push({
+                                x: x + 0.5,
+                                y: y + 0.5,
+                                type: Math.random() > 0.5 ? 'spin' : 'teleport',
+                                triggered: false
+                            });
+                            placed = true;
+                        }
+                        attempts++;
+                    }
+                }
+            }
+            
+            getRandomHint() {
+                const hints = [
+                    "LA SALIDA ESTÁ MUY LEJOS",
+                    "NO CONFÍES EN TUS OJOS",
+                    "HAY SALAS OCULTAS",
+                    "BUSCA ENERGÍA ANTES DE PERDER LA CORDURA",
+                    "EL TIEMPO SE AGOTA",
+                    "LA OSCURIDAD CONSUME",
+                    "SIGUE LA PARED DERECHA",
+                    "LA SALIDA ESTÁ EN UNA ESQUINA",
+                    "NO GIRES EN CÍRCULOS",
+                    "LA LOCURA ES CERCA"
+                ];
+                return hints[Math.floor(Math.random() * hints.length)];
+            }
+            
+            update() {
+                if (!this.gameRunning || this.exitFound) return;
+                
+                const moveSpeed = this.player.speed * (this.player.sanity > 30 ? 1 : 0.5);
+                const rotSpeed = this.player.rotSpeed;
+                const oldX = this.player.x;
+                const oldY = this.player.y;
+                
+                if (this.keys['arrowleft']) {
+                    this.player.angle -= rotSpeed;
+                }
+                if (this.keys['arrowright']) {
+                    this.player.angle += rotSpeed;
+                }
+                
+                let dx = 0, dy = 0;
+                if (this.keys['w']) {
+                    dx = Math.cos(this.player.angle) * moveSpeed;
+                    dy = Math.sin(this.player.angle) * moveSpeed;
+                }
+                if (this.keys['s']) {
+                    dx = -Math.cos(this.player.angle) * moveSpeed;
+                    dy = -Math.sin(this.player.angle) * moveSpeed;
+                }
+                if (this.keys['a']) {
+                    dx = Math.cos(this.player.angle - Math.PI/2) * moveSpeed;
+                    dy = Math.sin(this.player.angle - Math.PI/2) * moveSpeed;
+                }
+                if (this.keys['d']) {
+                    dx = Math.cos(this.player.angle + Math.PI/2) * moveSpeed;
+                    dy = Math.sin(this.player.angle + Math.PI/2) * moveSpeed;
+                }
+                
+                const newX = this.player.x + dx;
+                const newY = this.player.y + dy;
+                
+                if (!this.checkCollision(newX, newY)) {
+                    this.player.x = newX;
+                    this.player.y = newY;
+                    
+                    const distance = Math.sqrt(dx * dx + dy * dy);
+                    this.player.stepDistance += distance;
+                    
+                    if (this.player.stepDistance >= 0.5) {
+                        this.player.steps++;
+                        this.player.stepDistance = 0;
+                        document.getElementById('steps').textContent = this.player.steps;
+                    }
+                    
+                    if (distance > 0.001) {
+                        if (this.keys['shift']) {
+                            this.player.sanity = Math.max(0, this.player.sanity - 0.15);
+                        } else {
+                            this.player.sanity = Math.max(0, this.player.sanity - 0.05);
+                        }
+                        
+                        this.updateSanityUI();
+                    }
+                }
+                
+                this.checkSignCollection();
+                this.checkEnergizerCollection();
+                this.checkTrapTrigger();
+                this.checkExit();
+            }
+            
+            checkCollision(x, y) {
+                const margin = 0.2;
+                const corners = [
+                    {x: x - margin, y: y - margin},
+                    {x: x + margin, y: y - margin},
+                    {x: x - margin, y: y + margin},
+                    {x: x + margin, y: y + margin}
+                ];
+                
+                for (const corner of corners) {
+                    const mapX = Math.floor(corner.x);
+                    const mapY = Math.floor(corner.y);
+                    
+                    if (mapX < 0 || mapX >= this.mazeSize || 
+                        mapY < 0 || mapY >= this.mazeSize || 
+                        this.maze[mapY][mapX] === 1) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+            
+            checkSignCollection() {
+                this.signs.forEach(sign => {
+                    if (!sign.collected) {
+                        const dx = this.player.x - sign.x;
+                        const dy = this.player.y - sign.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 0.5) {
+                            sign.collected = true;
+                            this.player.signs++;
+                            document.getElementById('signs').textContent = this.player.signs;
+                            this.showHint(sign.message);
+                        }
+                    }
+                });
+            }
+            
+            checkEnergizerCollection() {
+                this.energizers.forEach(energizer => {
+                    if (!energizer.collected) {
+                        const dx = this.player.x - energizer.x;
+                        const dy = this.player.y - energizer.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 0.5) {
+                            energizer.collected = true;
+                            this.player.sanity = Math.min(100, this.player.sanity + energizer.value);
+                            this.updateSanityUI();
+                            this.showEnergyBoost(energizer.value);
+                        }
+                    }
+                });
+            }
+            
+            checkTrapTrigger() {
+                this.traps.forEach(trap => {
+                    if (!trap.triggered) {
+                        const dx = this.player.x - trap.x;
+                        const dy = this.player.y - trap.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 0.5) {
+                            trap.triggered = true;
+                            this.triggerTrap(trap.type);
+                        }
+                    }
+                });
+            }
+            
+            checkExit() {
+                const dx = this.player.x - (this.exit.x + 0.5);
+                const dy = this.player.y - (this.exit.y + 0.5);
+                const distance = Math.sqrt(dx * dx + dy * dy);
+                
+                if (distance < 0.8) {
+                    this.win();
+                }
+            }
+            
+            updateSanityUI() {
+                const sanityPercent = Math.floor(this.player.sanity);
+                document.getElementById('sanityValue').textContent = sanityPercent + '%';
+                document.getElementById('sanityFill').style.width = sanityPercent + '%';
+                
+                if (sanityPercent < 30) {
+                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #8B0000, #CD5C5C)';
+                } else if (sanityPercent < 60) {
+                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #4B4B00, #CCCC00)';
+                } else {
+                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #4a4a4a, #666)';
+                }
+                
+                if (this.player.sanity <= 0 && !this.insaneMode) {
+                    this.enterInsanityMode();
+                }
+            }
+            
+            enterInsanityMode() {
+                this.insaneMode = true;
+                this.player.sanity = 0;
+                document.getElementById('message').style.display = 'block';
+                
+                this.player.disorientation = 1;
+                
+                if (navigator.vibrate) {
+                    navigator.vibrate([100, 50, 100, 50, 200]);
+                }
+            }
+            
+            recoverFromInsanity() {
+                this.insaneMode = false;
+                this.player.sanity = 20;
+                this.player.disorientation = 0;
+                document.getElementById('message').style.display = 'none';
+                this.updateSanityUI();
+            }
+            
+            castRay(angle) {
+                const cos = Math.cos(angle);
+                const sin = Math.sin(angle);
+                
+                for (let depth = 0; depth < this.maxDepth; depth += 0.05) {
+                    const x = this.player.x + cos * depth;
+                    const y = this.player.y + sin * depth;
+                    
+                    if (x < 0 || x >= this.mazeSize || y < 0 || y >= this.mazeSize) {
+                        return {depth: this.maxDepth, wall: 1};
+                    }
+                    
+                    const mapX = Math.floor(x);
+                    const mapY = Math.floor(y);
+                    
+                    if (this.maze[mapY][mapX] === 1) {
+                        return {depth: depth, wall: 1, x: x, y: y};
+                    }
+                }
+                
+                return {depth: this.maxDepth, wall: 0};
+            }
+            
+            render() {
+                const width = this.canvas.width;
+                const height = this.canvas.height;
+                
+                const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
+                
+                if (this.player.sanity > 70) {
+                    gradient.addColorStop(0, '#2a2a2a');
+                    gradient.addColorStop(1, '#1a1a1a');
+                } else if (this.player.sanity > 40) {
+                    gradient.addColorStop(0, '#252525');
+                    gradient.addColorStop(0.5, '#2a1a1a');
+                    gradient.addColorStop(1, '#1a0a0a');
+                } else {
+                    gradient.addColorStop(0, '#1a1a1a');
+                    gradient.addColorStop(0.5, '#1a0a0a');
+                    gradient.addColorStop(1, '#0a0a0a');
+                }
+                
+                this.ctx.fillStyle = gradient;
+                this.ctx.fillRect(0, 0, width, height);
+                
+                const rayWidth = width / this.numRays;
+                
+                for (let i = 0; i < this.numRays; i++) {
+                    let rayAngle = this.player.angle - this.fov / 2 + (i / this.numRays) * this.fov;
+                    
+                    if (this.insaneMode) {
+                        rayAngle += Math.sin(Date.now() * 0.01 + i * 0.1) * 0.3;
+                    }
+                    
+                    const ray = this.castRay(rayAngle);
+                    
+                    if (ray.wall === 1) {
+                        const wallHeight = (height / ray.depth) * 0.8;
+                        const wallTop = (height - wallHeight) / 2;
+                        
+                        let color = '#333';
+                        
+                        const exitDistance = Math.sqrt(
+                            Math.pow(this.player.x - (this.exit.x + 0.5), 2) + 
+                            Math.pow(this.player.y - (this.exit.y + 0.5), 2)
+                        );
+                        
+                        const rayDistance = Math.sqrt(
+                            Math.pow(this.player.x - ray.x, 2) + 
+                            Math.pow(this.player.y - ray.y, 2)
+                        );
+                        
+                        if (exitDistance < 5 && rayDistance < 5) {
+                            const intensity = 1 - (exitDistance / 5);
+                            const r = Math.floor(40 + intensity * 60);
+                            const g = Math.floor(40 + intensity * 80);
+                            const b = Math.floor(80 + intensity * 100);
+                            color = `rgb(${r}, ${g}, ${b})`;
+                        } else if (this.specialRooms.length > 0) {
+                            const room = this.specialRooms.find(r => 
+                                ray.x >= r.x && ray.x < r.x + r.width &&
+                                ray.y >= r.y && ray.y < r.y + r.height
+                            );
+                            
+                            if (room && room.type === 'forest') {
+                                const brightness = Math.max(40, 100 - ray.depth * 8);
+                                const green = Math.floor(brightness + 20);
+                                color = `rgb(${Math.floor(brightness * 0.7)}, ${green}, ${Math.floor(brightness * 0.6)})`;
+                            } else if (room && room.type === 'cave') {
+                                const brightness = Math.max(35, 80 - ray.depth * 6);
+                                color = `rgb(${Math.floor(brightness * 0.8)}, ${Math.floor(brightness * 0.6)}, ${Math.floor(brightness * 0.4)})`;
+                            }
+                        }
+                        
+                        const correctedDepth = ray.depth * Math.cos(rayAngle - this.player.angle);
+                        const brightness = Math.max(25, 150 / (1 + correctedDepth * correctedDepth * 0.3));
+                        
+                        this.ctx.fillStyle = color;
+                        this.ctx.globalAlpha = brightness / 100;
+                        
+                        const x = Math.floor(i * rayWidth);
+                        const brickHeight = 8;
+                        
+                        for (let y = 0; y < wallHeight; y += brickHeight) {
+                            const pixelY = Math.floor(wallTop + y);
+                            this.ctx.fillRect(x, pixelY, Math.ceil(rayWidth) + 1, brickHeight - 1);
+                        }
+                        
+                        this.ctx.globalAlpha = 1;
+                    }
+                }
+                
+                this.signs.forEach(sign => {
+                    if (!sign.collected) {
+                        const dx = sign.x - this.player.x;
+                        const dy = sign.y - this.player.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 4) {
+                            const angle = Math.atan2(dy, dx) - this.player.angle;
+                            const normalizedAngle = ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
+                            
+                            if (Math.abs(normalizedAngle) < this.fov / 2) {
+                                const screenX = width / 2 + (normalizedAngle / this.fov) * width;
+                                const size = Math.max(6, 100 / distance);
+                                const screenY = height / 2;
+                                
+                                const pulse = Math.sin(Date.now() * 0.002) * 0.2 + 0.3;
+                                this.ctx.fillStyle = `rgba(100, 0, 150, ${pulse})`;
+                                this.ctx.beginPath();
+                                this.ctx.arc(screenX, screenY, size / 2, 0, Math.PI * 2);
+                                this.ctx.fill();
+                                
+                                this.ctx.fillStyle = '#999';
+                                this.ctx.font = `${size}px monospace`;
+                                this.ctx.textAlign = 'center';
+                                this.ctx.fillText('?', screenX, screenY + size/4);
+                            }
+                        }
+                    }
+                });
+                
+                this.energizers.forEach(energizer => {
+                    if (!energizer.collected) {
+                        const dx = energizer.x - this.player.x;
+                        const dy = energizer.y - this.player.y;
+                        const distance = Math.sqrt(dx * dx + dy * dy);
+                        
+                        if (distance < 6) {
+                            const angle = Math.atan2(dy, dx) - this.player.angle;
+                            const normalizedAngle = ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
+                            
+                            if (Math.abs(normalizedAngle) < this.fov / 2) {
+                                const screenX = width / 2 + (normalizedAngle / this.fov) * width;
+                                const size = Math.max(10, 140 / distance);
+                                const screenY = height / 2;
+                                
+                                const pulse = Math.sin(Date.now() * 0.003) * 0.4 + 0.6;
+                                this.ctx.fillStyle = `rgba(100, 255, 100, ${pulse})`;
+                                this.ctx.fillRect(screenX - size/2, screenY - size/2, size, size);
+                                
+                                this.ctx.fillStyle = '#555';
+                                this.ctx.font = `${size * 0.8}px monospace`;
+                                this.ctx.textAlign = 'center';
+                                this.ctx.fillText('+' + energizer.value, screenX, screenY + size/3);
+                            }
+                        }
+                    }
+                });
+                
+                if (this.player.sanity < 50) {
+                    const vignette = this.ctx.createRadialGradient(
+                        width / 2, height / 2, 0,
+                        width / 2, height / 2, width / 2
+                    );
+                    const darkness = 1 - (this.player.sanity / 100);
+                    vignette.addColorStop(0, `rgba(0, 0, 0, ${darkness * 0.2})`);
+                    vignette.addColorStop(0.7, `rgba(0, 0, 0, ${darkness * 0.4})`);
+                    vignette.addColorStop(1, `rgba(0, 0, 0, ${darkness * 0.7})`);
+                    this.ctx.fillStyle = vignette;
+                    this.ctx.fillRect(0, 0, width, height);
+                }
+                
+                if (this.player.sanity < 30 || this.insaneMode) {
+                    const imageData = this.ctx.getImageData(0, 0, width, height);
+                    const data = imageData.data;
+                    const noiseIntensity = this.insaneMode ? 0.15 : 0.05;
+                    
+                    for (let i = 0; i < data.length; i += 4) {
+                        if (Math.random() < noiseIntensity) {
+                            const noise = Math.random() * 60 - 30;
+                            data[i] += noise;
+                            data[i + 1] += noise;
+                            data[i + 2] += noise;
+                        }
+                    }
+                    this.ctx.putImageData(imageData, 0, 0);
+                }
+                
+                if (this.insaneMode) {
+                    const imageData = this.ctx.getImageData(0, 0, width, height);
+                    const data = imageData.data;
+                    for (let i = 0; i < data.length; i += 4) {
+                        if (Math.random() < 0.1) {
+                            data[i] = 255 - data[i];
+                            data[i + 1] = Math.random() * 255;
+                        }
+                    }
+                    this.ctx.putImageData(imageData, 0, 0);
+                }
+            }
+            
+            showHint(text) {
+                const hint = document.createElement('div');
+                hint.style.cssText = `
+                    position: absolute;
+                    top: 50%;
+                    left: 50%;
+                    transform: translate(-50%, -50%);
+                    background: rgba(50, 0, 100, 0.95);
+                    color: #ccc;
+                    padding: 20px;
+                    font-size: 10px;
+                    font-family: 'Press Start 2P', cursive;
+                    text-align: center;
+                    z-index: 500;
+                    animation: fadeInOut 4s ease-in-out;
+                    border: 2px solid #333;
+                    box-shadow: 0 0 30px rgba(100, 0, 150, 0.8);
+                    max-width: 80%;
+                `;
+                hint.textContent = text;
+                document.getElementById('gameContainer').appendChild(hint);
+                
+                setTimeout(() => hint.remove(), 4000);
+            }
+            
+            showEnergyBoost(value) {
+                const boost = document.createElement('div');
+                boost.className = 'energyBoost';
+                boost.textContent = `+${value}% CORDURA`;
+                document.getElementById('gameContainer').appendChild(boost);
+                
+                setTimeout(() => boost.remove(), 1000);
+            }
+            
+            triggerTrap(type) {
+                if (type === 'spin') {
+                    this.player.angle += (Math.random() - 0.5) * Math.PI * 1.5;
+                    this.player.sanity -= 15;
+                } else if (type === 'teleport') {
+                    let teleported = false;
+                    let attempts = 0;
+                    while (!teleported && attempts < 50) {
+                        const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                        const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
+                        if (this.maze[y][x] === 0) {
+                            this.player.x = x + 0.5;
+                            this.player.y = y + 0.5;
+                            teleported = true;
+                            this.player.sanity -= 20;
+                        }
+                        attempts++;
+                    }
+                }
+                this.updateSanityUI();
+            }
+            
+            win() {
+                this.exitFound = true;
+                this.gameRunning = false;
+                
+                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
+                const minutes = Math.floor(elapsed / 60);
+                const seconds = elapsed % 60;
+                
+                this.showEpicVictoryAnimation(minutes, seconds);
+            }
+            
+            showEpicVictoryAnimation(minutes, seconds) {
+                const victoryDiv = document.getElementById('victoryAnimation');
+                victoryDiv.style.display = 'flex';
+                
+                // Actualizar estadísticas
+                document.getElementById('victoryTime').textContent = 
+                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                document.getElementById('victorySteps').textContent = this.player.steps;
+                document.getElementById('victorySigns').textContent = this.player.signs;
+                document.getElementById('victoryLevel').textContent = this.level;
+                
+                // Crear efecto de partículas épico
+                this.createEpicParticles();
+                
+                // Crear efecto de ondas de choque
+                this.createShockwaves();
+                
+                // Mostrar logros si corresponde
+                this.checkAchievements();
+                
+                // Vibración para dispositivos móviles
+                if (navigator.vibrate) {
+                    navigator.vibrate([200, 100, 200, 100, 400]);
+                }
+                
+                // Reproducir sonido de victoria (simulado visualmente)
+                this.createVisualSoundwaves();
+            }
+            
+            createEpicParticles() {
+                const particlesContainer = document.getElementById('particles');
+                particlesContainer.innerHTML = '';
+                
+                // Partículas principales
+                for (let i = 0; i < 100; i++) {
+                    const particle = document.createElement('div');
+                    particle.className = 'particle';
+                    particle.style.left = Math.random() * 100 + '%';
+                    particle.style.animationDelay = Math.random() * 10 + 's';
+                    particle.style.animationDuration = (8 + Math.random() * 8) + 's';
+                    
+                    // Colores variados para efecto arcoíris
+                    const colors = [
+                        'rgba(255, 100, 100, 1)',
+                        'rgba(100, 255, 100, 1)',
+                        'rgba(100, 100, 255, 1)',
+                        'rgba(255, 255, 100, 1)',
+                        'rgba(255, 100, 255, 1)',
+                        'rgba(100, 255, 255, 1)'
+                    ];
+                    const color = colors[Math.floor(Math.random() * colors.length)];
+                    particle.style.background = `radial-gradient(circle, ${color} 0%, ${color.replace('1)', '0)')} 70%)`;
+                    particle.style.width = (3 + Math.random() * 5) + 'px';
+                    particle.style.height = particle.style.width;
+                    
+                    particlesContainer.appendChild(particle);
+                }
+                
+                // Partículas de estrellas
+                for (let i = 0; i < 50; i++) {
+                    const star = document.createElement('div');
+                    star.className = 'particle';
+                    star.style.left = Math.random() * 100 + '%';
+                    star.style.animationDelay = Math.random() * 10 + 's';
+                    star.style.animationDuration = (6 + Math.random() * 10) + 's';
+                    star.style.background = 'white';
+                    star.style.width = '2px';
+                    star.style.height = '2px';
+                    star.style.boxShadow = '0 0 6px white';
+                    
+                    particlesContainer.appendChild(star);
+                }
+            }
+            
+            createShockwaves() {
+                const victoryDiv = document.getElementById('victoryAnimation');
+                
+                for (let i = 0; i < 3; i++) {
+                    setTimeout(() => {
+                        const shockwave = document.createElement('div');
+                        shockwave.style.cssText = `
+                            position: absolute;
+                            top: 50%;
+                            left: 50%;
+                            transform: translate(-50%, -50%);
+                            width: 100px;
+                            height: 100px;
+                            border: 3px solid rgba(100, 200, 255, 0.8);
+                            border-radius: 50%;
+                            animation: shockwave 2s ease-out forwards;
+                            pointer-events: none;
+                        `;
+                        
+                        const style = document.createElement('style');
+                        style.textContent = `
+                            @keyframes shockwave {
+                                0% {
+                                    width: 100px;
+                                    height: 100px;
+                                    opacity: 1;
+                                }
+                                100% {
+                                    width: 800px;
+                                    height: 800px;
+                                    opacity: 0;
+                                }
+                            }
+                        `;
+                        document.head.appendChild(style);
+                        
+                        victoryDiv.appendChild(shockwave);
+                        setTimeout(() => shockwave.remove(), 2000);
+                    }, i * 500);
+                }
+            }
+            
+            createVisualSoundwaves() {
+                const victoryDiv = document.getElementById('victoryAnimation');
+                
+                for (let i = 0; i < 8; i++) {
+                    const bar = document.createElement('div');
+                    bar.style.cssText = `
+                        position: absolute;
+                        bottom: 50px;
+                        left: ${50 - 20 + i * 5}%;
+                        width: 3%;
+                        height: 20px;
+                        background: linear-gradient(to top, #0066cc, #00aaff);
+                        animation: soundwave ${0.5 + Math.random() * 0.5}s ease-in-out infinite;
+                        animation-delay: ${i * 0.1}s;
+                        transform-origin: bottom;
+                    `;
+                    
+                    victoryDiv.appendChild(bar);
+                }
+                
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes soundwave {
+                        0%, 100% { transform: scaleY(0.5); }
+                        50% { transform: scaleY(1.5); }
+                    }
+                `;
+                document.head.appendChild(style);
+                
+                setTimeout(() => {
+                    victoryDiv.querySelectorAll('[style*="soundwave"]').forEach(bar => bar.remove());
+                }, 5000);
+            }
+            
+            checkAchievements() {
+                const achievements = [];
+                
+                if (this.player.steps < 100) {
+                    achievements.push("EXPLORADOR RÁPIDO");
+                }
+                
+                if (this.player.signs >= 5) {
+                    achievements.push("BUSCADOR DE VERDADES");
+                }
+                
+                if (this.player.sanity > 50) {
+                    achievements.push("MENTE FUERTE");
+                }
+                
+                if (this.level > 3) {
+                    achievements.push("SUPERVIVIENTE");
+                }
+                
+                achievements.forEach((achievement, index) => {
+                    setTimeout(() => {
+                        this.showAchievement(achievement);
+                    }, 2000 + index * 1500);
+                });
+            }
+            
+            showAchievement(text) {
+                const achievement = document.createElement('div');
+                achievement.className = 'achievement';
+                achievement.innerHTML = `
+                    <div style="color: #ffd700; margin-bottom: 5px;">¡LOGRO DESBLOQUEADO!</div>
+                    <div style="color: #fff;">${text}</div>
+                `;
+                
+                document.getElementById('gameContainer').appendChild(achievement);
+                
+                setTimeout(() => {
+                    achievement.style.animation = 'slideOut 0.5s ease-in forwards';
+                    setTimeout(() => achievement.remove(), 500);
+                }, 3000);
+                
+                const style = document.createElement('style');
+                style.textContent = `
+                    @keyframes slideOut {
+                        0% { right: 20px; opacity: 1; }
+                        100% { right: -300px; opacity: 0; }
+                    }
+                `;
+                document.head.appendChild(style);
+            }
+            
+            continueToNextLevel() {
+                document.getElementById('victoryAnimation').style.display = 'none';
+                this.nextLevel();
+            }
+            
+            nextLevel() {
+                this.level++;
+                this.mazeSize = Math.min(35, 25 + this.level * 2);
+                this.player.signs = 0;
+                this.player.steps = 0;
+                this.player.stepDistance = 0;
+                this.player.sanity = 100;
+                this.player.disorientation = 0;
+                this.exitFound = false;
+                this.insaneMode = false;
+                this.startTime = Date.now();
+                
+                document.getElementById('level').textContent = this.level;
+                document.getElementById('signs').textContent = '0';
+                document.getElementById('steps').textContent = '0';
+                document.getElementById('sanityValue').textContent = '100%';
+                document.getElementById('sanityFill').style.width = '100%';
+                document.getElementById('message').style.display = 'none';
+                
+                this.generateDenseMaze();
+                this.gameRunning = true;
+            }
+            
+            start() {
+                document.getElementById('startScreen').style.display = 'none';
+                document.getElementById('loading').style.display = 'none';
+                this.gameRunning = true;
+                this.startTime = Date.now();
+                this.gameLoop();
+            }
+            
+            gameLoop() {
+                this.update();
+                this.render();
+                requestAnimationFrame(() => this.gameLoop());
+            }
+        }
+        
+        const game = new Game();
+        
+        setTimeout(() => {
+            document.getElementById('loading').style.display = 'none';
+        }, 1500);
+    </script>
+</body>
+</html>
