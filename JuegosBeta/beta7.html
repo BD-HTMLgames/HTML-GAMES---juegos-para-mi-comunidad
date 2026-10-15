@@ -1,0 +1,671 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Super Plumber</title>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <style>
+        :root { --ui-font: 'Press Start 2P', cursive; }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { background: #000; width: 100vw; height: 100vh; overflow: hidden; font-family: var(--ui-font); color: #fff; user-select: none; -webkit-user-select: none; }
+        #game-container { position: relative; width: 100vw; height: 100vh; background-color: #5c94fc; overflow: hidden; transition: background-color 0.8s ease; }
+        canvas { display: block; width: 100%; height: 100%; image-rendering: pixelated; image-rendering: crisp-edges; }
+        .ui-layer { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; background: rgba(0,0,0,0.92); z-index: 20; text-align: center; }
+        .hidden { display: none !important; }
+        h1 { font-size: clamp(16px,4vw,32px); color: #ffce00; text-shadow: 4px 4px #c34c00; margin-bottom: 16px; line-height: 1.4; }
+        p { font-size: clamp(7px,1.4vw,11px); line-height: 1.8; margin-bottom: 24px; color: #ccc; max-width: 80%; }
+        button { background: #e52521; border: 4px solid #fff; color: #fff; padding: 14px 28px; font-family: var(--ui-font); font-size: clamp(9px,1.8vw,14px); cursor: pointer; text-transform: uppercase; box-shadow: 0 6px 0 #8b0000; }
+        button:active { transform: translateY(4px); box-shadow: 0 2px 0 #8b0000; }
+        #hud { position: absolute; top: 0; left: 0; width: 100%; padding: 8px 16px; box-sizing: border-box; display: flex; justify-content: space-between; pointer-events: none; z-index: 10; text-shadow: 2px 2px 0 #000; font-size: clamp(7px,1.3vw,11px); }
+        #lives-screen { background: #000 !important; }
+        .lives-display { display: flex; align-items: center; gap: 20px; }
+        .lives-display canvas { image-rendering: pixelated; }
+        #mobile-controls { position: absolute; bottom: 8px; width: 100%; height: 120px; display: none; pointer-events: none; z-index: 20; justify-content: space-between; padding: 0 16px; box-sizing: border-box; align-items: flex-end; }
+        .d-pad, .action-btn { pointer-events: auto; background: rgba(255,255,255,0.2); border: 2px solid rgba(255,255,255,0.4); border-radius: 50%; width: 60px; height: 60px; display: flex; align-items: center; justify-content: center; font-size: 22px; }
+        .d-pad:active, .action-btn:active { background: rgba(255,255,255,0.5); }
+        .d-group { display: flex; gap: 12px; flex-direction: column; align-items: center; }
+        .d-row { display: flex; gap: 12px; }
+        .action-btn { width: 76px; height: 76px; font-size: 26px; font-weight: bold; }
+        @media (hover:none) and (pointer:coarse) { #mobile-controls { display: flex; } }
+    </style>
+</head>
+<body>
+<div id="game-container">
+    <canvas id="gameCanvas" width="960" height="540"></canvas>
+    <div id="hud">
+        <div>MARIO<br><span id="scoreVal">000000</span></div>
+        <div>MONEDAS<br><span id="coinVal">x00</span></div>
+        <div>MUNDO<br><span id="worldName">1-1</span></div>
+        <div>TIEMPO<br><span id="timeVal">999</span></div>
+    </div>
+    <div id="start-screen" class="ui-layer">
+        <h1>SUPER PLUMBER</h1>
+        <p>Flechas / WASD = Mover &amp; Saltar<br>Flecha Abajo = Entrar en tuberia</p>
+        <button id="startBtn">JUGAR</button>
+    </div>
+    <div id="game-over-screen" class="ui-layer hidden">
+        <h1 style="color:#e52521">GAME OVER</h1>
+        <button id="restartBtn">REINTENTAR</button>
+    </div>
+    <div id="lives-screen" class="ui-layer hidden">
+        <div class="lives-display">
+            <canvas id="livesCanvas" width="48" height="48"></canvas>
+            <span style="font-size:clamp(16px,3vw,28px)" id="livesCount">x 3</span>
+        </div>
+    </div>
+    <div id="win-screen" class="ui-layer hidden">
+        <h1 style="color:#4cd137">MISION CUMPLIDA</h1>
+        <p>Puntuacion: <span id="finalScore">0</span></p>
+        <button id="playAgainBtn">MENU</button>
+    </div>
+    <div id="mobile-controls">
+        <div class="d-group">
+            <div class="d-row"><div class="d-pad" id="btnLeft">&#9664;</div><div class="d-pad" id="btnRight">&#9654;</div></div>
+            <div class="d-pad" id="btnDown">&#9660;</div>
+        </div>
+        <div class="action-btn" id="btnJump">A</div>
+    </div>
+</div>
+<script>
+/* ============================================================
+   IMAGENES
+   ============================================================ */
+const IMG = {
+    marioS: new Image(), marioB: new Image(), marioD: new Image(),
+    mush: new Image(), goomba: new Image(), koopa: new Image(), shell: new Image(),
+    castle: new Image(), coin: new Image()
+};
+IMG.marioS.src = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85626-removebg-preview.png";
+IMG.marioB.src = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85627-removebg-preview.png";
+IMG.marioD.src = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85732-removebg-preview.png?updatedAt=1773456425085";
+IMG.mush.src  = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85623-removebg-preview.png";
+IMG.goomba.src= "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85622-removebg-preview.png";
+IMG.koopa.src = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85719-removebg-preview.png?updatedAt=1773455263876";
+IMG.shell.src = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85730-removebg-preview.png?updatedAt=1773456425616";
+IMG.castle.src= "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85747-removebg-preview.png?updatedAt=1773457696677";
+IMG.coin.src  = "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_105451820-removebg-preview.png";
+
+/* Nubes decorativas */
+const cloudImgs = [];
+const cloudUrls = [
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube1.png?updatedAt=1792021696141",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube2.png?updatedAt=1792021696043",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube3.png?updatedAt=1792021696000",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube4.png?updatedAt=1792021730551",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube5.png?updatedAt=1792021730310",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube6.png?updatedAt=1792021730420",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube7.png?updatedAt=1792021730116",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube8.png?updatedAt=1792021696275",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube9.png?updatedAt=1792021696137",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube10.png?updatedAt=1792021696072",
+    "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube11.png?updatedAt=1792021696011"
+];
+cloudUrls.forEach(u => { const i = new Image(); i.src = u; cloudImgs.push(i); });
+
+/* ============================================================
+   MOTOR
+   ============================================================ */
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+const container = document.getElementById('game-container');
+const T = 32, GY = 400, GRAV = 0.5, ACC = 0.4, FRIC = 0.85, MXS = 6, JMP = 13;
+let gs = 'START', score = 0, coins = 0, lives = 3, time = 999, timeI;
+let zone = 'main';
+const ZONES = { main:{bg:'#5c94fc',n:'Superficie'}, underground:{bg:'#000',n:'Subsuelo'}, sky:{bg:'#87CEEB',n:'Mundo Nube'} };
+let cam = {x:0}, lastCP = {x:100,y:GY-T,z:'main'};
+const keys = {r:false,l:false,u:false,d:false};
+let blocks=[],enemies=[],items=[],checkPts=[],particles=[],floatTxts=[],cloudData=[],flag,lvW,player;
+let pipeDestY = 0; /* y del borde superior de la tuberia destino para clipping */
+
+function okI(i){return i.complete&&i.naturalHeight>0;}
+function aFT(x,y,t,c){floatTxts.push({x,y,t:t,c:c||'#fff',l:45,vy:-2.5});}
+function cC(a,b){return a.x<b.x+b.width&&a.x+a.width>b.x&&a.y<b.y+b.height&&a.y+a.height>b.y;}
+function sP(x,y,c){for(let i=0;i<5;i++)particles.push({x,y,vx:(Math.random()-.5)*10,vy:(Math.random()-.5)*10,l:20,c});}
+
+/* ============================================================
+   ENTITY
+   ============================================================ */
+class Entity {
+    constructor(x,y,w,h,tp){this.x=x;this.y=y;this.width=w;this.height=h;this.type=tp;this.content=null;this.velX=0;this.velY=0;this.isDead=false;this.isWarp=false;this.destX=0;this.destY=0;this.destZone='main';this.bY=0;}
+    drawBody(cx,cX){
+        if(this.x+this.width<cX||this.x>cX+canvas.width)return;
+        let dY=this.y+this.bY;
+        if(this.type==='ground'||this.type==='brick'||this.type==='cloud'){
+            let cl=this.type==='brick'?'#b83800':this.type==='cloud'?'#eee':'#c84c0c';
+            if(zone==='underground'&&this.type==='ground')cl='#654321';
+            cx.fillStyle=cl;cx.fillRect(this.x,dY,this.width,this.height);
+            cx.strokeStyle='rgba(0,0,0,0.5)';cx.lineWidth=1;cx.strokeRect(this.x,dY,this.width,this.height);
+            if(this.type==='brick'){cx.strokeStyle='rgba(0,0,0,0.25)';cx.beginPath();cx.moveTo(this.x,dY+this.height/2);cx.lineTo(this.x+this.width,dY+this.height/2);cx.moveTo(this.x+this.width/2,dY);cx.lineTo(this.x+this.width/2,dY+this.height/2);cx.stroke();}
+            if(this.type==='ground'&&zone!=='sky'){cx.fillStyle=zone==='underground'?'#4a3c31':'#00a800';cx.fillRect(this.x,dY,this.width,6);}
+        }else if(this.type==='lucky'){
+            let p=Math.sin(Date.now()/200)*.1+.9;cx.fillStyle=this.content==='mushroom'?'#ff9999':'#ffcc00';cx.globalAlpha=p;cx.fillRect(this.x,dY,this.width,this.height);cx.globalAlpha=1;
+            cx.strokeStyle='rgba(0,0,0,.7)';cx.lineWidth=2;cx.strokeRect(this.x,dY,this.width,this.height);cx.fillStyle='#000';cx.font='20px "Press Start 2P"';cx.fillText('?',this.x+8,dY+24);
+        }else if(this.type==='hard'){
+            cx.fillStyle='#7a5a45';cx.fillRect(this.x,dY,this.width,this.height);cx.strokeStyle='rgba(0,0,0,.3)';cx.lineWidth=1;cx.strokeRect(this.x,dY,this.width,this.height);
+            cx.strokeStyle='rgba(0,0,0,.15)';cx.beginPath();cx.moveTo(this.x,dY+this.height/2);cx.lineTo(this.x+this.width,dY+this.height/2);cx.stroke();
+        }else if(this.type==='pipe'){
+            cx.fillStyle='#00aa00';cx.fillRect(this.x,this.y,this.width,this.height);
+            cx.fillStyle='#00cc00';cx.fillRect(this.x-4,this.y,this.width+8,this.height>96?32:this.height>64?24:16);
+            cx.fillStyle='rgba(0,0,0,.25)';cx.fillRect(this.x+this.width-8,this.y,8,this.height);
+            cx.fillStyle='rgba(255,255,255,.12)';cx.fillRect(this.x+4,this.y+18,5,this.height-18);
+            if(this.isWarp){cx.strokeStyle='#fff';cx.lineWidth=2;cx.strokeRect(this.x+2,this.y+2,this.width-4,this.height-4);}
+        }
+    }
+    drawFront(cx){
+        if(this.type==='pipe'){cx.fillStyle='#008800';cx.fillRect(this.x-4,this.y,this.width+8,12);cx.fillStyle='rgba(0,0,0,.4)';cx.fillRect(this.x-4,this.y,this.width+8,2);}
+    }
+}
+
+/* ============================================================
+   PLAYER - Con animacion de tuberia mejorada
+   ============================================================ */
+class Player extends Entity {
+    constructor(x,y){super(x,y,T,T,'player');this.isBig=false;this.gnd=false;this.fR=true;this.invT=0;this.isWinning=false;
+        this.pipeSt='none';this.pipeRef=null;this.pipeTmr=0;this.emergePipeY=0;}
+    update(){
+        if(this.isDead){this.y+=this.velY;this.velY+=GRAV;return;}
+        if(this.isWinning){this.velX=2;this.x+=this.velX;this.y=GY-this.height;this.gnd=true;return;}
+        if(this.invT>0)this.invT--;
+
+        /* Animacion entrar en tuberia */
+        if(this.pipeSt==='entering'){
+            this.y+=1.8;this.pipeTmr--;
+            if(this.pipeTmr<=0||this.y>=this.pipeRef.y+this.pipeRef.height-10){
+                zone=this.pipeRef.destZone;updEnv();
+                this.x=this.pipeRef.destX+(this.pipeRef.width/2)-(this.width/2);
+                this.emergePipeY=this.pipeRef.destY;pipeDestY=this.pipeRef.destY;
+                this.y=this.pipeRef.destY+20;
+                this.pipeSt='emerging';this.pipeTmr=32;
+                cam.x=this.x-200;if(cam.x<0)cam.x=0;
+                lastCP={x:this.x,y:this.y,zone};
+            }
+            return;
+        }
+        /* Animacion salir de tuberia */
+        if(this.pipeSt==='emerging'){
+            this.y-=1.8;this.pipeTmr--;
+            if(this.pipeTmr<=0||this.y<=this.emergePipeY-this.height){
+                this.y=this.emergePipeY-this.height;
+                this.pipeSt='none';this.pipeRef=null;
+            }
+            return;
+        }
+
+        /* Intentar entrar en tuberia */
+        if(keys.d&&this.gnd&&!this.isDead){
+            for(let b of blocks){if(b.type==='pipe'&&b.isWarp&&!b.isDead&&this.x+this.width>b.x+4&&this.x<b.x+b.width-4&&Math.abs((this.y+this.height)-b.y)<5){
+                this.pipeSt='entering';this.pipeRef=b;this.pipeTmr=32;this.velX=0;this.velY=0;
+                this.x=b.x+(b.width/2)-(this.width/2);break;}}
+        }
+
+        if(keys.r){if(this.velX<MXS)this.velX+=ACC;this.fR=true;}
+        if(keys.l){if(this.velX>-MXS)this.velX-=ACC;this.fR=false;}
+        if(!keys.r&&!keys.l)this.velX*=FRIC;
+        if(keys.u&&this.gnd){this.velY=-JMP;this.gnd=false;}
+
+        this.velY+=GRAV;
+        this.x+=this.velX;this.cC('x');if(this.x<cam.x){this.x=cam.x;this.velX=0;}
+        this.y+=this.velY;this.gnd=false;this.cC('y');
+        if(this.y>canvas.height+100)this.takeDmg(true);
+    }
+    cC(ax){
+        for(let b of blocks){if(b.bY<0)b.bY+=2;if(b.isDead)continue;
+            if(cC(this,b)){
+                if(ax==='x'){if(this.velX>0)this.x=b.x-this.width;else if(this.velX<0)this.x=b.x+b.width;this.velX=0;}
+                else{if(this.velY>0){this.y=b.y-this.height;this.gnd=true;this.velY=0;}
+                    else if(this.velY<0){this.y=b.y+b.height;this.velY=0;b.bY=-10;
+                        if(b.type==='lucky')spR(b);else if(b.type==='brick'&&this.isBig){b.isDead=true;score+=50;sP(b.x+16,b.y+16,'#b83800');aFT(b.x,b.y-10,'50','#fff');}
+                    }
+                }
+            }
+        }
+    }
+    grow(){if(!this.isBig){this.isBig=true;this.y-=T;this.height=T*2;score+=1000;updH();aFT(this.x,this.y-20,'1000','#4cd137');}}
+    shrink(){if(this.isBig){this.isBig=false;this.height=T;this.invT=60;this.y+=T;}else this.die();}
+    takeDmg(i){if(this.invT>0&&!i)return;if(i)this.die();else{if(this.isBig)this.shrink();else this.die();}}
+    die(){if(this.isDead)return;this.isDead=true;this.velY=-10;this.fR=true;lives--;updH();
+        setTimeout(()=>{if(lives>0)showLives();else setGS('GAMEOVER');},1500);}
+
+    draw(cx){
+        if(this.invT>0&&Math.floor(Date.now()/100)%2===0)return;
+        let needClip=this.pipeSt!=='none';
+        if(needClip){
+            let clipY=this.pipeSt==='entering'?this.pipeRef.y:this.emergePipeY;
+            cx.save();cx.beginPath();cx.rect(this.x-20,-2000,this.width+40,clipY+2000);cx.clip();
+        }
+        let dX=Math.round(this.x),dY=Math.round(this.y);cx.save();
+        if(this.isDead){cx.translate(dX,dY);
+            if(okI(IMG.marioD))cx.drawImage(IMG.marioD,0,0,this.width,this.height);
+            else{cx.fillStyle='#888';cx.fillRect(0,0,this.width,this.height);}
+        }else{
+            if(!this.fR){cx.translate(dX+this.width,dY);cx.scale(-1,1);}
+            else cx.translate(dX,dY);
+            let im=this.isBig?IMG.marioB:IMG.marioS;
+            if(okI(im))cx.drawImage(im,0,0,this.width,this.height);
+            else{cx.fillStyle=this.isBig?'#ff0000':'#e52521';cx.fillRect(0,0,this.width,this.height);}
+        }
+        cx.restore();
+        if(needClip)cx.restore();
+    }
+}
+
+/* ============================================================
+   ITEM
+   ============================================================ */
+class Item extends Entity {
+    constructor(x,y,tp){super(x,y,T,T,tp);this.velX=2;this.active=false;this.eY=y-T;}
+    update(){
+        if(!this.active){this.y-=1;if(this.y<=this.eY){this.active=true;this.y=this.eY;}return;}
+        if(this.type==='coin'){this.y-=2;this.life=(this.life||10)-1;if(this.life<=0)this.isDead=true;return;}
+        this.velY=(this.velY||0)+GRAV;this.x+=this.velX;this.y+=this.velY;
+        for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.y+this.height>b.y&&this.y<b.y){this.y=b.y-this.height;this.velY=0;}else if(this.x<b.x+b.width&&this.x+this.width>b.x)this.velX*=-1;}}
+        if(cC(this,player)){if(this.type==='mushroom'){player.grow();}this.isDead=true;}
+    }
+    draw(cx,cX){
+        if(this.x+this.width<cX||this.x>cX+canvas.width||this.isDead)return;
+        if(this.type==='mushroom'){if(okI(IMG.mush))cx.drawImage(IMG.mush,this.x,this.y,this.width,this.height);else{cx.fillStyle='#ff4444';cx.fillRect(this.x,this.y,this.width,this.height);}}
+        else if(this.type==='coin'){if(okI(IMG.coin))cx.drawImage(IMG.coin,this.x,this.y,this.width,this.height);else{cx.fillStyle='#FFD700';cx.beginPath();cx.ellipse(this.x+16,this.y+16,8,12,0,0,Math.PI*2);cx.fill();}}
+    }
+}
+
+/* ============================================================
+   GOOMBA - Con volteo de direccion
+   ============================================================ */
+class Enemy extends Entity {
+    constructor(x,y,rng){super(x,y,T,T,'goomba');this.sX=x;this.rng=rng;this.spd=1.5;this.dir=-1;this.sq=false;this.sqT=0;}
+    update(){
+        if(this.sq){this.sqT--;if(this.sqT<=0)this.isDead=true;return;}
+        if(this.isDead)return;
+        if(this.x>cam.x+canvas.width+100||this.x<cam.x-100)return;
+        this.velX=this.spd*this.dir;this.x+=this.velX;let hW=false;
+        for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.velX>0)this.x=b.x-this.width;else if(this.velX<0)this.x=b.x+b.width;this.dir*=-1;hW=true;}}
+        if(!hW&&(this.x>this.sX+this.rng||this.x<this.sX))this.dir*=-1;
+        this.velY=(this.velY||0)+GRAV;this.y+=this.velY;let g=false;
+        for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.y+this.height>b.y&&this.y<b.y){this.y=b.y-this.height;this.velY=0;g=true;}}}
+        if(!g&&this.y>canvas.height)this.isDead=true;
+    }
+    draw(cx,cX){
+        if(this.x+this.width<cX||this.x>cX+canvas.width)return;if(this.isDead)return;
+        if(this.sq){let sW=this.width+6,sH=8,sX=this.x-3,sY=this.y+this.height-sH;
+            if(okI(IMG.goomba)){cx.save();cx.translate(sX,sY);cx.scale(sW/this.width,sH/this.height);cx.drawImage(IMG.goomba,0,0,this.width,this.height);cx.restore();}
+            else{cx.fillStyle='#8B4513';cx.fillRect(sX,sY,sW,sH);}return;}
+        /* Voltea segun direccion */
+        let fR=this.dir>0;cx.save();
+        if(!fR){cx.translate(this.x+this.width,this.y);cx.scale(-1,1);}
+        else cx.translate(this.x,this.y);
+        if(okI(IMG.goomba))cx.drawImage(IMG.goomba,0,0,this.width,this.height);
+        else{cx.fillStyle='#8B4513';cx.fillRect(0,0,this.width,this.height);}
+        cx.restore();
+    }
+}
+
+/* ============================================================
+   KOOPA - Con volteo de direccion y rango mejorado
+   ============================================================ */
+class Koopa extends Enemy {
+    constructor(x,y,rng){super(x,y,T,T,'koopa');this.spd=1.8;this.isSh=false;this.revT=0;}
+    update(){
+        if(this.sq){this.sqT--;if(this.sqT<=0)this.isDead=true;return;}
+        if(this.isDead)return;
+        if(this.isSh){
+            this.revT--;if(this.revT<=0){this.isSh=false;this.y-=2;}
+            this.velY=(this.velY||0)+GRAV;this.y+=this.velY;
+            for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.y+this.height>b.y&&this.y<b.y){this.y=b.y-this.height;this.velY=0;}}}
+            if(this.y>canvas.height+50)this.isDead=true;return;
+        }
+        if(this.x>cam.x+canvas.width+100||this.x<cam.x-100)return;
+        this.velX=this.spd*this.dir;this.x+=this.velX;let hW=false;
+        for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.velX>0)this.x=b.x-this.width;else if(this.velX<0)this.x=b.x+b.width;this.dir*=-1;hW=true;}}
+        if(!hW&&(this.x>this.sX+this.rng||this.x<this.sX))this.dir*=-1;
+        this.velY=(this.velY||0)+GRAV;this.y+=this.velY;let g=false;
+        for(let b of blocks){if(b.isDead)continue;if(cC(this,b)){if(this.y+this.height>b.y&&this.y<b.y){this.y=b.y-this.height;this.velY=0;g=true;}}}
+        if(!g&&this.y>canvas.height+50)this.isDead=true;
+    }
+    draw(cx,cX){
+        if(this.x+this.width<cX||this.x>cX+canvas.width||this.isDead)return;
+        if(this.isSh){if(okI(IMG.shell))cx.drawImage(IMG.shell,this.x,this.y,this.width,this.height);else{cx.fillStyle='#006400';cx.beginPath();cx.ellipse(this.x+16,this.y+16,16,10,0,Math.PI*2);cx.fill();}return;}
+        /* Voltea segun direccion como Mario */
+        let fR=this.dir>0;cx.save();
+        if(!fR){cx.translate(this.x+this.width,this.y);cx.scale(-1,1);}
+        else cx.translate(this.x,this.y);
+        if(okI(IMG.koopa))cx.drawImage(IMG.koopa,0,0,this.width,this.height);
+        else{cx.fillStyle='#00aa00';cx.fillRect(0,10,32,22);cx.beginPath();cx.arc(16,10,12,Math.PI,0);cx.fill();}
+        cx.restore();
+    }
+}
+
+/* ============================================================
+   CHECKPOINT - Siempre clavado en el suelo
+   ============================================================ */
+class CheckPt {
+    constructor(x){this.x=x;this.on=false;}
+    draw(cx,cX){
+        if(this.x>cX+canvas.width||this.x<cX-50)return;
+        cx.fillStyle=this.on?'#4cd137':'#888';cx.fillRect(this.x,GY-100,4,100);
+        cx.fillStyle=this.on?'#2d8a20':'#555';cx.fillRect(this.x-3,GY-5,10,5);
+        cx.fillStyle=this.on?'#FFD700':'#e52521';cx.beginPath();cx.arc(this.x+2,GY-100,6,0,Math.PI*2);cx.fill();
+        cx.fillStyle=this.on?'#4cd137':'#e52521';cx.beginPath();cx.moveTo(this.x+4,GY-90);cx.lineTo(this.x+28,GY-78);cx.lineTo(this.x+4,GY-66);cx.fill();
+    }
+}
+
+/* ============================================================
+   NIVEL 1-1 - Basado en el original de Super Mario Bros
+   ============================================================ */
+function mkP(x,y,w,tp){let c=Math.floor(w/T);for(let i=0;i<c;i++)blocks.push(new Entity(x+i*T,y,T,T,tp));}
+function mkSt(sx,h,gr){for(let c=0;c<h;c++){let x=gr?sx+c*T:sx+(h-1-c)*T;for(let r=0;r<=c;r++)blocks.push(new Entity(x,GY-r*T,T,T,'hard'));}}
+function spR(b){b.type='hard';if(b.content==='mushroom')items.push(new Item(b.x,b.y,'mushroom'));else if(b.content==='coin'){items.push(new Item(b.x,b.y,'coin'));score+=200;coins++;updH();aFT(b.x,b.y-10,'200','#FFD700');}}
+
+function createLevel(){
+    blocks=[];enemies=[];items=[];checkPts=[];particles=[];floatTxts=[];zone='main';
+    let B=GY-4*T, H=GY-8*T; /* B=altura bloques bajos, H=altura bloques altos */
+
+    /* ===== TRAMO 1: Zona de inicio ===== */
+    mkP(0,GY,70*T,'ground');
+
+    /* Fila de bloques iniciales estilo 1-1 */
+    addLucky(288,B,'mushroom');        /* ? con hongo */
+    addBrick(512,B); addLucky(544,B,'coin'); addBrick(576,B); addLucky(608,B,'coin'); addBrick(640,B);
+    addLucky(576,H,'mushroom');        /* ? alto con hongo */
+
+    /* Goombas iniciales */
+    enemies.push(new Enemy(720,GY-T,180));
+    enemies.push(new Enemy(780,GY-T,180));
+
+    /* Tuberias ascendentes estilo 1-1 */
+    addPipe(900,GY,64);    /* 2 tiles */
+    addPipe(1200,GY,96);   /* 3 tiles */
+    addPipe(1500,GY,128);  /* 4 tiles */
+    addPipe(1800,GY,128);  /* 4 tiles */
+
+    /* ===== TRAMO 2: Zona de ladrillos ===== */
+    mkP(2240,GY,60*T,'ground');
+
+    /* Goomba */
+    enemies.push(new Enemy(2380,GY-T,200));
+
+    /* Bloques */
+    addLucky(2520,B,'coin');
+    addBrick(2584,B); addLucky(2616,B,'coin'); addBrick(2648,B);
+    addBrick(2584,H); addBrick(2616,H); addBrick(2648,H);
+
+    /* Goombas */
+    enemies.push(new Enemy(2750,GY-T,180));
+    enemies.push(new Enemy(2800,GY-T,180));
+
+    /* Checkpoint */
+    checkPts.push(new CheckPt(3000));
+
+    /* Bloques altos */
+    addBrick(3100,B); addLucky(3132,B,'mushroom'); addBrick(3164,B);
+    addLucky(3132,H,'coin');
+
+    /* Koopa */
+    enemies.push(new Koopa(3300,GY-T,500));
+
+    /* Tuberia warp al subsuelo */
+    let pw1=new Entity(3500,GY-96,64,96,'pipe');pw1.isWarp=true;pw1.destX=14032;pw1.destY=GY;pw1.destZone='underground';blocks.push(pw1);
+
+    /* ===== TRAMO 3: Zona de precipicios ===== */
+    mkP(4160,GY,18*T,'ground');
+
+    enemies.push(new Enemy(4250,GY-T,160));
+    enemies.push(new Enemy(4350,GY-T,160));
+
+    /* Precipicio de 3 tiles */
+    mkP(4740,GY,18*T,'ground');
+
+    addBrick(4800,B); addBrick(4832,B); addLucky(4864,B,'coin'); addBrick(4896,B);
+    enemies.push(new Koopa(5000,GY-T,400));
+
+    /* Precipicio de 3 tiles */
+    mkP(5320,GY,20*T,'ground');
+
+    /* Tuberia al cielo */
+    let pw3=new Entity(5450,GY-96,64,96,'pipe');pw3.isWarp=true;pw3.destX=22032;pw3.destY=GY;pw3.destZone='sky';blocks.push(pw3);
+
+    /* ===== TRAMO 4: Escalera final y bandera ===== */
+    mkP(5960,GY,90*T,'ground');
+
+    enemies.push(new Enemy(6100,GY-T,200));
+    enemies.push(new Enemy(6200,GY-T,200));
+    enemies.push(new Koopa(6400,GY-T,500));
+
+    /* Escalera ascendente 8 escalones */
+    mkSt(6700,8,true);
+
+    /* Escalera descendente */
+    mkSt(7000,4,false);
+
+    /* Escalera final antes de bandera (estilo 1-1: 8 escalones) */
+    mkSt(7600,8,true);
+
+    /* Banderin y castillo */
+    flag={x:8000,y:GY-8*T};
+    lvW=8600;
+
+    /* ===== SUBSUELO ===== */
+    for(let i=0;i<160;i++){blocks.push(new Entity(14000+i*T,GY,T,T,'brick'));if(i>10&&i<140)blocks.push(new Entity(14000+i*T,100,T,T,'brick'));}
+    enemies.push(new Koopa(14500,GY-T,500));enemies.push(new Koopa(15200,GY-T,500));enemies.push(new Enemy(15800,GY-T,200));
+    addLucky(16200,GY-5*T,'mushroom');
+    let pw2=new Entity(16600,GY-64,64,64,'pipe');pw2.isWarp=true;pw2.destX=3600;pw2.destY=GY;pw2.destZone='main';blocks.push(pw2);
+
+    /* ===== CIELO ===== */
+    for(let i=0;i<160;i++)blocks.push(new Entity(22000+i*T,GY,T,T,'cloud'));
+    for(let j=0;j<10;j++)for(let k=0;k<=j;k++)blocks.push(new Entity(23000+j*T,GY-(k+3)*T,T,T,'cloud'));
+    enemies.push(new Koopa(23500,GY-T,600));enemies.push(new Koopa(25000,GY-T,600));enemies.push(new Koopa(26500,GY-T,600));
+    let pw4=new Entity(27000,GY-64,64,64,'pipe');pw4.isWarp=true;pw4.destX=5550;pw4.destY=GY;pw4.destZone='main';blocks.push(pw4);
+    lvW=30000;
+
+    /* ===== NUBES DECORATIVAS ===== */
+    cloudData=[
+        {x:80,y:55,i:0,w:110,h:55},{x:500,y:75,i:4,w:55,h:30},{x:900,y:45,i:1,w:100,h:50},
+        {x:1350,y:70,i:6,w:50,h:28},{x:1700,y:40,i:2,w:105,h:52},{x:2200,y:65,i:3,w:55,h:30},
+        {x:2700,y:50,i:8,w:95,h:48},{x:3200,y:80,i:5,w:55,h:30},{x:3700,y:42,i:7,w:110,h:55},
+        {x:4200,y:68,i:9,w:100,h:50},{x:4700,y:48,i:4,w:55,h:30},{x:5200,y:60,i:10,w:105,h:52},
+        {x:5700,y:38,i:0,w:110,h:55},{x:6200,y:72,i:6,w:50,h:28},{x:6700,y:50,i:1,w:100,h:50},
+        {x:7200,y:45,i:3,w:55,h:30},{x:7700,y:65,i:8,w:95,h:48},{x:8200,y:55,i:2,w:105,h:52}
+    ];
+
+    player=new Player(100,GY-T);cam.x=0;
+}
+
+/* Helper para agregar bloques */
+function addLucky(x,y,c){let b=new Entity(x,y,T,T,'lucky');b.content=c;blocks.push(b);}
+function addBrick(x,y){blocks.push(new Entity(x,y,T,T,'brick'));}
+function addPipe(x,y,h){blocks.push(new Entity(x,y-h,64,h,'pipe'));}
+
+function drawCastle(cx,x,y){
+    if(okI(IMG.castle))cx.drawImage(IMG.castle,x,y,200,200);
+    else{cx.fillStyle='#b85c38';cx.fillRect(x,y+100,200,100);cx.fillStyle='#000';cx.fillRect(x+80,y+120,40,80);cx.fillStyle='#b85c38';for(let i=0;i<5;i++)cx.fillRect(x+i*40,y+80,20,20);}
+}
+
+/* ============================================================
+   GAME STATE
+   ============================================================ */
+function updH(){document.getElementById('scoreVal').innerText=score.toString().padStart(6,'0');document.getElementById('coinVal').innerText='x'+coins.toString().padStart(2,'0');document.getElementById('timeVal').innerText=time;}
+function updEnv(){let z=ZONES[zone];container.style.backgroundColor=z.bg;document.getElementById('worldName').innerText=z.n;}
+function resetLvl(){zone=lastCP.z;createLevel();player.x=lastCP.x;player.y=lastCP.y;cam.x=player.x-200;if(cam.x<0)cam.x=0;updEnv();setGS('PLAYING');}
+
+function setGS(s){
+    gs=s;
+    ['start-screen','game-over-screen','lives-screen','win-screen'].forEach(id=>document.getElementById(id).classList.add('hidden'));
+    if(s==='START')document.getElementById('start-screen').classList.remove('hidden');
+    else if(s==='GAMEOVER')document.getElementById('game-over-screen').classList.remove('hidden');
+    else if(s==='WIN'){document.getElementById('win-screen').classList.remove('hidden');document.getElementById('finalScore').innerText=score;}
+    else if(s==='LIVES')document.getElementById('lives-screen').classList.remove('hidden');
+    else if(s==='PLAYING'){clearInterval(timeI);timeI=setInterval(()=>{if(time>0){time--;updH();}else if(player)player.takeDmg(true);},1000);}
+}
+
+function showLives(){
+    setGS('LIVES');
+    document.getElementById('livesCount').innerText='x '+lives;
+    /* Dibujar Mario pequeno en el canvas de vidas */
+    let lc=document.getElementById('livesCanvas'),lctx=lc.getContext('2d');
+    lctx.clearRect(0,0,48,48);lctx.fillStyle='#5c94fc';lctx.fillRect(0,0,48,48);
+    if(okI(IMG.marioS))lctx.drawImage(IMG.marioS,4,4,40,40);
+    else{lctx.fillStyle='#e52521';lctx.fillRect(8,8,32,32);}
+    setTimeout(()=>{score=Math.max(0,score-500);resetLvl();},2200);
+}
+
+/* ============================================================
+   UPDATE
+   ============================================================ */
+function update(){
+    if(gs!=='PLAYING')return;if(!player)return;
+    player.update();
+
+    /* Camara suave */
+    let tCX=player.x-canvas.width/3;
+    if(tCX>cam.x)cam.x+=(tCX-cam.x)*0.08;
+    if(cam.x<0)cam.x=0;if(cam.x>lvW-canvas.width)cam.x=lvW-canvas.width;
+
+    /* Checkpoints */
+    checkPts.forEach(c=>{if(!c.on&&cC(player,{x:c.x,y:GY-100,width:10,height:100})){c.on=true;lastCP={x:c.x,y:GY-T,zone};score+=500;updH();aFT(c.x,GY-120,'500','#4cd137');}});
+
+    /* Enemigos */
+    enemies.forEach(e=>{
+        e.update();
+        if(!e.isDead&&!e.sq&&!(e.isSh)&&!player.isDead&&player.pipeSt==='none'&&!player.isWinning&&cC(player,e)){
+            let pB=player.y+player.height,eM=e.y+e.height*0.5;
+            let hFT=player.velY>0&&pB<eM+6;
+            if(hFT){
+                if(e.type==='koopa'){e.isSh=true;e.revT=240;}
+                else{e.sq=true;e.sqT=28;e.velX=0;e.velY=0;}
+                player.velY=-8;score+=100;updH();aFT(e.x+8,e.y-10,'100','#fff');sP(e.x+16,e.y+e.height,'#8B4513');
+            }else player.takeDmg();
+        }
+    });
+    enemies=enemies.filter(e=>!e.isDead);
+
+    /* Items */
+    items.forEach(i=>i.update());items=items.filter(i=>!i.isDead);
+
+    /* Bandera */
+    if(flag&&cC(player,{x:flag.x,y:flag.y,width:8,height:GY-flag.y})){
+        if(player.y<GY-player.height){player.y+=2;player.x=flag.x-player.width/2+3;}
+        else{player.isWinning=true;player.fR=true;}
+    }
+    if(player.isWinning&&player.x>flag.x+80)setGS('WIN');
+
+    /* Particulas */
+    for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.x+=p.vx;p.y+=p.vy;p.vy+=0.3;p.l--;if(p.l<=0)particles.splice(i,1);}
+    for(let i=floatTxts.length-1;i>=0;i--){let t=floatTxts[i];t.y+=t.vy;t.l--;if(t.l<=0)floatTxts.splice(i,1);}
+}
+
+/* ============================================================
+   DRAW
+   ============================================================ */
+function draw(){
+    ctx.fillStyle=ZONES[zone].bg;ctx.fillRect(0,0,canvas.width,canvas.height);
+    ctx.save();ctx.translate(-Math.floor(cam.x),-Math.floor(cam.y));
+
+    /* Fondo decorativo */
+    if(zone==='sky'){
+        drawBgClouds();
+    }else if(zone==='underground'){
+        ctx.fillStyle='#333';for(let i=0;i<50;i++){let px=(i*473)%lvW,py=(i*132)%380;if(px>cam.x&&px<cam.x+canvas.width){let s=(i%3)+2;ctx.fillRect(px,py,s,s);}}
+    }else{
+        /* Nubes sprite */
+        cloudData.forEach(c=>{
+            if(c.x>cam.x-200&&c.x<cam.x+canvas.width+200){
+                let im=cloudImgs[c.i];
+                if(okI(im))ctx.drawImage(im,c.x,c.y,c.w,c.h);
+            }
+        });
+        /* Colinas estilo Mario */
+        ctx.fillStyle='#00a800';
+        ctx.beginPath();ctx.arc(400,GY,70,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(1100,GY,45,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(2400,GY,80,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(4000,GY,55,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(5500,GY,65,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(6500,GY,50,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(7500,GY,75,Math.PI,0);ctx.fill();
+        /* Arbustos */
+        ctx.fillStyle='#009900';
+        ctx.beginPath();ctx.arc(700,GY,25,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(1900,GY,20,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(3100,GY,30,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(4900,GY,22,Math.PI,0);ctx.fill();
+        ctx.beginPath();ctx.arc(6300,GY,28,Math.PI,0);ctx.fill();
+    }
+
+    /* Tuberias (capa trasera) */
+    blocks.filter(b=>b.type==='pipe').forEach(b=>b.drawBody(ctx,cam.x));
+
+    /* Bloques (no tuberias) */
+    blocks=blocks.filter(b=>!b.isDead);
+    blocks.filter(b=>b.type!=='pipe').forEach(b=>b.drawBody(ctx,cam.x));
+
+    /* Checkpoints */
+    checkPts.forEach(c=>c.draw(ctx,cam.x));
+
+    /* Bandera y castillo */
+    if(flag&&zone==='main'){
+        ctx.fillStyle='#228B22';ctx.fillRect(flag.x,flag.y,6,GY-flag.y);
+        ctx.fillStyle='#1a6b1a';ctx.fillRect(flag.x-3,GY-5,12,5);
+        ctx.fillStyle='#FFD700';ctx.beginPath();ctx.arc(flag.x+3,flag.y,8,0,Math.PI*2);ctx.fill();
+        ctx.fillStyle='#e52521';ctx.beginPath();ctx.moveTo(flag.x+6,flag.y+18);ctx.lineTo(flag.x+46,flag.y+36);ctx.lineTo(flag.x+6,flag.y+54);ctx.fill();
+        drawCastle(ctx,flag.x+100,flag.y);
+    }
+
+    /* Items */
+    items.forEach(i=>i.draw(ctx,cam.x));
+
+    /* Enemigos */
+    enemies.forEach(e=>e.draw(ctx,cam.x));
+
+    /* Jugador (con clipping de tuberia si aplica) */
+    if(player)player.draw(ctx);
+
+    /* Frente de tuberias (capa frontal - tapa a Mario cuando entra) */
+    blocks.filter(b=>b.type==='pipe').forEach(b=>b.drawFront(ctx));
+
+    /* Particulas */
+    particles.forEach(p=>{ctx.globalAlpha=p.l/20;ctx.fillStyle=p.c;ctx.fillRect(p.x,p.y,5,5);});ctx.globalAlpha=1;
+
+    /* Textos flotantes */
+    floatTxts.forEach(t=>{ctx.globalAlpha=Math.min(1,t.l/15);ctx.fillStyle=t.c;ctx.font='11px "Press Start 2P"';ctx.strokeStyle='#000';ctx.lineWidth=3;ctx.strokeText(t.t,t.x,t.y);ctx.fillText(t.t,t.x,t.y);});ctx.globalAlpha=1;
+
+    ctx.restore();
+}
+
+function drawBgClouds(){
+    /* Nubes para zona cielo */
+    [{x:100,y:60,w:100,h:50,i:0},{x:500,y:80,w:55,h:30,i:4},{x:900,y:50,w:95,h:48,i:1}].forEach(c=>{
+        if(c.x>cam.x-200&&c.x<cam.x+canvas.width+200){let im=cloudImgs[c.i];if(okI(im))ctx.drawImage(im,c.x,c.y,c.w,c.h);}
+    });
+}
+
+/* ============================================================
+   LOOP Y CONTROLES
+   ============================================================ */
+function loop(){update();draw();requestAnimationFrame(loop);}
+function startG(){score=0;coins=0;time=999;lives=3;lastCP={x:100,y:GY-T,z:'main'};updH();createLevel();updEnv();setGS('PLAYING');}
+
+window.addEventListener('keydown',e=>{
+    if(e.code==='ArrowRight'||e.code==='KeyD')keys.r=true;
+    if(e.code==='ArrowLeft'||e.code==='KeyA')keys.l=true;
+    if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW')keys.u=true;
+    if(e.code==='ArrowDown'||e.code==='KeyS')keys.d=true;
+    if(['ArrowRight','ArrowLeft','ArrowUp','ArrowDown','Space'].includes(e.code))e.preventDefault();
+});
+window.addEventListener('keyup',e=>{
+    if(e.code==='ArrowRight'||e.code==='KeyD')keys.r=false;
+    if(e.code==='ArrowLeft'||e.code==='KeyA')keys.l=false;
+    if(e.code==='Space'||e.code==='ArrowUp'||e.code==='KeyW')keys.u=false;
+    if(e.code==='ArrowDown'||e.code==='KeyS')keys.d=false;
+});
+
+window.onload=function(){
+    document.getElementById('startBtn').addEventListener('click',startG);
+    document.getElementById('restartBtn').addEventListener('click',startG);
+    document.getElementById('playAgainBtn').addEventListener('click',startG);
+    const aT=(el,k)=>{el.addEventListener('touchstart',e=>{e.preventDefault();keys[k]=true;});el.addEventListener('touchend',e=>{e.preventDefault();keys[k]=false;});};
+    aT(document.getElementById('btnLeft'),'l');aT(document.getElementById('btnRight'),'r');aT(document.getElementById('btnJump'),'u');aT(document.getElementById('btnDown'),'d');
+    createLevel();loop();
+};
+</script>
+</body>
+</html>
