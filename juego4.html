@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <title>Adventurous Mario</title>
-<meta name="description" content="Aventura de plataformas retro: 3 mundos, caparazones pateables, flor de fuego, estrella invencible, combos y 1UP.">
+<meta name="description" content="Aventura de plataformas retro: 3 mundos ampliados, plantas piraña, caparazones pateables, flor de fuego, estrella invencible, combos y 1UP.">
 <style>
   html, body { margin: 0; padding: 0; background: #000; height: 100%; overflow: hidden; }
 </style>
@@ -21,7 +21,7 @@ const GAME_CSS = `
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 .am-stage{position:fixed;inset:0;background:#000;display:flex;align-items:center;justify-content:center;overflow:hidden;font-family:'Press Start 2P',monospace;color:#fff;user-select:none;-webkit-user-select:none;touch-action:none;z-index:5}
-.am-frame{position:relative;width:800px;height:450px;background:#5c94fc;border:4px solid #fff;box-shadow:0 0 46px rgba(0,0,0,.95),0 0 0 4px #000;overflow:hidden;transition:background-color .9s ease}
+.am-frame{position:relative;box-sizing:border-box;width:800px;height:450px;background:#5c94fc;border:4px solid #fff;box-shadow:0 0 46px rgba(0,0,0,.95),0 0 0 4px #000;overflow:hidden;transition:background-color .9s ease}
 .am-canvas{display:block;width:100%;height:100%;image-rendering:pixelated}
 
 /* ---------- HUD ---------- */
@@ -81,11 +81,13 @@ const GAME_CSS = `
 
 /* ---------------- Motor ---------------- */
 /* ============================================================
-   ADVENTUROUS MARIO — Motor de juego v2.0 "MAX"
+   ADVENTUROUS MARIO — Motor de juego v2.1 "MAX+"
    Vanilla JS sin dependencias. Se monta en cualquier contenedor.
    Corrige todos los bugs del prototipo original y añade:
    caparazones pateables, flor de fuego, estrella, audio chiptune,
-   timestep fijo, coyote time, combos, 1UP, pausa, parallax, iris.
+   timestep fijo, coyote time, combos, 1UP, pausa, parallax, iris,
+   sprites propios (nubes/flor/estrella/tortuga) y PLANTA PIRAÑA
+   que emerge de las tuberías + mundos ampliados.
    ============================================================ */
 
 function mountAdventurousMario(root) {
@@ -99,7 +101,7 @@ function mountAdventurousMario(root) {
   root.innerHTML = `
   <div class="am-stage">
     <div class="am-frame">
-      <canvas id="amCanvas" width="800" height="450"></canvas>
+      <canvas id="amCanvas" class="am-canvas" width="800" height="450"></canvas>
 
       <div class="am-hud">
         <div class="am-hud-item">PUNTOS<br><span class="am-hi" id="amScore">000000</span></div>
@@ -122,7 +124,7 @@ function mountAdventurousMario(root) {
       <div class="am-layer am-title hidden" id="amTitle">
         <div class="am-logo">ADVENTUROUS<span>MARIO</span></div>
         <img class="am-mario-idle" id="amIdle" alt="Mario saltarín" />
-        <div class="am-sub">3 mundos conectados por tuberías · caparazones pateables ·<br>flor de fuego · estrella invencible · combos · 1UP cada 50 monedas</div>
+        <div class="am-sub">3 mundos ampliados · plantas piraña · caparazones pateables ·<br>flor de fuego · estrella invencible · combos · 1UP cada 50 monedas</div>
         <button class="am-btn" id="amStart" type="button">JUGAR AHORA</button>
         <div class="am-best" id="amBest"></div>
         <div class="am-controls">
@@ -189,6 +191,8 @@ function mountAdventurousMario(root) {
     frameEl.style.height = Math.floor(450 * s) + "px";
   }
   window.addEventListener("resize", onResize);
+  document.addEventListener("fullscreenchange", onResize);
+  document.addEventListener("webkitfullscreenchange", onResize);
   onResize();
 
   /* ---------------- Constantes ---------------- */
@@ -197,13 +201,14 @@ function mountAdventurousMario(root) {
   const WALK_MAX = 5.5, RUN_MAX = 8.5, ACCEL = 0.38, AIR_ACCEL = 0.26;
   const FRICTION = 0.82, SKID = 0.72;
   const JUMP_V = 13, JUMP_CUT = 4, COYOTE = 6, BUFFER = 8;
-  const CHAIN_PTS = [100, 200, 400, 800, 1000, 2000, 4000];
+  const CHAIN_PTS = [100, 200, 300, 400, 500, 800, 1000];
   const GROUND_Y = 400;
+  const FLAG_X = 11980, CASTLE_X = 12140; // mástil y castillo (mundo 1-1 ampliado)
 
   const ZONES = {
-    main: { bg: "#5c94fc", code: "1-1", min: 0, max: 9312 },
-    underground: { bg: "#000000", code: "1-2", min: 13936, max: 18800 },
-    sky: { bg: "#6b9eff", code: "1-3", min: 21920, max: 27248 },
+    main: { bg: "#5c94fc", code: "1-1", min: 0, max: 12480 },
+    underground: { bg: "#000000", code: "1-2", min: 13936, max: 19760 },
+    sky: { bg: "#6b9eff", code: "1-3", min: 21920, max: 28900 },
   };
 
   /* ---------------- Estado global ---------------- */
@@ -235,6 +240,23 @@ function mountAdventurousMario(root) {
     shell: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85730-removebg-preview.png?updatedAt=1773456425616",
     castle: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85747-removebg-preview.png?updatedAt=1773457696677",
     coin: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_105451820-removebg-preview.png",
+    // — sprites nuevos del usuario (v2.1) —
+    koopaL: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/tortuga%20mario%20Hizquierda.png",
+    koopaR: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/tortuga%20mario%20Hderecha.png",
+    flower: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/flor%20mario.png",
+    star: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/estrella%20mario.png",
+    piranha: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85654-removebg-preview.png?updatedAt=1773447697300",
+    cloudS1: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube6.png?updatedAt=1792021730420",
+    cloudS2: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube4.png?updatedAt=1792021730551",
+    cloudS3: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube5.png?updatedAt=1792021730310",
+    cloudS4: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20peque%C3%B1as/nube7.png?updatedAt=1792021730116",
+    cloudL1: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube3.png?updatedAt=1792021696000",
+    cloudL2: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube9.png?updatedAt=1792021696137",
+    cloudL3: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube11.png?updatedAt=1792021696011",
+    cloudL4: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube10.png?updatedAt=1792021696072",
+    cloudL5: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube2.png?updatedAt=1792021696043",
+    cloudL6: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube1.png?updatedAt=1792021696141",
+    cloudL7: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube8.png?updatedAt=1792021696275",
   };
   const assets = {};
   function loadImage(key, url) {
@@ -427,7 +449,7 @@ function mountAdventurousMario(root) {
   function spawnCoinPop(b) {
     particles.push({ kind: "coinpop", x: b.x + 5, y: b.y - 30, vy: -6.8, life: 36, max: 36 });
     S.coins++;
-    S.score += 200;
+    S.score += 100;
     A.sfx.coin();
     checkCoin1up();
     updateHUD();
@@ -523,8 +545,9 @@ function mountAdventurousMario(root) {
       // impacto contra enemigos
       for (const e of enemies) {
         if (e.flipDead || e.dead || e.squish > 0) continue;
+        if (e.kind === "piranha" && e.pipe.y - e.y < 12) continue; // escondida: intocable
         if (aabb(f, e)) {
-          flipKill(e, 200);
+          flipKill(e, 100);
           addParticles(f.x + 6, f.y + 6, 5, "#ff9a3c", 5, 0.2);
           fireballs.splice(i, 1);
           break;
@@ -588,7 +611,7 @@ function mountAdventurousMario(root) {
     }
     /* --- deslizarse por el mástil de la bandera --- */
     if (p.playerMode === "flag") {
-      p.x = 8776;
+      p.x = FLAG_X - 24;
       p.facing = 1;
       if (p.y < GROUND_Y - p.h) {
         p.y = Math.min(GROUND_Y - p.h, p.y + 3.2);
@@ -607,7 +630,7 @@ function mountAdventurousMario(root) {
       moveX(p);
       p.vy = Math.min(p.vy + GRAV, MAX_FALL);
       moveY(p);
-      if (p.x >= 8988) {
+      if (p.x >= CASTLE_X + 28) {
         p.opacity = Math.max(0, p.opacity - 0.03);
         if (p.opacity <= 0 && !transition) enterWin();
       }
@@ -713,8 +736,8 @@ function mountAdventurousMario(root) {
     const p = player;
     if (p.power === 0) { p.power = 1; p.y -= T; p.h = T * 2; }
     A.sfx.power();
-    S.score += 1000;
-    addPopup(p.x, p.y - 12, 1000);
+    S.score += 500;
+    addPopup(p.x, p.y - 12, 500);
     updateHUD();
   }
   function pDamage() {
@@ -761,6 +784,37 @@ function mountAdventurousMario(root) {
       squish: 0, flipDead: false, dead: false,
     };
   }
+  function makePiranha(pipe) {
+    return {
+      kind: "piranha", pipe,
+      x: pipe.x + pipe.w / 2 - 14, w: 28, h: 56,
+      y: pipe.y,           // empieza escondida dentro de la tubería
+      vy: 0, phase: "wait", t: 80 + (pipe.x % 110),
+      outH: 56, flipDead: false, dead: false, squish: 0, graceT: 0,
+    };
+  }
+  function updatePiranha(e) {
+    const top = e.pipe.y;
+    const p = player;
+    const near = p && p.playerMode === "normal" &&
+      Math.abs((p.x + p.w / 2) - (e.x + e.w / 2)) < 120;
+    if (e.phase === "wait") {
+      e.t--;
+      if (e.t <= 0) {
+        if (near) e.t = 34;      // no muerde si el jugador está sobre la tubería
+        else e.phase = "rise";
+      }
+    } else if (e.phase === "rise") {
+      e.y -= 1.35;
+      if (e.y <= top - e.outH) { e.y = top - e.outH; e.phase = "out"; e.t = 95; }
+    } else if (e.phase === "out") {
+      e.t--;
+      if (e.t <= 0) e.phase = "sink";
+    } else if (e.phase === "sink") {
+      e.y += 1.35;
+      if (e.y >= top) { e.y = top; e.phase = "wait"; e.t = 100 + ((e.pipe.x * 7) % 70); }
+    }
+  }
   function updateEnemy(e) {
     if (e.flipDead) {
       e.vy += 0.4;
@@ -776,6 +830,8 @@ function mountAdventurousMario(root) {
     }
     // congelados si quedan lejos de la cámara (a la derecha)
     if (e.x > camera.x + VW + 90) return;
+
+    if (e.kind === "piranha") { updatePiranha(e); return; }
 
     if (e.kind === "koopa") {
       if (e.graceT > 0) e.graceT--;
@@ -800,7 +856,8 @@ function mountAdventurousMario(root) {
         // el caparazón arrasa con otros enemigos
         for (const o of enemies) {
           if (o === e || o.flipDead || o.dead || o.squish > 0) continue;
-          if (aabb(e, o)) flipKill(o, 200);
+          if (o.kind === "piranha" && o.pipe.y - o.y < 12) continue;
+          if (aabb(e, o)) flipKill(o, 100);
         }
         return;
       }
@@ -843,7 +900,13 @@ function mountAdventurousMario(root) {
       if (!aabb(p, e)) continue;
 
       // estrella: contacto mortal para el enemigo
-      if (p.starT > 0) { flipKill(e, 200); continue; }
+      if (p.starT > 0) { flipKill(e, 100); continue; }
+
+      // planta piraña: no se puede pisar; solo estrella, fuego o caparazón
+      if (e.kind === "piranha") {
+        if (e.pipe.y - e.y > 12) pDamage();   // solo si ya asomó lo suficiente
+        continue;
+      }
 
       const isIdleShell = e.kind === "koopa" && e.state === "shell";
       const isSlideShell = e.kind === "koopa" && e.state === "slide";
@@ -914,8 +977,8 @@ function mountAdventurousMario(root) {
           if (p.power === 0) { p.power = 1; p.y -= T; p.h = T * 2; }
           p.power = 2;
           A.sfx.power();
-          S.score += 1000;
-          addPopup(it.x, it.y - 12, 1000);
+          S.score += 500;
+          addPopup(it.x, it.y - 12, 500);
           updateHUD();
         } else if (it.kind === "oneup") {
           S.lives++;
@@ -925,8 +988,8 @@ function mountAdventurousMario(root) {
         } else if (it.kind === "star") {
           p.starT = 640;
           A.sfx.power();
-          S.score += 1000;
-          addPopup(it.x, it.y - 12, 1000);
+          S.score += 500;
+          addPopup(it.x, it.y - 12, 500);
           updateHUD();
         }
         addParticles(it.x + 14, it.y + 14, 6, "#fff2b0", 4, 0.1);
@@ -941,7 +1004,7 @@ function mountAdventurousMario(root) {
       if (p.playerMode === "normal" && aabb(p, c)) {
         pickups.splice(i, 1);
         S.coins++;
-        S.score += 200;
+        S.score += 100;
         A.sfx.coin();
         addParticles(c.x + 11, c.y + 12, 5, "#ffd84d", 4, 0.05);
         checkCoin1up();
@@ -967,7 +1030,11 @@ function mountAdventurousMario(root) {
     };
     const G = (x0, n) => { for (let i = 0; i < n; i++) B(x0 + i * T, GROUND_Y, "ground"); };
     const Cl = (x0, n) => { for (let i = 0; i < n; i++) B(x0 + i * T, GROUND_Y, "cloud"); };
-    const Pipe = (x, y, h, warp) => B(x, y, "pipe", { w: 64, h, warp: warp || null });
+    const Pipe = (x, y, h, warp, plant) => {
+      const b = B(x, y, "pipe", { w: 64, h, warp: warp || null });
+      if (plant) enemies.push(makePiranha(b));
+      return b;
+    };
     const Lucky = (x, y, content) => B(x, y, "lucky", { content });
     const Brick = (x, y) => B(x, y, "brick");
     const Hard = (x, y) => B(x, y, "hard");
@@ -977,12 +1044,12 @@ function mountAdventurousMario(root) {
     const Ck = (x) => checkpts.push({ x, clothY: 92, activated: false });
     const Stairs = (x0, n) => { for (let i = 0; i < n; i++) for (let j = 0; j <= i; j++) Hard(x0 + i * T, GROUND_Y - T - j * T); };
 
-    /* ===== ZONA 1-1 · SUPERFICIE (0 → 9312) ===== */
+    /* ===== ZONA 1-1 · SUPERFICIE (0 → 12480) ===== */
     G(0, 70);                                   // 0–2240
     Lucky(320, 272, "power");
     Brick(400, 272); Brick(432, 272); Lucky(464, 272, "coin"); Brick(496, 272);
     Lucky(432, 176, "coin");
-    Pipe(1400, 336, 64);
+    Pipe(1400, 336, 64, null, true);            // primera piraña
     Goo(950, 250); Goo(1150, 250);
     Coin(2256, 300); Coin(2300, 286); Coin(2344, 300);   // arco sobre foso 1
     G(2400, 39);                                // 2400–3648
@@ -990,18 +1057,18 @@ function mountAdventurousMario(root) {
     Brick(2720, 272); Brick(2752, 272); Lucky(2784, 272, "coin");
     Goo(2944, 300); Kop(3136, 280);
     for (let i = 0; i < 4; i++) for (let j = 0; j <= i; j++) Hard(3232 + i * T, GROUND_Y - T - j * T);
-    Pipe(3488, 304, 96, { zone: "underground", x: 14096, y: GROUND_Y }); // → subsuelo
+    Pipe(3488, 304, 96, { zone: "underground", x: 14096, y: GROUND_Y }, true); // → subsuelo
     Coin(3696, 308); Coin(3744, 290); Coin(3792, 308);   // arco sobre foso 2
     G(3840, 55);                                // 3840–5600
     Goo(4000, 250); Kop(4200, 260);
     Brick(4400, 272); Brick(4432, 272); Lucky(4464, 272, "power"); Brick(4496, 272);
     Lucky(4464, 176, "coin");
-    Pipe(4800, 336, 64);                        // salida decorativa del subsuelo
+    Pipe(4800, 336, 64, null, true);            // salida decorativa del subsuelo
     Stairs(5000, 8);
-    Pipe(5376, 336, 64, { zone: "sky", x: 22096, y: GROUND_Y });          // → cielo
+    Pipe(5376, 336, 64, { zone: "sky", x: 22096, y: GROUND_Y }, true);    // → cielo
     Coin(5660, 306); Coin(5712, 288); Coin(5764, 306);   // arco sobre foso 3
     G(5824, 109);                               // 5824–9312
-    Pipe(6048, 336, 64);                        // salida decorativa del cielo
+    Pipe(6048, 336, 64, null, true);            // salida decorativa del cielo
     Goo(6400, 250); Goo(6464, 250); Goo(6528, 250);
     Ck(6656);
     Coin(6720, 344); Coin(6752, 344); Coin(6784, 344); Coin(6816, 344);
@@ -1009,22 +1076,48 @@ function mountAdventurousMario(root) {
     Brick(7200, 272); Lucky(7232, 272, "power"); Brick(7264, 272); Brick(7296, 272);
     Lucky(7264, 176, "star");                   // ★ estrella secreta
     Stairs(8300, 8);
-    // bandera en 8800 · castillo en 8960 (solo dibujo)
 
-    /* ===== ZONA 1-2 · SUBSUELO (14000 → 18800) ===== */
-    for (let i = 0; i < 150; i++) B(14000 + i * T, GROUND_Y, "ground");   // piso indestructible
-    for (let i = 11; i <= 129; i++) B(14000 + i * T, 176, "brick");       // techo rompible
-    Pipe(14000, 336, 64);                       // entrada decorativa
+    /* --- extensión 1-1: jardín de tuberías con pirañas --- */
+    G(9312, 40);                                // 9312–10592
+    Pipe(9600, 304, 96, null, true);            // tubería alta · piraña
+    Kop(9860, 200);
+    Pipe(10048, 336, 64, null, true);
+    Goo(10260, 240);
+    Coin(10640, 300); Coin(10688, 284); Coin(10736, 300);   // arco sobre foso 4
+    G(10784, 53);                               // 10784–12480
+    Ck(10980);                                  // checkpoint final
+    Kop(11060, 160);
+    Brick(11140, 272); Lucky(11172, 272, "coin"); Brick(11204, 272);
+    Pipe(11360, 336, 64, null, true);
+    Goo(11470, 160);
+    Stairs(11560, 8);
+    // bandera en 11980 · castillo en 12140 (solo dibujo)
+
+    /* ===== ZONA 1-2 · SUBSUELO (14000 → 19760) ===== */
+    for (let i = 0; i < 180; i++) B(14000 + i * T, GROUND_Y, "ground");   // piso indestructible (ampliado)
+    for (let i = 11; i <= 169; i++) B(14000 + i * T, 176, "brick");       // techo rompible
+    Pipe(14000, 336, 64, null, true);           // entrada decorativa · piraña
     Goo(14600, 250); Kop(14900, 300); Kop(15400, 300); Goo(15900, 250);
     for (let i = 0; i < 6; i++) Coin(15168 + i * T, 344);
     Lucky(15696, 240, "oneup");                 // 1UP oculto
     Lucky(16200, 272, "power");
     Coin(16384, 344); Coin(16416, 344); Coin(16448, 344);
-    Pipe(16512, 336, 64, { zone: "main", x: 4896, y: GROUND_Y });         // → superficie
 
-    /* ===== ZONA 1-3 · CIELO (22000 → 27248) ===== */
+    /* --- extensión 1-2: galería profunda --- */
+    for (let i = 0; i < 5; i++) Coin(17000 + i * T, 344);
+    Pipe(17200, 336, 64, null, true);           // piraña en la oscuridad
+    Kop(17500, 280);
+    Brick(17640, 272); Brick(17672, 272); Lucky(17704, 272, "coin");
+    Goo(17900, 220);
+    Brick(18040, 272); Brick(18072, 272); Brick(18104, 272);
+    Goo(18200, 220);
+    Pipe(18500, 304, 96, null, true);           // tubería alta · piraña
+    for (let i = 0; i < 4; i++) Coin(18840 + i * T, 344);
+    Pipe(19200, 336, 64, { zone: "main", x: 4896, y: GROUND_Y }, true);    // → superficie
+
+    /* ===== ZONA 1-3 · CIELO (22000 → 28900) ===== */
     Cl(22000, 164);                             // piso de nubes continuo
-    Pipe(22000, 336, 64);                       // entrada decorativa
+    Pipe(22000, 336, 64, null, true);           // entrada decorativa · piraña
     for (let i = 0; i < 4; i++) B(22400 + i * T, 272, "cloud");
     for (let i = 0; i < 5; i++) B(22800 + i * T, 272, "cloud");
     for (let i = 0; i < 4; i++) B(23040 + i * T, 176, "cloud");
@@ -1038,7 +1131,16 @@ function mountAdventurousMario(root) {
     Lucky(25024, 272, "star");                  // ★ segunda estrella
     Coin(25800, 340); Coin(25832, 340); Coin(25864, 340);
     Coin(26304, 300); Coin(26336, 300); Coin(26368, 300); Coin(26400, 300);
-    Pipe(27000, 336, 64, { zone: "main", x: 6144, y: GROUND_Y });         // → superficie
+
+    /* --- extensión 1-3: puentes de nubes --- */
+    Cl(27248, 52);                              // piso de nubes ampliado → 28912
+    for (let i = 0; i < 4; i++) B(27420 + i * T, 272, "cloud");
+    for (let i = 0; i < 5; i++) B(27780 + i * T, 176, "cloud");
+    Coin(27436, 224); Coin(27468, 224); Coin(27500, 224);
+    Coin(27796, 128); Coin(27828, 128); Coin(27860, 128);
+    Goo(27300, 180);
+    Kop(27600, 240); Kop(28100, 240);
+    Pipe(28300, 336, 64, { zone: "main", x: 6144, y: GROUND_Y }, true);    // → superficie
   }
 
   /* ---------------- Cámara / entorno / HUD ---------------- */
@@ -1127,7 +1229,7 @@ function mountAdventurousMario(root) {
       "PUNTOS: " + S.score.toString().padStart(6, "0") + "<br>RÉCORD: " + S.best.toString().padStart(6, "0");
   }
   function enterWin() {
-    const bonus = S.time * 10;
+    const bonus = S.time * 5;
     S.score += bonus;
     saveBest();
     setMode("WIN");
@@ -1191,7 +1293,7 @@ function mountAdventurousMario(root) {
       if (player.playerMode === "normal" && aabb(player, { x: c.x - 4, y: 298, w: 12, h: 104 })) {
         c.activated = true;
         checkpoint = { x: c.x, y: 368, zone: S.zone };
-        S.score += 500;
+        S.score += 300;
         addPopup(c.x - 20, 262, "CHECKPOINT");
         A.sfx.check();
         updateHUD();
@@ -1200,13 +1302,13 @@ function mountAdventurousMario(root) {
   }
   function updateFlag() {
     if (flagGrabbed || player.playerMode !== "normal") return;
-    if (aabb(player, { x: 8794, y: 100, w: 14, h: 300 })) {
+    if (aabb(player, { x: FLAG_X - 6, y: 100, w: 14, h: 300 })) {
       flagGrabbed = true;
       player.playerMode = "flag";
       const h = GROUND_Y - player.y;
-      const pts = h > 200 ? 5000 : h > 120 ? 2000 : 800;
+      const pts = h > 200 ? 2000 : h > 120 ? 1000 : 500;
       S.score += pts;
-      addPopup(8740, Math.max(60, player.y - 12), pts);
+      addPopup(FLAG_X - 60, Math.max(60, player.y - 12), pts);
       A.sfx.flag();
       A.stopMusic();
       updateHUD();
@@ -1275,6 +1377,11 @@ function mountAdventurousMario(root) {
     ctx.closePath();
     ctx.fill();
   }
+  function drawCloud(im, x, y, w) {
+    if (im) { ctx.drawImage(im, x, y, w, w); return; }
+    ctx.fillStyle = "rgba(255,255,255,.85)";
+    cloudBlob(x + w * 0.14, y + w * 0.44, w / 105);
+  }
   function drawParallax() {
     if (S.zone === "underground") {
       ctx.save();
@@ -1287,13 +1394,39 @@ function mountAdventurousMario(root) {
       ctx.restore();
       return;
     }
+    // capa lejana: nubes pequeñas (sprites del usuario)
     ctx.save();
-    ctx.translate(-camera.x * 0.3, 0);
-    ctx.fillStyle = "rgba(255,255,255,.85)";
-    const csp = 460, c0 = Math.floor((camera.x * 0.3 - 150) / csp);
-    for (let i = c0; i < c0 + 5; i++) cloudBlob(i * csp + 80, 64 + ((i * 73) % 80), 1 + (i % 3) * 0.25);
+    ctx.translate(-camera.x * 0.22, 0);
+    const csp = 480, c0 = Math.floor((camera.x * 0.22 - 150) / csp);
+    for (let i = c0; i < c0 + 5; i++) {
+      const im = img("cloudS" + ((((i % 4) + 4) % 4) + 1));
+      const w = 64 + ((i * 41) % 36);
+      drawCloud(im, i * csp + 70, 40 + ((i * 83) % 80), w);
+    }
     ctx.restore();
-    if (S.zone !== "main") return;
+    // capa media: nubes grandes (sprites del usuario)
+    ctx.save();
+    ctx.translate(-camera.x * 0.42, 0);
+    const cmp = 760, c1 = Math.floor((camera.x * 0.42 - 240) / cmp);
+    for (let i = c1; i < c1 + 4; i++) {
+      const im = img("cloudL" + ((((i % 7) + 7) % 7) + 1));
+      const w = 150 + ((i * 53) % 90);
+      drawCloud(im, i * cmp + 90, 55 + ((i * 67) % 110), w);
+    }
+    ctx.restore();
+    // el cielo añade una tercera capa cercana de nubarrones
+    if (S.zone === "sky") {
+      ctx.save();
+      ctx.translate(-camera.x * 0.62, 0);
+      const skp = 640, s1 = Math.floor((camera.x * 0.62 - 200) / skp);
+      for (let i = s1; i < s1 + 4; i++) {
+        const im = img("cloudL" + (((((i * 3 + 2) % 7) + 7) % 7) + 1));
+        const w = 180 + ((i * 71) % 100);
+        drawCloud(im, i * skp + 110, 295 + ((i * 47) % 55), w);
+      }
+      ctx.restore();
+      return;
+    }
     ctx.save();
     ctx.translate(-camera.x * 0.55, 0);
     const sp = 560, s0 = Math.floor((camera.x * 0.55 - 250) / sp);
@@ -1337,6 +1470,7 @@ function mountAdventurousMario(root) {
     }
   }
   function drawBlock(b) {
+    if (b.dead) return; // los ladrillos rotos desaparecen del dibujo
     if (b.x + b.w < camera.x - 40 || b.x > camera.x + VW + 40) return;
     const off = b.hit > 0 ? Math.sin((b.hit / 10) * Math.PI) * 7 : 0;
     const x = Math.round(b.x), y = Math.round(b.y - off);
@@ -1433,27 +1567,27 @@ function mountAdventurousMario(root) {
   }
   function drawFlagAndCastle() {
     if (S.zone !== "main") return;
-    if (camera.x + VW < 8700 || camera.x > 9400) return;
-    ctx.fillStyle = "#9aa0a8"; ctx.fillRect(8800, 150, 5, 250);
-    ctx.fillStyle = "#c9ced6"; ctx.fillRect(8800, 150, 2, 250);
+    if (camera.x + VW < FLAG_X - 220 || camera.x > CASTLE_X + 480) return;
+    ctx.fillStyle = "#9aa0a8"; ctx.fillRect(FLAG_X, 150, 5, 250);
+    ctx.fillStyle = "#c9ced6"; ctx.fillRect(FLAG_X, 150, 2, 250);
     ctx.fillStyle = "#ffd84d";
-    ctx.beginPath(); ctx.arc(8802, 146, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(FLAG_X + 2, 146, 7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = "#e52521";
     ctx.beginPath();
-    ctx.moveTo(8805, flagClothY);
-    ctx.lineTo(8857, flagClothY + 15);
-    ctx.lineTo(8805, flagClothY + 30);
+    ctx.moveTo(FLAG_X + 5, flagClothY);
+    ctx.lineTo(FLAG_X + 57, flagClothY + 15);
+    ctx.lineTo(FLAG_X + 5, flagClothY + 30);
     ctx.closePath();
     ctx.fill();
     const im = img("castle");
     if (im) {
-      ctx.drawImage(im, 8960, 160, 240, 240);
+      ctx.drawImage(im, CASTLE_X, 160, 240, 240);
     } else {
-      ctx.fillStyle = "#b85c38"; ctx.fillRect(8960, 240, 240, 160);
+      ctx.fillStyle = "#b85c38"; ctx.fillRect(CASTLE_X, 240, 240, 160);
       ctx.fillStyle = "#8a3a20";
-      for (let i = 0; i < 6; i++) ctx.fillRect(8964 + i * 40, 216, 24, 24);
-      ctx.fillStyle = "#9a4a2a"; ctx.fillRect(8990, 200, 60, 60); ctx.fillRect(9110, 200, 60, 60);
-      ctx.fillStyle = "#1a0d05"; ctx.fillRect(9052, 320, 44, 80);
+      for (let i = 0; i < 6; i++) ctx.fillRect(CASTLE_X + 4 + i * 40, 216, 24, 24);
+      ctx.fillStyle = "#9a4a2a"; ctx.fillRect(CASTLE_X + 30, 200, 60, 60); ctx.fillRect(CASTLE_X + 150, 200, 60, 60);
+      ctx.fillStyle = "#1a0d05"; ctx.fillRect(CASTLE_X + 92, 320, 44, 80);
     }
   }
   function drawPickup(c) {
@@ -1489,39 +1623,98 @@ function mountAdventurousMario(root) {
       }
       ctx.restore();
     } else if (it.kind === "flower") {
-      ctx.fillStyle = "#2a8a2a"; ctx.fillRect(it.x + 11, it.y + 16, 6, 14);
-      ctx.fillStyle = "#3fbf3f"; ctx.fillRect(it.x + 4, it.y + 22, 7, 4); ctx.fillRect(it.x + 17, it.y + 19, 7, 4);
-      ctx.fillStyle = "#ff8c1a";
-      [[0, -9], [0, 9], [-9, 0], [9, 0]].forEach((o) => {
-        ctx.beginPath(); ctx.arc(cx + o[0], cy - 6 + o[1], 6, 0, Math.PI * 2); ctx.fill();
-      });
-      ctx.fillStyle = "#ffd84d";
-      ctx.beginPath(); ctx.arc(cx, cy - 6, 5, 0, Math.PI * 2); ctx.fill();
-      ctx.fillStyle = "#fff"; ctx.fillRect(cx - 4, cy - 9, 3, 4); ctx.fillRect(cx + 1, cy - 9, 3, 4);
+      const imF = img("flower");
+      if (imF) {
+        ctx.save();
+        ctx.translate(cx, cy - 2);
+        ctx.rotate(Math.sin(S.frame * 0.08) * 0.12);
+        ctx.drawImage(imF, -17, -17, 34, 34);
+        ctx.restore();
+      } else {
+        ctx.fillStyle = "#2a8a2a"; ctx.fillRect(it.x + 11, it.y + 16, 6, 14);
+        ctx.fillStyle = "#3fbf3f"; ctx.fillRect(it.x + 4, it.y + 22, 7, 4); ctx.fillRect(it.x + 17, it.y + 19, 7, 4);
+        ctx.fillStyle = "#ff8c1a";
+        [[0, -9], [0, 9], [-9, 0], [9, 0]].forEach((o) => {
+          ctx.beginPath(); ctx.arc(cx + o[0], cy - 6 + o[1], 6, 0, Math.PI * 2); ctx.fill();
+        });
+        ctx.fillStyle = "#ffd84d";
+        ctx.beginPath(); ctx.arc(cx, cy - 6, 5, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.fillRect(cx - 4, cy - 9, 3, 4); ctx.fillRect(cx + 1, cy - 9, 3, 4);
+      }
     } else if (it.kind === "star") {
       ctx.save();
       ctx.translate(cx, cy);
       ctx.rotate(Math.sin(S.frame * 0.1) * 0.25);
       const s = 1 + Math.sin(S.frame * 0.2) * 0.08;
       ctx.scale(s, s);
-      ctx.beginPath();
-      for (let i = 0; i < 10; i++) {
-        const ang = -Math.PI / 2 + i * Math.PI / 5;
-        const r = i % 2 === 0 ? 14 : 6;
-        if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
-        else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+      const imSt = img("star");
+      if (imSt) {
+        ctx.drawImage(imSt, -17, -17, 34, 34);
+      } else {
+        ctx.beginPath();
+        for (let i = 0; i < 10; i++) {
+          const ang = -Math.PI / 2 + i * Math.PI / 5;
+          const r = i % 2 === 0 ? 14 : 6;
+          if (i === 0) ctx.moveTo(Math.cos(ang) * r, Math.sin(ang) * r);
+          else ctx.lineTo(Math.cos(ang) * r, Math.sin(ang) * r);
+        }
+        ctx.closePath();
+        ctx.fillStyle = "#ffd84d"; ctx.fill();
+        ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 2; ctx.stroke();
+        ctx.fillStyle = "#000"; ctx.fillRect(-5, -3, 3, 5); ctx.fillRect(3, -3, 3, 5);
       }
-      ctx.closePath();
-      ctx.fillStyle = "#ffd84d"; ctx.fill();
-      ctx.strokeStyle = "#b8860b"; ctx.lineWidth = 2; ctx.stroke();
-      ctx.fillStyle = "#000"; ctx.fillRect(-5, -3, 3, 5); ctx.fillRect(3, -3, 3, 5);
       ctx.restore();
     }
   }
   function drawEnemy(e) {
     if (e.x + e.w < camera.x - 60 || e.x > camera.x + VW + 60) return;
     if (e.kind === "goomba") drawGoomba(e);
-    else drawKoopa(e);
+    else if (e.kind === "koopa") drawKoopa(e);
+  }
+  function drawPiranha(e) {
+    if (e.x + e.w < camera.x - 60 || e.x > camera.x + VW + 60) return;
+    const top = e.pipe.y;
+    const exp = top - e.y;               // píxeles ya expuestos
+    if (exp <= 1 && !e.flipDead) return; // totalmente escondida
+    ctx.save();
+    if (!e.flipDead) {
+      // recorte: la planta solo se ve POR ENCIMA de la boca de la tubería
+      ctx.beginPath();
+      ctx.rect(e.x - 20, -600, e.w + 40, 600 + top);
+      ctx.clip();
+    }
+    if (e.flipDead) {
+      ctx.translate(e.x + e.w / 2, e.y + e.h / 2);
+      ctx.rotate(Math.PI);
+      ctx.translate(-(e.x + e.w / 2), -(e.y + e.h / 2));
+    }
+    const im = img("piranha");
+    if (im) {
+      // proporcion natural de la imagen original (nada estirada)
+      const natW = im.naturalWidth || 441, natH = im.naturalHeight || 565;
+      const dw = Math.max(30, Math.round((e.h + 2) * (natW / natH)));
+      ctx.drawImage(im, e.x + e.w / 2 - dw / 2, e.y - 1, dw, e.h + 2);
+    } else {
+      const cx = e.x + e.w / 2;
+      ctx.fillStyle = "#2a8a2a";
+      ctx.fillRect(cx - 4, e.y + 24, 8, e.h - 24);
+      ctx.fillStyle = "#1a5a1a";
+      ctx.fillRect(cx - 10, e.y + 30, 7, 5); ctx.fillRect(cx + 3, e.y + 38, 7, 5);
+      ctx.fillStyle = "#e52521";
+      ctx.beginPath(); ctx.arc(cx, e.y + 17, 15, Math.PI, 0); ctx.fill();
+      ctx.fillRect(cx - 15, e.y + 17, 30, 9);
+      ctx.fillStyle = "#fff";
+      for (let i = 0; i < 4; i++) {
+        ctx.beginPath();
+        ctx.moveTo(cx - 13 + i * 8, e.y + 24);
+        ctx.lineTo(cx - 9 + i * 8, e.y + 31);
+        ctx.lineTo(cx - 5 + i * 8, e.y + 24);
+        ctx.closePath(); ctx.fill();
+      }
+      ctx.fillStyle = "#fff"; ctx.fillRect(cx - 10, e.y + 8, 6, 7); ctx.fillRect(cx + 5, e.y + 8, 6, 7);
+      ctx.fillStyle = "#000"; ctx.fillRect(cx - 9, e.y + 10, 3, 5); ctx.fillRect(cx + 6, e.y + 10, 3, 5);
+    }
+    ctx.restore();
   }
   function drawGoomba(e) {
     ctx.save();
@@ -1569,11 +1762,22 @@ function mountAdventurousMario(root) {
       }
       ctx.restore();
     } else {
-      const imK = img("koopa");
+      // sprites direccionales del usuario (izquierda/derecha), sprite alto estilo clásico
+      const imL = img("koopaL"), imR = img("koopaR");
+      let imK, flip = false, tall = false;
+      if (imL || imR) {
+        imK = e.dir > 0 ? (imR || imL) : (imL || imR);
+        flip = e.dir > 0 ? !imR : !imL;   // espejo solo si falta el del lado
+        tall = true;
+      } else {
+        imK = img("koopa");
+        flip = e.dir > 0;                 // el respaldo mira a la izquierda
+      }
       if (imK) {
         ctx.translate(cx, cy);
-        if (e.dir > 0) ctx.scale(-1, 1);
-        ctx.drawImage(imK, -16, -16, 32, 32);
+        if (flip) ctx.scale(-1, 1);
+        if (tall) ctx.drawImage(imK, -14, 16 - 46, 28, 46);
+        else ctx.drawImage(imK, -16, -16, 32, 32);
       } else {
         ctx.fillStyle = "#2a8a2a";
         ctx.beginPath(); ctx.arc(cx, cy + 4, 13, Math.PI, 0); ctx.fill();
@@ -1668,6 +1872,7 @@ function mountAdventurousMario(root) {
     ctx.translate(-Math.round(camera.x) + shx, shy);
     checkpts.forEach(drawCheckpoint);
     drawFlagAndCastle();
+    enemies.forEach((e) => { if (e.kind === "piranha") drawPiranha(e); }); // detrás de las tuberías
     blocks.forEach(drawBlock);
     pickups.forEach(drawPickup);
     items.forEach(drawItem);
@@ -1791,15 +1996,39 @@ function mountAdventurousMario(root) {
         ph: player ? player.h : 0,
         g: player ? !!player.grounded : false,
         pm: player ? player.playerMode : "",
+        power: player ? player.power : -1,
+        starT: player ? player.starT : 0,
         cam: Math.round(camera.x),
         enemies: enemies.length,
         enemySample: enemies.slice(0, 4).map((e) => ({ k: e.kind, x: Math.round(e.x), y: Math.round(e.y) })),
+        plants: enemies.filter((e) => e.kind === "piranha").map((e) => ({ x: Math.round(e.x), y: Math.round(e.y) })),
         items: items.map((i) => i.kind),
         cps: checkpts.map((c) => ({ x: c.x, on: c.activated })),
         blocks: blocks.length, lives: S.lives, score: S.score, coins: S.coins,
       };
     },
   };
+  // Teleport de pruebas — SOLO disponible con #debug en la URL
+  if (location.hash === "#debug") {
+    window.__AM.warp = (x, zone, y) => {
+      if (!player) return "no player";
+      if (zone) S.zone = zone;
+      player.x = x;
+      player.y = (typeof y === "number") ? y : GROUND_Y - player.h;
+      player.vx = 0; player.vy = 0;
+      player.invuln = 0;
+      player.playerMode = "normal";
+      camera.x = clampCam(x - 320);
+      updateEnv();
+      return "warped to " + x;
+    };
+    window.__AM.give = (kind) => {
+      if (!player) return "no player";
+      if (kind === "flower") { if (player.power === 0) { player.y -= T; player.h = T * 2; } player.power = 2; updateHUD(); return "fire"; }
+      if (kind === "star") { player.starT = 640; return "star"; }
+      return "?";
+    };
+  }
 
   /* ---------------- Limpieza (para React) ---------------- */
   return function cleanup() {
