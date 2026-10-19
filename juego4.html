@@ -2048,5 +2048,43 @@ function mountAdventurousMario(root) {
 
 mountAdventurousMario(document.getElementById('am-root'));
 </script>
+<script>
+/* ============ CONECTOR DE SCORE CON LA PÁGINA PRINCIPAL ============ */
+(function () {
+  var GAME_TITLE = "Adventurous Mario"; // Debe coincidir EXACTO con index.html
+  var lastSent = -1;   // último score ya reportado
+  var bestSeen = 0;    // puntaje máximo visto en esta sesión
+
+  function inIframe() { try { return window.self !== window.top; } catch (e) { return true; } }
+
+  function report() {
+    if (!inIframe() || bestSeen <= 0 || bestSeen === lastSent) return;
+    lastSent = bestSeen;
+    try {
+      window.parent.postMessage({ type: "gameScore", game: GAME_TITLE, score: bestSeen }, "*");
+    } catch (e) {}
+  }
+
+  function watchScore() {
+    var el = document.getElementById("amScore");
+    if (!el) { setTimeout(watchScore, 400); return; }
+    var read = function () {
+      var v = parseInt((el.textContent || "").replace(/[^0-9]/g, ""), 10);
+      if (!isNaN(v) && v > bestSeen) bestSeen = v;
+    };
+    read();
+    if (window.MutationObserver) {
+      new MutationObserver(read).observe(el, { childList: true, characterData: true, subtree: true });
+    }
+    setInterval(function () { read(); report(); }, 10000); // respaldo cada 10s
+  }
+
+  window.addEventListener("pagehide", report);
+  window.addEventListener("beforeunload", report);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) report(); });
+
+  watchScore();
+})();
+</script>
 </body>
 </html>
