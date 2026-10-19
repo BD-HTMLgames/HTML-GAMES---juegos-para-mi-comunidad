@@ -501,7 +501,6 @@ let games = [
   { title: "FlappyBird", cat: "arcade", file: "juego3.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20FlappyBird" },
   { title: "Adventurous Mario", cat: "plataforma", file: "juego4.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20mario" }
 ];
-/* FIX CATEGORÍA: añadida "Plataformas" para que el Mario aparezca en su filtro */
 let categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }, { id: "plataforma", label: "Plataformas" }];
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
@@ -524,32 +523,41 @@ async function hashPass(p) {
   return 'plain:' + p;
 }
 
-/* ============ FIX HISTORIAL DUPLICADO: fusión de llaves antiguas ============
-   Los mismos juegos quedaron guardados en Firebase con títulos distintos
-   (JUEGO4 por auto-detección de GitHub, "Snake" por un rename, etc.).
-   Este mapa une cada variante con su título canónico (el del array games). */
+/* ============ FIX HISTORIAL DUPLICADO v2 ============
+   Fusiona llaves viejas del historial con el título canónico del catálogo.
+   v2: resuelve por alias explícito Y por comparación sin mayúsculas/minúsculas,
+   así "Juego de la serpiente", "juego de la Serpiente", "JUEGO1", etc. caen
+   todos en la misma llave automáticamente. */
 const HISTORY_ALIASES = {
   "JUEGO1": "juego de la Serpiente", "JUEGO 1": "juego de la Serpiente", "SNAKE": "juego de la Serpiente",
   "JUEGO2": "UNO", "JUEGO 2": "UNO",
-  "JUEGO3": "FlappyBird", "JUEGO 3": "FlappyBird", "FLAPPYBIRD": "FlappyBird",
+  "JUEGO3": "FlappyBird", "JUEGO 3": "FlappyBird",
   "JUEGO4": "Adventurous Mario", "JUEGO 4": "Adventurous Mario",
-  "ADVENTUROUS_MARIO": "Adventurous Mario", "ADVENTUROUS MARIO": "Adventurous Mario"
+  "ADVENTUROUS_MARIO": "Adventurous Mario"
 };
 let historyMigratedFor = null;
+
+function canonicalGameTitle(raw) {
+  const k = String(raw || '');
+  if (HISTORY_ALIASES[k]) return HISTORY_ALIASES[k];
+  if (HISTORY_ALIASES[k.toUpperCase()]) return HISTORY_ALIASES[k.toUpperCase()];
+  const g = games.find(x => x.title.toLowerCase() === k.toLowerCase());
+  return g ? g.title : k;
+}
 
 function migrateUserHistory(userName) {
   if (!userData || !userData.history || historyMigratedFor === userName) return;
   let changed = false;
   const h = userData.history;
   Object.keys(h).forEach(oldKey => {
-    const canon = HISTORY_ALIASES[oldKey] || HISTORY_ALIASES[String(oldKey).toUpperCase()] || null;
+    const canon = canonicalGameTitle(oldKey);
     if (!canon || canon === oldKey || !h[oldKey]) return;
     const old = h[oldKey];
     if (!h[canon]) h[canon] = { timesPlayed: 0, rating: 0, highScore: 0 };
     const c = h[canon];
-    c.timesPlayed = (c.timesPlayed || 0) + (old.timesPlayed || 0);          // se suman las jugadas
-    c.highScore = Math.max(c.highScore || 0, old.highScore || 0);           // se conserva el récord mayor
-    c.rating = Math.max(c.rating || 0, old.rating || 0);                    // se conserva la mejor nota
+    c.timesPlayed = (c.timesPlayed || 0) + (old.timesPlayed || 0);
+    c.highScore = Math.max(c.highScore || 0, old.highScore || 0);
+    c.rating = Math.max(c.rating || 0, old.rating || 0);
     c.lastPlayed = Math.max(c.lastPlayed || 0, old.lastPlayed || 0);
     delete h[oldKey];
     changed = true;
@@ -590,7 +598,7 @@ document.getElementById('confirmLogin').addEventListener('click', async e => { e
   }
   localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); listenToUserData(fn); loginDropdown.classList.remove('show'); renderUserArea(); showToast(`¡Bienvenido, ${userData.name}!`); });
 document.getElementById('closeLogin').addEventListener('click', () => loginDropdown.classList.remove('show'));
-/* FIX: la migración del historial corre al cargar los datos del usuario (fusión de duplicados) */
+/* Al cargar los datos del usuario se ejecuta la migración (fusión de duplicados) */
 function listenToUserData(n) { userDbRef = db.ref('users/' + n); userDbRef.on('value', s => { if (s.exists()) { userData = s.val(); userData.name = n; migrateUserHistory(n); localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); if (profileSidebar.classList.contains('show')) updateSidebarData(); } }); }
 setInterval(() => { if (userData && userDbRef) { userData.timeSpent = (userData.timeSpent || 0) + 10; userDbRef.child('timeSpent').set(userData.timeSpent); } }, 10000);
 let recoveryTemp = { email: '', code: 0, userKey: '', expiry: 0 };
@@ -612,7 +620,7 @@ leaderboardList.addEventListener('click', e => { const row = e.target.closest('.
 document.getElementById('closeLbProfileCard').addEventListener('click', () => lbProfileCard.classList.remove('show'));
 lbSearchInput.addEventListener('input', e => { const q = e.target.value.toLowerCase().trim(); if (q.length < 2) { lbSearchResults.innerHTML = ''; return; } const res = globalLeaderboardData.filter(p => p.name.toLowerCase().includes(q)); let h = ''; if (res.length > 0) res.forEach(p => { const pi = globalLeaderboardData.findIndex(x => x.name === p.name); const r = pi + 1, rc = getRankClass(r); let ps = 0; if (p.history) for (let g in p.history) ps += p.history[g].highScore || 0; h += `<div class="lb-search-result" data-name="${esc(p.name)}"><span class="res-rank ${rc}">#${r}</span><span class="res-name">${esc(p.name)}</span><span class="res-score">${ps.toLocaleString()} pts</span></div>`; }); else h = '<div style="padding: 10px; text-align: center; color: #6a3030; font-size: 0.8rem;">No encontrado.</div>'; lbSearchResults.innerHTML = h; });
 lbSearchResults.addEventListener('click', e => { const r = e.target.closest('.lb-search-result'); if (r && r.dataset.name) showLbProfileCard(r.dataset.name, r); });
-/* El grid solo se re-renderiza si los ratings visibles cambiaron de verdad (anti-parpadeo) */
+/* El grid solo se re-renderiza si los ratings visibles cambiaron (anti-parpadeo) */
 let lastRatingsSig = '';
 db.ref('users').on('value', s => { globalLeaderboardData = []; globalGameRatings = {}; const tr = {}; s.forEach(c => { const v = c.val(); let ps = 0; if (v.history) for (let g in v.history) { ps += v.history[g].highScore || 0; if (v.history[g].rating > 0) { if (!tr[g]) tr[g] = []; tr[g].push(v.history[g].rating); } } globalLeaderboardData.push({ name: c.key, ...v, totalScore: ps }); }); for (let g in tr) { const sum = tr[g].reduce((a, b) => a + b, 0); globalGameRatings[g] = { avg: (sum / tr[g].length).toFixed(1), count: tr[g].length }; } globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore); if (leaderboardDropdown.classList.contains('show')) renderLeaderboard(); if (profileSidebar.classList.contains('show')) updateSidebarData(); const sig = JSON.stringify(globalGameRatings); if (sig !== lastRatingsSig) { lastRatingsSig = sig; renderGames(); } });
 const catContainer = document.getElementById("categories");
@@ -620,8 +628,8 @@ function renderCategories() { catContainer.innerHTML = ''; categories.forEach((c
 const grid = document.getElementById("gamesGrid"); const emptyState = document.getElementById("emptyState"); const gameContainer = document.getElementById("gameContainer"); const gameFrame = document.getElementById("gameFrame"); const closeGameBtn = document.getElementById("closeGameBtn"); let currentGameTitle = null;
 function renderGames() { const f = games.filter(g => (currentCat === "all" || g.cat === currentCat) && g.title.toLowerCase().includes(currentSearch)); grid.innerHTML = ""; if (f.length === 0) { emptyState.classList.remove("hidden"); return; } emptyState.classList.add("hidden"); f.forEach((g, i) => { const c = document.createElement("div"); c.className = "game-card fade-up"; const gd = userData?.history?.[g.title]; const hp = gd && (gd.timesPlayed || 0) > 0; const th = !hp ? `<div class="game-tag">NEW</div>` : ""; const gr = globalGameRatings[g.title]?.avg || 0; const rh = gr > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${gr}</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`; c.innerHTML = `${th}${rh}<div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.onerror=null;this.src='${defaultImg}'"><div class="game-overlay"></div></div><div class="play-icon"><i class="fas fa-play"></i></div><div class="game-title">${esc(g.title)}</div>`; c.addEventListener("click", () => { currentGameTitle = g.title; if (userData && userDbRef) { if (!userData.history) userData.history = {}; if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1; userData.history[g.title].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); } gameFrame.src = g.file; gameContainer.classList.add('show'); showToast(!userData ? "MODO OFFLINE." : `Iniciando: ${g.title}...`); }); grid.appendChild(c); }); }
 closeGameBtn.addEventListener('click', () => { gameContainer.classList.remove('show'); gameFrame.src = ''; if (userData && currentGameTitle) { const gd = userData.history?.[currentGameTitle]; if (!gd || !gd.rating || gd.rating === 0) setTimeout(() => openRatingModal(currentGameTitle), 300); } });
-/* FIX: los scores que llegan con títulos viejos se normalizan con el mapa de alias */
-window.addEventListener('message', e => { if (e.data && e.data.type === 'gameScore' && userData && userDbRef) { const raw = String(e.data.game || ''); const gt = HISTORY_ALIASES[raw] || HISTORY_ALIASES[raw.toUpperCase()] || raw; const sc = parseInt(e.data.score); if (!isNaN(sc)) { if (!userData.history) userData.history = {}; if (!userData.history[gt]) userData.history[gt] = { timesPlayed: 0, rating: 0, highScore: 0 }; if (sc > (userData.history[gt].highScore || 0)) { userData.history[gt].highScore = sc; showToast(`¡Récord: ${sc} pts!`); } userData.history[gt].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); renderGames(); } } });
+/* Los scores que llegan con títulos en cualquier variante se normalizan (fix duplicados) */
+window.addEventListener('message', e => { if (e.data && e.data.type === 'gameScore' && userData && userDbRef) { const gt = canonicalGameTitle(String(e.data.game || '')); const sc = parseInt(e.data.score); if (!isNaN(sc)) { if (!userData.history) userData.history = {}; if (!userData.history[gt]) userData.history[gt] = { timesPlayed: 0, rating: 0, highScore: 0 }; if (sc > (userData.history[gt].highScore || 0)) { userData.history[gt].highScore = sc; showToast(`¡Récord: ${sc} pts!`); } userData.history[gt].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); renderGames(); } } });
 const ratingToast = document.getElementById("ratingToast"); let toastTimer; let tempRating = 0;
 function openRatingModal(gt) { document.getElementById("toastGameTitle").textContent = gt; tempRating = 0; const cr = userData?.history?.[gt]?.rating || 0; const stars = document.querySelectorAll('#starsInputToast i'); stars.forEach(s => { s.classList.remove('star-metallic', 'hover'); s.classList.add('star-empty'); if (cr >= parseInt(s.dataset.val)) { s.classList.remove('star-empty'); s.classList.add('star-metallic'); } }); ratingToast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => ratingToast.classList.remove('show'), 15000); }
 async function closeRatingModal() { if (tempRating > 0) { if (!userData.history) userData.history = {}; if (!userData.history[currentGameTitle]) userData.history[currentGameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[currentGameTitle].rating = tempRating; if (userData && userDbRef) { await userDbRef.child('history').set(userData.history); showToast("Calificación enviada."); } renderGames(); } ratingToast.classList.remove('show'); clearTimeout(toastTimer); }
