@@ -474,11 +474,10 @@
 
 <script>
 // =======================================================================
-// CONFIGURACIÓN OBLIGATORIA: Reemplaza con tus datos reales de GitHub
+// CONFIGURACIÓN: Datos de GitHub
 // =======================================================================
 const githubUser = "BD-HTMLgames";
 const githubRepo = "HTML-GAMES---juegos-para-mi-comunidad";
-// =======================================================================
 
 const firebaseConfig = {
   apiKey: "AIzaSyD4F-dDO0APfcrGNTCugMriwyD53Iyd2FY", authDomain: "bd--htmlgames.firebaseapp.com",
@@ -502,7 +501,8 @@ let games = [
   { title: "FlappyBird", cat: "arcade", file: "juego3.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20FlappyBird" },
   { title: "Adventurous Mario", cat: "plataforma", file: "juego4.html", img: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/juego%20de%20mario" }
 ];
-let categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }];
+/* FIX CATEGORÍA: añadida "Plataformas" para que el Mario aparezca en su filtro */
+let categories = [{ id: "all", label: "Todos" }, { id: "arcade", label: "Arcade" }, { id: "cards", label: "Cartas" }, { id: "plataforma", label: "Plataformas" }];
 let currentCat = "all", currentSearch = "";
 let userData = JSON.parse(localStorage.getItem('htmlGamesUser')) || null;
 let userDbRef = null; let currentDevGame = null; let currentDevCommentRef = null; let devGames = [];
@@ -511,12 +511,9 @@ let userDbRef = null; let currentDevGame = null; let currentDevCommentRef = null
 let savedAppState = localStorage.getItem('htmlGamesAppState') || 'home';
 let savedDevGame = localStorage.getItem('htmlGamesCurrentDevGame') || null;
 
-/* ============ HELPERS DE SEGURIDAD (FIX #2, #6 y #11) ============ */
-// Escapa HTML para prevenir XSS en nombres, comentarios y textos insertados
+/* ============ HELPERS DE SEGURIDAD ============ */
 function esc(s) { return String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c])); }
-// Sanitiza textos para usarlos como claves de Firebase (no admite . # $ [ ] /)
 function safeKey(s) { return String(s).replace(/[.#$\/\[\]]/g, '_'); }
-// Hashea contraseñas con SHA-256 (migra automáticamente usuarios antiguos con texto plano)
 async function hashPass(p) {
   try {
     if (window.crypto && crypto.subtle) {
@@ -525,6 +522,40 @@ async function hashPass(p) {
     }
   } catch (e) { console.warn('hashPass fallback:', e); }
   return 'plain:' + p;
+}
+
+/* ============ FIX HISTORIAL DUPLICADO: fusión de llaves antiguas ============
+   Los mismos juegos quedaron guardados en Firebase con títulos distintos
+   (JUEGO4 por auto-detección de GitHub, "Snake" por un rename, etc.).
+   Este mapa une cada variante con su título canónico (el del array games). */
+const HISTORY_ALIASES = {
+  "JUEGO1": "juego de la Serpiente", "JUEGO 1": "juego de la Serpiente", "SNAKE": "juego de la Serpiente",
+  "JUEGO2": "UNO", "JUEGO 2": "UNO",
+  "JUEGO3": "FlappyBird", "JUEGO 3": "FlappyBird", "FLAPPYBIRD": "FlappyBird",
+  "JUEGO4": "Adventurous Mario", "JUEGO 4": "Adventurous Mario",
+  "ADVENTUROUS_MARIO": "Adventurous Mario", "ADVENTUROUS MARIO": "Adventurous Mario"
+};
+let historyMigratedFor = null;
+
+function migrateUserHistory(userName) {
+  if (!userData || !userData.history || historyMigratedFor === userName) return;
+  let changed = false;
+  const h = userData.history;
+  Object.keys(h).forEach(oldKey => {
+    const canon = HISTORY_ALIASES[oldKey] || HISTORY_ALIASES[String(oldKey).toUpperCase()] || null;
+    if (!canon || canon === oldKey || !h[oldKey]) return;
+    const old = h[oldKey];
+    if (!h[canon]) h[canon] = { timesPlayed: 0, rating: 0, highScore: 0 };
+    const c = h[canon];
+    c.timesPlayed = (c.timesPlayed || 0) + (old.timesPlayed || 0);          // se suman las jugadas
+    c.highScore = Math.max(c.highScore || 0, old.highScore || 0);           // se conserva el récord mayor
+    c.rating = Math.max(c.rating || 0, old.rating || 0);                    // se conserva la mejor nota
+    c.lastPlayed = Math.max(c.lastPlayed || 0, old.lastPlayed || 0);
+    delete h[oldKey];
+    changed = true;
+  });
+  historyMigratedFor = userName;
+  if (changed && userDbRef) { userDbRef.child('history').set(h); showToast("Historial unificado."); }
 }
 
 function getRankClass(index) { if (index <= 10) return 'rank-ruby'; if (index <= 25) return 'rank-diamond'; if (index <= 50) return 'rank-gold'; if (index <= 75) return 'rank-silver'; if (index <= 100) return 'rank-bronze'; return 'rank-wood'; }
@@ -543,14 +574,12 @@ document.getElementById('historyToggle').addEventListener('click', function() { 
 const loginDropdown = document.getElementById("loginDropdown"); const usernameInput = document.getElementById("usernameInput"); const passwordInput = document.getElementById("passwordInput"); const loginError = document.getElementById("loginError"); const genderBtns = document.querySelectorAll('.gender-btn'); let selectedGender = null;
 genderBtns.forEach(b => b.addEventListener('click', e => { e.stopPropagation(); selectedGender = b.dataset.val; genderBtns.forEach(x => x.classList.remove('active')); b.classList.add('active'); }));
 document.getElementById('confirmLogin').addEventListener('click', async e => { e.stopPropagation(); const n = usernameInput.value.trim(), p = passwordInput.value.trim();
-  /* FIX #6: validación de formato (evita caracteres que rompen Firebase) */
   if (!/^[A-Za-z0-9_\-]{3,16}$/.test(n)) { loginError.textContent = "3-16 caracteres. Solo letras, números, guiones y _ (sin espacios ni símbolos)."; loginError.style.display = 'block'; return; }
   if (p.length < 3) { loginError.textContent = "La contraseña debe tener al menos 3 caracteres."; loginError.style.display = 'block'; return; }
   const fn = n.toUpperCase().replace(/\s+/g, '_'); const uRef = db.ref('users/' + fn); const snap = await uRef.once('value');
-  const hp = await hashPass(p); /* FIX #11: contraseñas hasheadas */
+  const hp = await hashPass(p);
   if (snap.exists()) {
     const d = snap.val();
-    /* Acepta hash (usuarios nuevos) o texto plano (usuarios antiguos, se migran solo) */
     if (d.password !== hp && d.password !== p) { loginError.textContent = "Contraseña incorrecta."; loginError.style.display = 'block'; return; }
     if (d.password === p && d.password !== hp) { await uRef.child('password').set(hp); d.password = hp; }
     userData = d; userData.name = fn;
@@ -561,8 +590,8 @@ document.getElementById('confirmLogin').addEventListener('click', async e => { e
   }
   localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); listenToUserData(fn); loginDropdown.classList.remove('show'); renderUserArea(); showToast(`¡Bienvenido, ${userData.name}!`); });
 document.getElementById('closeLogin').addEventListener('click', () => loginDropdown.classList.remove('show'));
-/* FIX #3: se eliminó renderGames() de aquí (causaba el parpadeo cada 10s) */
-function listenToUserData(n) { userDbRef = db.ref('users/' + n); userDbRef.on('value', s => { if (s.exists()) { userData = s.val(); userData.name = n; localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); if (profileSidebar.classList.contains('show')) updateSidebarData(); } }); }
+/* FIX: la migración del historial corre al cargar los datos del usuario (fusión de duplicados) */
+function listenToUserData(n) { userDbRef = db.ref('users/' + n); userDbRef.on('value', s => { if (s.exists()) { userData = s.val(); userData.name = n; migrateUserHistory(n); localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); if (profileSidebar.classList.contains('show')) updateSidebarData(); } }); }
 setInterval(() => { if (userData && userDbRef) { userData.timeSpent = (userData.timeSpent || 0) + 10; userDbRef.child('timeSpent').set(userData.timeSpent); } }, 10000);
 let recoveryTemp = { email: '', code: 0, userKey: '', expiry: 0 };
 document.getElementById('openRecoveryLink').addEventListener('click', () => { loginError.style.display = 'none'; showLoginView('viewRecoveryEmail'); });
@@ -571,7 +600,6 @@ document.getElementById('sendCodeBtn').addEventListener('click', async () => { c
 document.getElementById('verifyCodeBtn').addEventListener('click', async () => { const c = parseInt(document.getElementById('codeInput').value); const er = document.getElementById('codeError'); if (Date.now() > recoveryTemp.expiry) { er.textContent = "Código expirado."; er.style.display = 'block'; return; } const se = recoveryTemp.email.toLowerCase().replace(/\./g, '_'); const lR = db.ref('recoveryLocks/' + se); if (c === recoveryTemp.code) { await lR.remove(); er.style.display = 'none'; document.getElementById('recUsernameInput').value = recoveryTemp.userKey; showLoginView('viewNewPassword'); } else { const lS = await lR.once('value'); let a = lS.exists() ? (lS.val().attempts||0) : 0; a++; if (a >= 10) { await lR.set({ attempts: a, lockUntil: Date.now() + 1800000 }); er.textContent = "Bloqueado 30 min."; } else { await lR.set({ attempts: a }); er.textContent = `Incorrecto. Intentos: ${10-a}`; } er.style.display = 'block'; } });
 document.getElementById('saveNewPassBtn').addEventListener('click', async () => { const np = document.getElementById('newPassInput').value.trim(); const er = document.getElementById('newPassError'); if (np.length < 3) { er.textContent = "Mínimo 3 caracteres."; er.style.display = 'block'; return; } await db.ref('users/' + recoveryTemp.userKey + '/password').set(await hashPass(np)); const s = await db.ref('users/' + recoveryTemp.userKey).once('value'); userData = s.val(); userData.name = recoveryTemp.userKey; localStorage.setItem('htmlGamesUser', JSON.stringify(userData)); listenToUserData(userData.name); loginDropdown.classList.remove('show'); renderUserArea(); showToast("Contraseña actualizada."); });
 function renderSetupView(st, em='') { const sd = document.getElementById('setupDropdown'); if (st===1) { sd.innerHTML = `<label class="form-label" style="margin-top:0;">CORREO</label><input type="email" id="setupEmailInput" class="modal-input" placeholder="tu_correo@gmail.com" style="margin-bottom:10px;"><div id="setupError" class="login-error"></div><button id="setupNextBtn" class="cat-btn w-full" style="background:var(--red);border-color:var(--red);margin-top:5px;">SIGUIENTE</button><button id="setupCancelBtn" class="cat-btn w-full" style="margin-top:10px;">CANCELAR</button>`; document.getElementById('setupCancelBtn').addEventListener('click', () => sd.style.display='none'); document.getElementById('setupNextBtn').addEventListener('click', () => { const ev = document.getElementById('setupEmailInput').value.trim(); const er = document.getElementById('setupError'); if (!ev.includes('@')||!ev.includes('.')) { er.textContent="Inválido."; er.style.display='block'; return; } renderSetupView(2, ev); }); } else if (st===2) { sd.innerHTML = `<div style="border:1px solid var(--red);padding:10px;margin-bottom:15px;font-size:0.8rem;color:var(--cream);line-height:1.4;">Correo principal para recuperar cuenta. <strong style="color:var(--red-bright);">No podrás cambiarlo.</strong></div><div style="font-family:monospace;font-size:1.1rem;color:var(--gold);margin:15px 0;text-align:center;">${esc(em)}</div><button id="setupEditBtn" class="cat-btn w-full" style="margin-top:5px;">EDITAR</button><button id="setupSaveBtn" class="cat-btn w-full" style="background:var(--red);border-color:var(--red);margin-top:10px;">CONTINUAR</button>`; document.getElementById('setupEditBtn').addEventListener('click', () => renderSetupView(1)); document.getElementById('setupSaveBtn').addEventListener('click', async () => { if (!userDbRef) return;
-  /* FIX #10: impedir correos duplicados entre cuentas */
   const dup = await db.ref('users').orderByChild('recoveryEmail').equalTo(em).once('value'); let inUse = false; dup.forEach(d => { if (d.key !== userData.name) inUse = true; });
   if (inUse) { showToast("Ese correo ya está en uso por otra cuenta."); return; }
   await userDbRef.child('recoveryEmail').set(em); showToast("Correo guardado."); updateSidebarData(); }); } }
@@ -584,17 +612,17 @@ leaderboardList.addEventListener('click', e => { const row = e.target.closest('.
 document.getElementById('closeLbProfileCard').addEventListener('click', () => lbProfileCard.classList.remove('show'));
 lbSearchInput.addEventListener('input', e => { const q = e.target.value.toLowerCase().trim(); if (q.length < 2) { lbSearchResults.innerHTML = ''; return; } const res = globalLeaderboardData.filter(p => p.name.toLowerCase().includes(q)); let h = ''; if (res.length > 0) res.forEach(p => { const pi = globalLeaderboardData.findIndex(x => x.name === p.name); const r = pi + 1, rc = getRankClass(r); let ps = 0; if (p.history) for (let g in p.history) ps += p.history[g].highScore || 0; h += `<div class="lb-search-result" data-name="${esc(p.name)}"><span class="res-rank ${rc}">#${r}</span><span class="res-name">${esc(p.name)}</span><span class="res-score">${ps.toLocaleString()} pts</span></div>`; }); else h = '<div style="padding: 10px; text-align: center; color: #6a3030; font-size: 0.8rem;">No encontrado.</div>'; lbSearchResults.innerHTML = h; });
 lbSearchResults.addEventListener('click', e => { const r = e.target.closest('.lb-search-result'); if (r && r.dataset.name) showLbProfileCard(r.dataset.name, r); });
-/* FIX #3: solo re-renderizar el grid si los ratings visibles cambiaron de verdad */
+/* El grid solo se re-renderiza si los ratings visibles cambiaron de verdad (anti-parpadeo) */
 let lastRatingsSig = '';
 db.ref('users').on('value', s => { globalLeaderboardData = []; globalGameRatings = {}; const tr = {}; s.forEach(c => { const v = c.val(); let ps = 0; if (v.history) for (let g in v.history) { ps += v.history[g].highScore || 0; if (v.history[g].rating > 0) { if (!tr[g]) tr[g] = []; tr[g].push(v.history[g].rating); } } globalLeaderboardData.push({ name: c.key, ...v, totalScore: ps }); }); for (let g in tr) { const sum = tr[g].reduce((a, b) => a + b, 0); globalGameRatings[g] = { avg: (sum / tr[g].length).toFixed(1), count: tr[g].length }; } globalLeaderboardData.sort((a, b) => b.totalScore - a.totalScore); if (leaderboardDropdown.classList.contains('show')) renderLeaderboard(); if (profileSidebar.classList.contains('show')) updateSidebarData(); const sig = JSON.stringify(globalGameRatings); if (sig !== lastRatingsSig) { lastRatingsSig = sig; renderGames(); } });
 const catContainer = document.getElementById("categories");
 function renderCategories() { catContainer.innerHTML = ''; categories.forEach((c, i) => { const b = document.createElement("button"); b.className = "cat-btn" + (c.id === currentCat ? " active" : ""); b.textContent = c.label; b.classList.add("fade-up"); b.addEventListener("click", () => { document.querySelectorAll(".cat-btn").forEach(x => x.classList.remove("active")); b.classList.add("active"); currentCat = c.id; document.getElementById("resultLabel").textContent = "— " + c.label.toUpperCase(); renderGames(); }); catContainer.appendChild(b); }); }
 const grid = document.getElementById("gamesGrid"); const emptyState = document.getElementById("emptyState"); const gameContainer = document.getElementById("gameContainer"); const gameFrame = document.getElementById("gameFrame"); const closeGameBtn = document.getElementById("closeGameBtn"); let currentGameTitle = null;
-/* FIX #1: el buscador ahora sí filtra (currentSearch se aplica junto a la categoría) */
 function renderGames() { const f = games.filter(g => (currentCat === "all" || g.cat === currentCat) && g.title.toLowerCase().includes(currentSearch)); grid.innerHTML = ""; if (f.length === 0) { emptyState.classList.remove("hidden"); return; } emptyState.classList.add("hidden"); f.forEach((g, i) => { const c = document.createElement("div"); c.className = "game-card fade-up"; const gd = userData?.history?.[g.title]; const hp = gd && (gd.timesPlayed || 0) > 0; const th = !hp ? `<div class="game-tag">NEW</div>` : ""; const gr = globalGameRatings[g.title]?.avg || 0; const rh = gr > 0 ? `<div class="game-meta"><i class="fas fa-star" style="font-size: 0.6rem; color: var(--gold);"></i>${gr}</div>` : `<div class="game-meta"><i class="far fa-star"></i>NR</div>`; c.innerHTML = `${th}${rh}<div class="thumb-wrap"><img class="game-thumb" src="${g.img || defaultImg}" loading="lazy" onerror="this.onerror=null;this.src='${defaultImg}'"><div class="game-overlay"></div></div><div class="play-icon"><i class="fas fa-play"></i></div><div class="game-title">${esc(g.title)}</div>`; c.addEventListener("click", () => { currentGameTitle = g.title; if (userData && userDbRef) { if (!userData.history) userData.history = {}; if (!userData.history[g.title]) userData.history[g.title] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[g.title].timesPlayed = (userData.history[g.title].timesPlayed || 0) + 1; userData.history[g.title].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); } gameFrame.src = g.file; gameContainer.classList.add('show'); showToast(!userData ? "MODO OFFLINE." : `Iniciando: ${g.title}...`); }); grid.appendChild(c); }); }
 closeGameBtn.addEventListener('click', () => { gameContainer.classList.remove('show'); gameFrame.src = ''; if (userData && currentGameTitle) { const gd = userData.history?.[currentGameTitle]; if (!gd || !gd.rating || gd.rating === 0) setTimeout(() => openRatingModal(currentGameTitle), 300); } });
-window.addEventListener('message', e => { if (e.data && e.data.type === 'gameScore' && userData && userDbRef) { const gt = e.data.game; const sc = parseInt(e.data.score); if (!isNaN(sc)) { if (!userData.history) userData.history = {}; if (!userData.history[gt]) userData.history[gt] = { timesPlayed: 0, rating: 0, highScore: 0 }; if (sc > (userData.history[gt].highScore || 0)) { userData.history[gt].highScore = sc; showToast(`¡Récord: ${sc} pts!`); } userData.history[gt].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); renderGames(); } } });
-const ratingToast = document.getElementById("ratingToast"); let toastTimer; let tempRating = 0; /* FIX #7: tempRating declarada */
+/* FIX: los scores que llegan con títulos viejos se normalizan con el mapa de alias */
+window.addEventListener('message', e => { if (e.data && e.data.type === 'gameScore' && userData && userDbRef) { const raw = String(e.data.game || ''); const gt = HISTORY_ALIASES[raw] || HISTORY_ALIASES[raw.toUpperCase()] || raw; const sc = parseInt(e.data.score); if (!isNaN(sc)) { if (!userData.history) userData.history = {}; if (!userData.history[gt]) userData.history[gt] = { timesPlayed: 0, rating: 0, highScore: 0 }; if (sc > (userData.history[gt].highScore || 0)) { userData.history[gt].highScore = sc; showToast(`¡Récord: ${sc} pts!`); } userData.history[gt].lastPlayed = Date.now(); userDbRef.child('history').set(userData.history); renderGames(); } } });
+const ratingToast = document.getElementById("ratingToast"); let toastTimer; let tempRating = 0;
 function openRatingModal(gt) { document.getElementById("toastGameTitle").textContent = gt; tempRating = 0; const cr = userData?.history?.[gt]?.rating || 0; const stars = document.querySelectorAll('#starsInputToast i'); stars.forEach(s => { s.classList.remove('star-metallic', 'hover'); s.classList.add('star-empty'); if (cr >= parseInt(s.dataset.val)) { s.classList.remove('star-empty'); s.classList.add('star-metallic'); } }); ratingToast.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => ratingToast.classList.remove('show'), 15000); }
 async function closeRatingModal() { if (tempRating > 0) { if (!userData.history) userData.history = {}; if (!userData.history[currentGameTitle]) userData.history[currentGameTitle] = { timesPlayed: 0, rating: 0, highScore: 0 }; userData.history[currentGameTitle].rating = tempRating; if (userData && userDbRef) { await userDbRef.child('history').set(userData.history); showToast("Calificación enviada."); } renderGames(); } ratingToast.classList.remove('show'); clearTimeout(toastTimer); }
 document.querySelectorAll('#starsInputToast i').forEach(star => { star.addEventListener('mouseenter', () => { const v = parseInt(star.dataset.val); document.querySelectorAll('#starsInputToast i').forEach(s => { s.classList.remove('hover'); if (parseInt(s.dataset.val) <= v) { s.classList.add('hover'); s.classList.remove('star-empty'); s.classList.add('star-metallic'); } else { s.classList.add('star-empty'); s.classList.remove('star-metallic'); } }); }); star.addEventListener('click', () => { tempRating = parseInt(star.dataset.val); document.querySelectorAll('#starsInputToast i').forEach(s => { s.classList.remove('star-metallic'); s.classList.add('star-empty'); if (parseInt(s.dataset.val) <= tempRating) { s.classList.remove('star-empty'); s.classList.add('star-metallic'); } }); }); });
@@ -608,7 +636,7 @@ function spawnParticle() { const p = document.createElement("div"); p.className 
 setInterval(spawnParticle, 600);
 renderUserArea(); renderCategories(); renderGames(); if (userData) listenToUserData(userData.name);
 
-/* FIX #4: efecto 3D corregido (precedencia + limpieza al salir de la tarjeta) */
+/* Efecto 3D corregido (precedencia + limpieza al salir de la tarjeta) */
 let lastHoverCard = null;
 document.addEventListener("mousemove", e => {
   const c = e.target.closest ? e.target.closest(".game-card") : null;
@@ -624,7 +652,6 @@ const devGridState = document.getElementById("devGridState"); const devPlayerSta
 const devGameFrame = document.getElementById("devGameFrame"); const devSelectorBar = document.getElementById("devSelectorBar");
 const devCommentsList = document.getElementById("devCommentsList"); const commentInput = document.getElementById("commentInput"); const sendCommentBtn = document.getElementById("sendCommentBtn");
 
-// Auto-lectura de juegos Beta desde la carpeta JuegosBeta
 async function fetchDevGames() {
     const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/JuegosBeta`;
     try {
@@ -636,7 +663,6 @@ async function fetchDevGames() {
             const niceName = f.name.replace('.html', '').replace(/_/g, ' ').toUpperCase();
             return { title: niceName, file: `JuegosBeta/${f.name}`, img: defaultBetaImg };
         });
-        // Solo actualizar si hay cambios para no romper la interfaz
         if (JSON.stringify(newDevGames) !== JSON.stringify(devGames)) {
             devGames = newDevGames;
             if (devGridState.style.display !== 'none') renderDevGamesGrid();
@@ -645,8 +671,8 @@ async function fetchDevGames() {
     } catch (error) { console.error("Error:", error); }
 }
 
-/* FIX #5 + #8: lectura de juegos principales ahora es ADITIVA (no borra los existentes
-   si GitHub falla o aún no los subes), los nuevos entran en categoría "Nuevos" */
+/* Lectura ADITIVA de juegos principales: los nuevos entran en categoría "Nuevos",
+   nunca borra los existentes si GitHub falla */
 async function fetchMainGames() {
     const apiUrl = `https://api.github.com/repos/${githubUser}/${githubRepo}/contents/`;
     try {
@@ -670,7 +696,7 @@ async function fetchMainGames() {
     } catch (error) { console.error("Error fetching main games:", error); }
 }
 
-/* FIX #5: polling cada 5 minutos (antes 60s agotaba el límite de 60 req/hora de GitHub API) */
+/* Polling cada 5 minutos (60s agotaba el límite de la API de GitHub) */
 setInterval(() => {
     fetchMainGames();
     fetchDevGames();
@@ -691,7 +717,6 @@ function openDevPlayer(g) {
   currentDevGame = g.title; devGameFrame.src = g.file; devGridState.style.display = 'none'; devPlayerState.classList.add('show'); renderDevSelector(g.title);
   localStorage.setItem('htmlGamesAppState', 'devPlayer');
   localStorage.setItem('htmlGamesCurrentDevGame', g.title);
-  /* FIX extra: safeKey() evita crash si el nombre del archivo contiene . # $ [ ] / */
   if (currentDevCommentRef) currentDevCommentRef.off(); currentDevCommentRef = db.ref('devComments/' + safeKey(g.title));
   currentDevCommentRef.on('value', s => { let html = '', ca = []; s.forEach(c => ca.push(c.val())); ca.sort((a,b) => b.time-a.time); if (ca.length===0) html = '<div style="text-align:center;color:#6a3030;font-size:0.8rem;padding:20px;">Sé el primero en sugerir.</div>'; else ca.forEach(c => { const d = new Date(c.time); const ts = d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); html += `<div class="dev-comment-item"><div class="c-header"><span class="c-user">${esc(c.user)}</span><span class="c-time">${ts}</span></div><p class="c-text">${esc(c.text)}</p></div>`; }); devCommentsList.innerHTML = html; devCommentsList.scrollTop = devCommentsList.scrollHeight; });
 }
@@ -710,7 +735,7 @@ commentInput.addEventListener('keypress', e => { if (e.key === 'Enter') sendComm
 
 /* ============ RESTAURAR ESTADO TRAS REFRESCAR ============ */
 window.addEventListener('load', async () => {
-    fetchMainGames(); /* FIX #5b: primera lectura al cargar la página */
+    fetchMainGames();
     if (savedAppState === 'devGrid') {
         devView.classList.add('show');
         devGridState.style.display = 'block';
@@ -727,7 +752,6 @@ window.addEventListener('load', async () => {
         if (game) {
             openDevPlayer(game);
         } else {
-            // Si el juego ya no existe, volver a la cuadrícula
             backToDevGridView();
         }
     }
