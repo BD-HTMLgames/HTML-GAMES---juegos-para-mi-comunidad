@@ -201,7 +201,27 @@ function mountAdventurousMario(root) {
   const WALK_MAX = 5.5, RUN_MAX = 8.5, ACCEL = 0.38, AIR_ACCEL = 0.26;
   const FRICTION = 0.82, SKID = 0.72;
   const JUMP_V = 13, JUMP_CUT = 4, COYOTE = 6, BUFFER = 8;
-  const CHAIN_PTS = [100, 200, 300, 400, 500, 800, 1000];
+  /* ---------------- TABLA DE PUNTOS (v2.3) ----------------
+     moneda 1 · hongo 2 · flor/estrella 3 · matar con fuego/caparazón 4
+     pisotón 5 · checkpoint 0 · entrar a otra dimensión 1 · completarla 3
+     bandera/castillo 11 · ladrillos: 25% de suerte → 1-3 puntos
+     penalizaciones: reducir tamaño -1 · morir -3 · quedarse sin vidas -5 */
+  const PTS = {
+    coin: 1,             // moneda
+    mushroom: 2,         // hongo
+    flower: 3,           // flor de fuego
+    star: 3,             // estrella
+    stomp: 5,            // aplastar monstruo
+    kill: 4,             // matar con fuego, caparazón, estrella o golpe de bloque
+    warp: 1,             // entrar a otra dimensión
+    dimComplete: 3,      // completar una dimensión (volver de 1-2 o 1-3)
+    flag: 11,            // bandera final o castillo
+    brickChance: 0.25,   // probabilidad de que un ladrillo dé puntos
+    shrink: 1,           // penalización: un mob te reduce de tamaño
+    death: 3,            // penalización: morir por mob o caer al vacío
+    gameOver: 5,         // penalización: quedarte sin vidas
+  };
+  const CHAIN_PTS = [PTS.stomp, PTS.stomp, PTS.stomp, PTS.stomp, PTS.stomp, PTS.stomp, PTS.stomp];
   const GROUND_Y = 400;
   const FLAG_X = 11980, CASTLE_X = 12140; // mástil y castillo (mundo 1-1 ampliado)
 
@@ -216,6 +236,7 @@ function mountAdventurousMario(root) {
     mode: "LOADING", // LOADING | TITLE | PLAYING | PAUSED | GAMEOVER | WIN
     score: 0, coins: 0, lives: 3, time: 999, timeAcc: 0, hurry: false,
     zone: "main", frame: 0, shake: 0, fireQueued: false,
+    dimDone: { underground: false, sky: false }, // dimensiones ya completadas (puntos de warp)
     best: 0,
   };
   try { S.best = parseInt(localStorage.getItem("am_best") || "0", 10) || 0; } catch (e) { S.best = 0; }
@@ -432,8 +453,13 @@ function mountAdventurousMario(root) {
   }
 
   /* ---------------- Efectos ---------------- */
-  function addPopup(x, y, text) {
-    popups.push({ x, y, text: String(text), life: 50 });
+  function addPopup(x, y, text, neg) {
+    popups.push({ x, y, text: String(text), life: 50, neg: !!neg });
+  }
+  function addPenalty(n, x, y) {
+    S.score = Math.max(0, S.score - n);
+    if (x !== undefined) addPopup(x, y, "-" + n, true);
+    updateHUD();
   }
   function addParticles(x, y, n, color, spd, grav) {
     for (let i = 0; i < n; i++) {
@@ -449,7 +475,7 @@ function mountAdventurousMario(root) {
   function spawnCoinPop(b) {
     particles.push({ kind: "coinpop", x: b.x + 5, y: b.y - 30, vy: -6.8, life: 36, max: 36 });
     S.coins++;
-    S.score += 100;
+    S.score += PTS.coin;
     A.sfx.coin();
     checkCoin1up();
     updateHUD();
@@ -467,13 +493,18 @@ function mountAdventurousMario(root) {
     enemies.forEach((e) => {
       if (e.flipDead || e.squish > 0 || e.dead) return;
       if (Math.abs(e.y + e.h - b.y) < 6 && e.x + e.w > b.x && e.x < b.x + b.w) {
-        flipKill(e, 100);
+        flipKill(e, PTS.kill);
       }
     });
   }
   function breakBrick(b) {
     b.dead = true;
-    S.score += 50;
+    // recompensa de suerte: solo algunos ladrillos dan 1, 2 o 3 puntos (aleatorio)
+    if (Math.random() < PTS.brickChance) {
+      const pts = 1 + Math.floor(Math.random() * 3);
+      S.score += pts;
+      addPopup(b.x + 8, b.y - 6, pts);
+    }
     S.shake = 5;
     addParticles(b.x + 16, b.y + 16, 8, "#b5432a", 7, 0.4);
     A.sfx.brick();
@@ -547,7 +578,7 @@ function mountAdventurousMario(root) {
         if (e.flipDead || e.dead || e.squish > 0) continue;
         if (e.kind === "piranha" && e.pipe.y - e.y < 12) continue; // escondida: intocable
         if (aabb(f, e)) {
-          flipKill(e, 100);
+          flipKill(e, PTS.kill);
           addParticles(f.x + 6, f.y + 6, 5, "#ff9a3c", 5, 0.2);
           fireballs.splice(i, 1);
           break;
@@ -719,6 +750,7 @@ function mountAdventurousMario(root) {
     A.sfx.warp();
   }
   function applyWarp(dest) {
+    const fromZone = S.zone;
     S.zone = dest.zone;
     player.x = dest.x;
     player.y = dest.y - player.h;
@@ -729,6 +761,18 @@ function mountAdventurousMario(root) {
     checkpoint = { x: dest.x, y: dest.y - player.h, zone: dest.zone };
     camera.x = clampCam(dest.x - 320);
     updateEnv();
+    // dimensiones: entrar a otra dimensión +1 · completarla (volver a 1-1) +3 (una vez por dimensión)
+    if (dest.zone !== fromZone) {
+      if (dest.zone !== "main") {
+        S.score += PTS.warp;
+        addPopup(player.x + 6, player.y - 18, PTS.warp);
+      } else if (fromZone !== "main" && !S.dimDone[fromZone]) {
+        S.dimDone[fromZone] = true;
+        S.score += PTS.dimComplete;
+        addPopup(player.x + 6, player.y - 18, PTS.dimComplete);
+      }
+      updateHUD();
+    }
     A.tempo = S.hurry ? 1.22 : 1;
     A.startMusic();
   }
@@ -736,8 +780,8 @@ function mountAdventurousMario(root) {
     const p = player;
     if (p.power === 0) { p.power = 1; p.y -= T; p.h = T * 2; }
     A.sfx.power();
-    S.score += 500;
-    addPopup(p.x, p.y - 12, 500);
+    S.score += PTS.mushroom;
+    addPopup(p.x, p.y - 12, PTS.mushroom);
     updateHUD();
   }
   function pDamage() {
@@ -749,6 +793,7 @@ function mountAdventurousMario(root) {
       p.invuln = 95;
       A.sfx.down();
       addParticles(p.x + 16, p.y + 8, 6, "#ffffff", 4, 0.15);
+      addPenalty(PTS.shrink, p.x + 6, p.y - 10); // un mob te reduce de tamaño: -1
     } else {
       pDie();
     }
@@ -761,7 +806,7 @@ function mountAdventurousMario(root) {
     p.vy = -11.5;
     p.vx = 0;
     S.lives--;
-    updateHUD();
+    addPenalty(PTS.death, p.x + 6, p.y - 10); // morir por mob o caer al vacío: -3
     A.sfx.die();
   }
 
@@ -857,7 +902,7 @@ function mountAdventurousMario(root) {
         for (const o of enemies) {
           if (o === e || o.flipDead || o.dead || o.squish > 0) continue;
           if (o.kind === "piranha" && o.pipe.y - o.y < 12) continue;
-          if (aabb(e, o)) flipKill(o, 100);
+          if (aabb(e, o)) flipKill(o, PTS.kill);
         }
         return;
       }
@@ -900,7 +945,7 @@ function mountAdventurousMario(root) {
       if (!aabb(p, e)) continue;
 
       // estrella: contacto mortal para el enemigo
-      if (p.starT > 0) { flipKill(e, 100); continue; }
+      if (p.starT > 0) { flipKill(e, PTS.kill); continue; }
 
       // planta piraña: no se puede pisar; solo estrella, fuego o caparazón
       if (e.kind === "piranha") {
@@ -918,10 +963,7 @@ function mountAdventurousMario(root) {
         e.state = "slide";
         e.slideDir = dir;
         e.graceT = 12;
-        A.sfx.kick();
-        S.score += 100;
-        addPopup(e.x, e.y - 10, 100);
-        updateHUD();
+        A.sfx.kick(); // la patada no da puntos; matar con el caparazón da PTS.kill
         continue;
       }
 
@@ -977,8 +1019,8 @@ function mountAdventurousMario(root) {
           if (p.power === 0) { p.power = 1; p.y -= T; p.h = T * 2; }
           p.power = 2;
           A.sfx.power();
-          S.score += 500;
-          addPopup(it.x, it.y - 12, 500);
+          S.score += PTS.flower;
+          addPopup(it.x, it.y - 12, PTS.flower);
           updateHUD();
         } else if (it.kind === "oneup") {
           S.lives++;
@@ -988,8 +1030,8 @@ function mountAdventurousMario(root) {
         } else if (it.kind === "star") {
           p.starT = 640;
           A.sfx.power();
-          S.score += 500;
-          addPopup(it.x, it.y - 12, 500);
+          S.score += PTS.star;
+          addPopup(it.x, it.y - 12, PTS.star);
           updateHUD();
         }
         addParticles(it.x + 14, it.y + 14, 6, "#fff2b0", 4, 0.1);
@@ -1004,7 +1046,7 @@ function mountAdventurousMario(root) {
       if (p.playerMode === "normal" && aabb(p, c)) {
         pickups.splice(i, 1);
         S.coins++;
-        S.score += 100;
+        S.score += PTS.coin;
         A.sfx.coin();
         addParticles(c.x + 11, c.y + 12, 5, "#ffd84d", 4, 0.05);
         checkCoin1up();
@@ -1211,6 +1253,7 @@ function mountAdventurousMario(root) {
     unlockAudio();
     S.score = 0; S.coins = 0; S.lives = 3; S.time = 999; S.timeAcc = 0;
     S.hurry = false; S.fireQueued = false;
+    S.dimDone = { underground: false, sky: false };
     A.tempo = 1;
     checkpoint = { x: 100, y: 368, zone: "main" };
     S.zone = "main";
@@ -1223,20 +1266,18 @@ function mountAdventurousMario(root) {
     A.startMusic();
   }
   function gameOverNow() {
+    addPenalty(PTS.gameOver); // quedarte sin vidas: -5 del score conseguido
     saveBest();
     setMode("GAMEOVER");
     ui.overStats.innerHTML =
       "PUNTOS: " + S.score.toString().padStart(6, "0") + "<br>RÉCORD: " + S.best.toString().padStart(6, "0");
   }
   function enterWin() {
-    const bonus = S.time * 5;
-    S.score += bonus;
     saveBest();
     setMode("WIN");
     ui.winStats.innerHTML =
       "PUNTOS: " + S.score.toString().padStart(6, "0") +
       "<br>MONEDAS: " + S.coins +
-      "<br>BONUS DE TIEMPO: +" + bonus +
       "<br>RÉCORD: " + S.best.toString().padStart(6, "0");
     A.sfx.win();
   }
@@ -1293,8 +1334,7 @@ function mountAdventurousMario(root) {
       if (player.playerMode === "normal" && aabb(player, { x: c.x - 4, y: 298, w: 12, h: 104 })) {
         c.activated = true;
         checkpoint = { x: c.x, y: 368, zone: S.zone };
-        S.score += 300;
-        addPopup(c.x - 20, 262, "CHECKPOINT");
+        addPopup(c.x - 20, 262, "CHECKPOINT"); // agarrar checkpoint: 0 puntos
         A.sfx.check();
         updateHUD();
       }
@@ -1305,10 +1345,8 @@ function mountAdventurousMario(root) {
     if (aabb(player, { x: FLAG_X - 6, y: 100, w: 14, h: 300 })) {
       flagGrabbed = true;
       player.playerMode = "flag";
-      const h = GROUND_Y - player.y;
-      const pts = h > 200 ? 2000 : h > 120 ? 1000 : 500;
-      S.score += pts;
-      addPopup(FLAG_X - 60, Math.max(60, player.y - 12), pts);
+      S.score += PTS.flag; // bandera final o castillo: 11 puntos
+      addPopup(FLAG_X - 60, Math.max(60, player.y - 12), PTS.flag);
       A.sfx.flag();
       A.stopMusic();
       updateHUD();
@@ -1845,7 +1883,7 @@ function mountAdventurousMario(root) {
     ctx.strokeStyle = "#000";
     ctx.lineWidth = 3;
     ctx.strokeText(q.text, q.x, q.y);
-    ctx.fillStyle = "#fff";
+    ctx.fillStyle = q.neg ? "#ff6b6b" : "#fff";
     ctx.fillText(q.text, q.x, q.y);
     ctx.globalAlpha = 1;
     ctx.textAlign = "left";
