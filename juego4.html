@@ -47,6 +47,23 @@ const GAME_CSS = `
 @keyframes amBob{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
 .am-mario-idle{width:74px;height:auto;filter:drop-shadow(0 6px 0 rgba(0,0,0,.4));animation:amHop 1.7s ease-in-out infinite}
 @keyframes amHop{0%,100%{transform:translateY(0) scaleY(1)}14%{transform:translateY(-17px) scaleY(1.05)}34%{transform:translateY(0) scaleY(.95)}}
+
+/* ---------- Menú con selección de personaje ---------- */
+.am-title{padding:0;gap:0}
+.am-title-wrap{display:flex;align-items:center;justify-content:center;gap:36px;width:100%;height:100%;padding:16px 34px;box-sizing:border-box}
+.am-char-zone{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
+.am-char-zone .am-mario-idle{width:104px}
+.am-char-name{font-size:10px;color:#ffce00;text-shadow:2px 2px 0 #000;letter-spacing:2px}
+.am-char-floor{width:158px;height:14px;background:#c9612b;border:3px solid #7a3a12;box-shadow:0 5px 0 rgba(0,0,0,.4)}
+.am-menu-zone{display:flex;flex-direction:column;align-items:center;gap:13px;max-width:500px}
+.am-picker{display:flex;align-items:center;gap:14px}
+.am-arrow{pointer-events:auto;background:rgba(0,0,0,.55);border:2px solid #fff;color:#fff;font-family:inherit;font-size:11px;padding:9px 13px;cursor:pointer;text-shadow:1px 1px 0 #000}
+.am-arrow:hover{background:rgba(255,255,255,.28)}
+.am-arrow:active{transform:scale(.93)}
+.am-picker-label{font-size:7px;color:#cfe0ff;text-shadow:2px 2px 0 #000;line-height:1.9;letter-spacing:1px;text-align:center}
+.am-picker-label span{display:block;font-size:11px;color:#ffce00;margin-top:2px}
+.am-char-tag{display:inline-block;margin-top:2px}
+@media (max-width:560px){.am-title-wrap{gap:16px;padding:10px 14px}.am-char-zone .am-mario-idle{width:60px}.am-char-floor{width:92px;height:11px}.am-char-name{font-size:7px}.am-logo{font-size:19px}.am-logo span{font-size:28px}.am-menu-zone{gap:8px}.am-sub{font-size:6px}.am-arrow{padding:7px 9px;font-size:9px}}
 .am-sub{font-size:8px;line-height:1.9;color:#e8f0ff;max-width:540px}
 .am-best{font-size:9px;color:#ffce00;min-height:12px}
 .am-controls{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;font-size:7px;color:#cfe0ff;max-width:560px}
@@ -122,14 +139,28 @@ function mountAdventurousMario(root) {
       </div>
 
       <div class="am-layer am-title hidden" id="amTitle">
-        <div class="am-logo">ADVENTUROUS<span>MARIO</span></div>
-        <img class="am-mario-idle" id="amIdle" alt="Mario saltarín" />
-        <div class="am-sub">3 mundos ampliados · plantas piraña · caparazones pateables ·<br>flor de fuego · estrella invencible · combos · 1UP cada 50 monedas</div>
-        <button class="am-btn" id="amStart" type="button">JUGAR AHORA</button>
-        <div class="am-best" id="amBest"></div>
-        <div class="am-controls">
-          <span>← → MOVER</span><span>ESPACIO SALTAR</span><span>SHIFT CORRER</span>
-          <span>X FUEGO</span><span>↓ ENTRAR A TUBERÍA</span><span>P PAUSA</span><span>M SONIDO</span>
+        <div class="am-title-wrap">
+          <div class="am-char-zone">
+            <img class="am-mario-idle" id="amIdle" alt="Personaje seleccionado" />
+            <div class="am-char-floor"></div>
+            <div class="am-char-name" id="amCharName">MARIO</div>
+          </div>
+          <div class="am-menu-zone">
+            <div class="am-logo">ADVENTUROUS<span>MARIO</span></div>
+            <div class="am-sub">3 mundos ampliados · plantas piraña · caparazones pateables ·<br>flor de fuego · estrella invencible · combos · 1UP cada 50 monedas</div>
+            <div class="am-picker">
+              <button class="am-arrow" id="amPrev" type="button" aria-label="Personaje anterior">◀</button>
+              <div class="am-picker-label">PERSONAJE<span id="amCharLabel">MARIO</span></div>
+              <button class="am-arrow" id="amNext" type="button" aria-label="Personaje siguiente">▶</button>
+            </div>
+            <button class="am-btn" id="amStart" type="button">JUGAR AHORA</button>
+            <div class="am-best" id="amBest"></div>
+            <div class="am-controls">
+              <span>← → MOVER</span><span>ESPACIO SALTAR</span><span>SHIFT CORRER</span>
+              <span>X FUEGO</span><span>↓ ENTRAR A TUBERÍA</span><span>P PAUSA</span><span>M SONIDO</span>
+              <span>◀ ▶ ELEGIR PERSONAJE</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -179,6 +210,7 @@ function mountAdventurousMario(root) {
     score: $("amScore"), coins: $("amCoins"), world: $("amWorld"),
     time: $("amTime"), lives: $("amLives"), loading: $("amLoading"),
     loadFill: $("amLoadFill"), title: $("amTitle"), idle: $("amIdle"),
+    charLabel: $("amCharLabel"), charName: $("amCharName"),
     best: $("amBest"), pauseL: $("amPauseL"), over: $("amOver"),
     overStats: $("amOverStats"), win: $("amWin"), winStats: $("amWinStats"),
     snd: $("amSnd"),
@@ -250,11 +282,20 @@ function mountAdventurousMario(root) {
   let transition = null; // {phase:'close'|'open', t, cb}
   let player = null;
 
+  /* ---------------- Personajes seleccionables ---------------- */
+  const CHARACTERS = [
+    { id: "mario", name: "MARIO", glow: "rgba(229,37,33,.45)",
+      small: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85626-removebg-preview.png",
+      big: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85627-removebg-preview.png",
+      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85732-removebg-preview.png?updatedAt=1773456425085" },
+    { id: "luigi", name: "LUIGI", glow: "rgba(40,220,90,.55)",
+      small: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20peque%C3%B1o.png",
+      big: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20grande.png",
+      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20lose%20(1).png" },
+  ];
+
   /* ---------------- Assets ---------------- */
   const ASSET_URLS = {
-    small: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85626-removebg-preview.png",
-    big: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85627-removebg-preview.png",
-    dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85732-removebg-preview.png?updatedAt=1773456425085",
     mushroom: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85623-removebg-preview.png",
     goomba: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85622-removebg-preview.png",
     koopa: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85719-removebg-preview.png?updatedAt=1773455263876",
@@ -280,6 +321,11 @@ function mountAdventurousMario(root) {
     cloudL7: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/nubes/nubes%20grandes/nube8.png?updatedAt=1792021696275",
   };
   const assets = {};
+  CHARACTERS.forEach((c) => {
+    ASSET_URLS["small_" + c.id] = c.small;
+    ASSET_URLS["big_" + c.id] = c.big;
+    ASSET_URLS["dead_" + c.id] = c.dead;
+  });
   function loadImage(key, url) {
     return new Promise((res) => {
       const im = new Image();
@@ -298,9 +344,29 @@ function mountAdventurousMario(root) {
       ui.loadFill.style.width = Math.round((n / entries.length) * 100) + "%";
     });
     await Promise.race([Promise.all(jobs), new Promise((r) => setTimeout(r, 9500))]);
-    if (assets.big) ui.idle.src = assets.big.src;
+    setCharacter(charIdx, true);
   }
   const img = (k) => (assets[k] && assets[k].complete && assets[k].naturalWidth > 0) ? assets[k] : null;
+
+  /* ---------------- Selección de personaje ---------------- */
+  let charIdx = 0;
+  try {
+    const saved = localStorage.getItem("am_char");
+    const i = CHARACTERS.findIndex((c) => c.id === saved);
+    if (i >= 0) charIdx = i;
+  } catch (e) { /* sin storage */ }
+  let selChar = CHARACTERS[charIdx] || CHARACTERS[0];
+  function setCharacter(i, silent) {
+    charIdx = ((i % CHARACTERS.length) + CHARACTERS.length) % CHARACTERS.length;
+    selChar = CHARACTERS[charIdx];
+    try { localStorage.setItem("am_char", selChar.id); } catch (e) { /* sin storage */ }
+    const im = img("big_" + selChar.id) || img("small_" + selChar.id);
+    if (im) ui.idle.src = im.src;
+    if (ui.charLabel) ui.charLabel.textContent = selChar.name;
+    if (ui.charName) ui.charName.textContent = selChar.name;
+    ui.idle.style.filter = 'drop-shadow(0 6px 0 rgba(0,0,0,.4)) drop-shadow(0 0 14px ' + selChar.glow + ')';
+    if (!silent && S.mode === "TITLE" && A.sfx && A.sfx.tick) A.sfx.tick();
+  }
 
   /* ---------------- Audio (WebAudio, sin archivos) ---------------- */
   const midi = (m) => 440 * Math.pow(2, (m - 69) / 12);
@@ -1840,7 +1906,7 @@ function mountAdventurousMario(root) {
     const p = player;
     if (!p || p.playerMode === "hidden") return;
     if (p.invuln > 0 && p.playerMode === "normal" && (S.frame >> 2) % 2 === 0) return;
-    const im = p.playerMode === "dead" ? img("dead") : p.power >= 1 ? img("big") : img("small");
+    const im = p.playerMode === "dead" ? img("dead_" + selChar.id) : p.power >= 1 ? img("big_" + selChar.id) : img("small_" + selChar.id);
     ctx.save();
     ctx.globalAlpha = p.opacity;
     ctx.translate(Math.round(p.x) + p.w / 2, Math.round(p.y) + p.h);
@@ -1855,7 +1921,7 @@ function mountAdventurousMario(root) {
     else if (p.power === 2) ctx.filter = "saturate(0.3) brightness(1.4)";
     if (im) ctx.drawImage(im, -p.w / 2, -p.h, p.w, p.h);
     else {
-      ctx.fillStyle = "#e52521"; ctx.fillRect(-p.w / 2, -p.h, p.w, p.h * 0.55);
+      ctx.fillStyle = selChar.id === "luigi" ? "#2ea44f" : "#e52521"; ctx.fillRect(-p.w / 2, -p.h, p.w, p.h * 0.55);
       ctx.fillStyle = "#2b5fd9"; ctx.fillRect(-p.w / 2, -p.h + p.h * 0.5, p.w, p.h * 0.5);
     }
     ctx.restore();
@@ -1948,8 +2014,12 @@ function mountAdventurousMario(root) {
     if (GAME_KEYS.indexOf(e.code) >= 0) e.preventDefault();
     unlockAudio();
     switch (e.code) {
-      case "ArrowRight": case "KeyD": keys.right = true; break;
-      case "ArrowLeft": case "KeyA": keys.left = true; break;
+      case "ArrowRight": case "KeyD":
+        if (S.mode === "TITLE") { if (!e.repeat) setCharacter(charIdx + 1); break; }
+        keys.right = true; break;
+      case "ArrowLeft": case "KeyA":
+        if (S.mode === "TITLE") { if (!e.repeat) setCharacter(charIdx - 1); break; }
+        keys.left = true; break;
       case "ArrowUp": case "Space": case "KeyW":
         if (!e.repeat && player) player.buffer = BUFFER;
         keys.up = true;
@@ -2003,6 +2073,8 @@ function mountAdventurousMario(root) {
     () => { keys.run = true; bDownT = Date.now(); },
     () => { keys.run = false; if (Date.now() - bDownT < 220) S.fireQueued = true; });
 
+  $("amPrev").addEventListener("click", () => { unlockAudio(); setCharacter(charIdx - 1); });
+  $("amNext").addEventListener("click", () => { unlockAudio(); setCharacter(charIdx + 1); });
   $("amStart").addEventListener("click", startGame);
   $("amRetry").addEventListener("click", startGame);
   $("amAgain").addEventListener("click", startGame);
