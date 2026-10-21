@@ -1,1623 +1,2368 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LABERINTO DE LA LOCURA</title>
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-        
-        body {
-            background: #000;
-            color: #0f0;
-            font-family: 'Press Start 2P', cursive;
-            overflow: hidden;
-            position: relative;
-        }
-        
-        #gameContainer {
-            width: 100vw;
-            height: 100vh;
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        #canvas {
-            border: 2px solid #0f0;
-            box-shadow: 0 0 20px #0f0;
-            image-rendering: pixelated;
-            image-rendering: crisp-edges;
-        }
-        
-        #ui {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border: 2px solid #0f0;
-            border-radius: 5px;
-            min-width: 250px;
-        }
-        
-        .ui-row {
-            margin-bottom: 10px;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            font-size: 10px;
-        }
-        
-        .ui-label {
-            color: #0f0;
-            margin-right: 10px;
-        }
-        
-        .ui-value {
-            color: #fff;
-        }
-        
-        #sanityBar {
-            width: 100%;
-            height: 15px;
-            background: #222;
-            border: 1px solid #0f0;
-            margin-top: 5px;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        #sanityFill {
-            height: 100%;
-            background: linear-gradient(90deg, #4a4a4a, #666);
-            transition: width 0.3s ease, background 0.3s ease;
-        }
-        
-        #sanityValue {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 8px;
-            color: #fff;
-            text-shadow: 1px 1px 2px #000;
-        }
-        
-        #controls {
-            position: absolute;
-            bottom: 10px;
-            left: 10px;
-            z-index: 100;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px;
-            border: 2px solid #0f0;
-            border-radius: 5px;
-            font-size: 8px;
-        }
-        
-        .control-row {
-            margin-bottom: 5px;
-            color: #0f0;
-        }
-        
-        #message {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.9);
-            padding: 20px;
-            border: 2px solid #f00;
-            border-radius: 5px;
-            text-align: center;
-            z-index: 200;
-            display: none;
-            animation: pulse 1s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { box-shadow: 0 0 10px #f00; }
-            50% { box-shadow: 0 0 30px #f00, 0 0 50px #f00; }
-        }
-        
-        #startScreen {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: #000;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 300;
-        }
-        
-        #title {
-            font-size: 24px;
-            color: #f00;
-            text-shadow: 0 0 10px #f00;
-            margin-bottom: 20px;
-            animation: glitch 2s infinite;
-        }
-        
-        @keyframes glitch {
-            0%, 100% { text-shadow: 0 0 10px #f00; }
-            25% { text-shadow: -2px 0 #0f0, 2px 0 #00f; }
-            50% { text-shadow: 2px 0 #f00, -2px 0 #ff0; }
-            75% { text-shadow: 0 0 20px #f00; }
-        }
-        
-        #startButton {
-            background: #111;
-            color: #0f0;
-            border: 2px solid #0f0;
-            padding: 15px 30px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 12px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            margin-top: 20px;
-        }
-        
-        #startButton:hover {
-            background: #0f0;
-            color: #000;
-            box-shadow: 0 0 20px #0f0;
-            transform: scale(1.05);
-        }
-        
-        #loading {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 12px;
-            color: #0f0;
-            z-index: 400;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-        
-        .loading-dots {
-            margin-top: 10px;
-        }
-        
-        .loading-dots span {
-            animation: blink 1.4s infinite both;
-            font-size: 20px;
-        }
-        
-        .loading-dots span:nth-child(2) {
-            animation-delay: 0.2s;
-        }
-        
-        .loading-dots span:nth-child(3) {
-            animation-delay: 0.4s;
-        }
-        
-        @keyframes blink {
-            0%, 80%, 100% { opacity: 0; }
-            40% { opacity: 1; }
-        }
-        
-        .energyBoost {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            color: #0f0;
-            font-size: 16px;
-            text-shadow: 0 0 10px #0f0;
-            animation: energyPulse 1s ease-out forwards;
-            z-index: 150;
-            pointer-events: none;
-        }
-        
-        @keyframes energyPulse {
-            0% {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(0.5);
-            }
-            100% {
-                opacity: 0;
-                transform: translate(-50%, -100%) scale(1.5);
-            }
-        }
-        
-        @keyframes fadeInOut {
-            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
-        }
-        
-        #victoryAnimation {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(135deg, #0a0a2e 0%, #16213e 50%, #0f3460 100%);
-            display: none;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-            overflow: hidden;
-        }
-        
-        #particles {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            pointer-events: none;
-        }
-        
-        .particle {
-            position: absolute;
-            width: 4px;
-            height: 4px;
-            background: white;
-            border-radius: 50%;
-            animation: floatUp 10s linear infinite;
-        }
-        
-        @keyframes floatUp {
-            0% {
-                bottom: -10px;
-                opacity: 0;
-            }
-            10% {
-                opacity: 1;
-            }
-            90% {
-                opacity: 1;
-            }
-            100% {
-                bottom: 110%;
-                opacity: 0;
-            }
-        }
-        
-        #victoryContent {
-            position: relative;
-            z-index: 10;
-            text-align: center;
-            animation: victoryAppear 1s ease-out;
-        }
-        
-        @keyframes victoryAppear {
-            0% {
-                opacity: 0;
-                transform: scale(0.5) rotate(-10deg);
-            }
-            100% {
-                opacity: 1;
-                transform: scale(1) rotate(0deg);
-            }
-        }
-        
-        #victoryTitle {
-            font-size: 48px;
-            color: #ffd700;
-            text-shadow: 
-                0 0 10px #ffd700,
-                0 0 20px #ffd700,
-                0 0 30px #ffd700,
-                0 0 40px #ff8c00;
-            margin-bottom: 20px;
-            animation: titleGlow 2s ease-in-out infinite alternate;
-        }
-        
-        @keyframes titleGlow {
-            0% {
-                text-shadow: 
-                    0 0 10px #ffd700,
-                    0 0 20px #ffd700,
-                    0 0 30px #ffd700,
-                    0 0 40px #ff8c00;
-            }
-            100% {
-                text-shadow: 
-                    0 0 20px #ffd700,
-                    0 0 30px #ffd700,
-                    0 0 40px #ffd700,
-                    0 0 60px #ff8c00,
-                    0 0 80px #ff4500;
-            }
-        }
-        
-        #victoryMessage {
-            font-size: 16px;
-            color: #fff;
-            margin-bottom: 30px;
-            line-height: 1.8;
-            max-width: 600px;
-        }
-        
-        .victoryLine {
-            opacity: 0;
-            animation: fadeInLine 1s ease-out forwards;
-        }
-        
-        .victoryLine:nth-child(1) { animation-delay: 0.5s; }
-        .victoryLine:nth-child(2) { animation-delay: 1.5s; }
-        .victoryLine:nth-child(3) { animation-delay: 2.5s; }
-        .victoryLine:nth-child(4) { animation-delay: 3.5s; }
-        
-        @keyframes fadeInLine {
-            0% {
-                opacity: 0;
-                transform: translateY(20px);
-            }
-            100% {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-        
-        #victoryStats {
-            background: rgba(0, 0, 0, 0.7);
-            border: 2px solid #ffd700;
-            border-radius: 10px;
-            padding: 20px;
-            margin-bottom: 30px;
-            min-width: 400px;
-        }
-        
-        .statRow {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 10px;
-            font-size: 12px;
-            color: #fff;
-        }
-        
-        .statLabel {
-            color: #ffd700;
-        }
-        
-        .statValue {
-            color: #0f0;
-        }
-        
-        #continueButton {
-            background: linear-gradient(135deg, #ffd700, #ff8c00);
-            color: #000;
-            border: none;
-            padding: 15px 40px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 14px;
-            cursor: pointer;
-            transition: all 0.3s ease;
-            border-radius: 5px;
-            box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-            animation: buttonPulse 2s infinite;
-        }
-        
-        @keyframes buttonPulse {
-            0%, 100% {
-                transform: scale(1);
-                box-shadow: 0 4px 15px rgba(255, 215, 0, 0.4);
-            }
-            50% {
-                transform: scale(1.05);
-                box-shadow: 0 6px 25px rgba(255, 215, 0, 0.6);
-            }
-        }
-        
-        #continueButton:hover {
-            transform: scale(1.1);
-            box-shadow: 0 8px 30px rgba(255, 215, 0, 0.8);
-        }
-        
-        .achievement {
-            position: absolute;
-            right: 20px;
-            top: 20px;
-            background: linear-gradient(135deg, #8b008b, #4b0082);
-            border: 2px solid #ffd700;
-            border-radius: 5px;
-            padding: 15px;
-            color: #fff;
-            font-size: 10px;
-            z-index: 1001;
-            animation: slideIn 0.5s ease-out;
-            max-width: 250px;
-        }
-        
-        @keyframes slideIn {
-            0% {
-                right: -300px;
-                opacity: 0;
-            }
-            100% {
-                right: 20px;
-                opacity: 1;
-            }
-        }
-        
-        #spaceHint {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            color: #ffd700;
-            font-size: 12px;
-            animation: blink 1.5s infinite;
-            z-index: 20;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-        
-        .spaceKey {
-            background: rgba(255, 215, 0, 0.2);
-            border: 2px solid #ffd700;
-            padding: 5px 15px;
-            border-radius: 5px;
-            font-size: 14px;
-        }
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>LABERINTO DE LA LOCURA — EDICIÓN PESADILLA</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+:root{
+  --red:#ff2a2a; --darkred:#8b0000; --green:#39ff6a; --cyan:#59d6ff;
+  --gold:#ffd700; --purple:#b26bff; --bone:#e8e0cc; --panel:rgba(8,10,14,.88);
+  --amber:#ffb347;
+}
+*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+html,body{width:100%;height:100%;overflow:hidden;background:#000}
+body{
+  font-family:'Press Start 2P',monospace;color:var(--bone);
+  touch-action:none;user-select:none;-webkit-user-select:none;
+}
+#gameRoot{position:fixed;inset:0;background:#000;overflow:hidden}
+
+/* ====== CAPAS DE RENDER ====== */
+#view{
+  position:absolute;inset:0;width:100%;height:100%;
+  image-rendering:pixelated;image-rendering:crisp-edges;
+  background:#000;transition:filter .2s;
+}
+#noiseFx{
+  position:absolute;inset:0;width:100%;height:100%;
+  image-rendering:pixelated;pointer-events:none;opacity:0;mix-blend-mode:screen;
+}
+#vignetteFx{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 34%, rgba(0,0,0,.55) 68%, rgba(0,0,0,.97) 100%);
+}
+#redPulse{
+  position:absolute;inset:0;pointer-events:none;opacity:0;
+  background:radial-gradient(ellipse at center, rgba(0,0,0,0) 45%, rgba(120,0,0,.55) 100%);
+}
+#flashRed,#flashWhite{position:absolute;inset:0;pointer-events:none;opacity:0}
+#flashRed{background:radial-gradient(ellipse at center, rgba(160,10,10,.5), rgba(90,0,0,.85))}
+#flashWhite{background:radial-gradient(ellipse at center, rgba(255,255,240,.95), rgba(255,230,160,.7))}
+#scanlines{
+  position:absolute;inset:0;pointer-events:none;opacity:.14;z-index:40;
+  background:repeating-linear-gradient(to bottom, rgba(255,255,255,.05) 0 1px, transparent 1px 3px);
+}
+#burstRing{
+  position:absolute;left:50%;top:50%;width:40px;height:40px;border-radius:50%;
+  border:4px solid rgba(255,240,190,.9);pointer-events:none;opacity:0;z-index:45;
+}
+
+/* ====== HUD ====== */
+.panel{
+  background:var(--panel);border:2px solid #2c3a2c;border-radius:6px;
+  box-shadow:0 0 18px rgba(0,0,0,.8), inset 0 0 24px rgba(0,0,0,.5);
+}
+#hud{
+  position:absolute;top:12px;left:12px;z-index:60;padding:12px 14px;min-width:238px;
+  font-size:8px;line-height:1.5;
+}
+.hudRow{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:6px}
+.hudLabel{color:#7da77d;letter-spacing:1px}
+.hudVal{color:#fff}
+#hudLevelName{color:var(--red);font-size:8px;margin-bottom:8px;text-shadow:0 0 8px rgba(255,42,42,.6);letter-spacing:1px}
+.bar{width:100%;height:13px;background:#101418;border:1px solid #3a4a3a;position:relative;overflow:hidden;margin:3px 0 8px}
+.barFill{height:100%;width:100%;transition:width .25s ease,background .4s ease}
+#sanityFill{background:linear-gradient(90deg,#4a4a4a,#8a8f8a)}
+#stamFill{background:linear-gradient(90deg,#6b4a10,var(--amber))}
+.barTxt{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:7px;color:#fff;text-shadow:1px 1px 2px #000}
+#breaksPips{color:var(--red);letter-spacing:2px}
+#hudTip{margin-top:6px;font-size:7px;color:#6d8a6d;max-width:220px;line-height:1.6}
+
+/* ====== BOTONERA SUPERIOR DERECHA (¡EL SIGNO!) ====== */
+#topRight{position:absolute;top:12px;right:12px;z-index:400;display:flex;gap:10px;align-items:flex-start}
+.sqBtn{
+  width:46px;height:46px;border-radius:8px;border:2px solid #3a4a3a;background:var(--panel);
+  color:#9ec49e;font-family:inherit;font-size:14px;cursor:pointer;display:flex;
+  align-items:center;justify-content:center;transition:all .18s ease;
+  box-shadow:0 0 12px rgba(0,0,0,.7);
+}
+.sqBtn:hover{transform:translateY(-2px) scale(1.06);border-color:#7da77d;color:#fff}
+#btnHelp{
+  border-color:var(--amber);color:var(--amber);font-size:18px;font-weight:bold;
+  animation:helpPulse 1.6s ease-in-out infinite;
+}
+#btnHelp:hover{background:var(--amber);color:#000;box-shadow:0 0 26px var(--amber)}
+#btnHelp.attention{animation:helpAttn .9s ease-in-out infinite}
+@keyframes helpPulse{
+  0%,100%{box-shadow:0 0 8px rgba(255,179,71,.5);transform:scale(1)}
+  50%{box-shadow:0 0 24px rgba(255,179,71,.95);transform:scale(1.07)}
+}
+@keyframes helpAttn{
+  0%,100%{transform:scale(1) rotate(0deg);box-shadow:0 0 12px var(--amber)}
+  25%{transform:scale(1.18) rotate(-6deg);box-shadow:0 0 34px var(--amber)}
+  75%{transform:scale(1.18) rotate(6deg);box-shadow:0 0 34px var(--amber)}
+}
+
+/* ====== MINIMAPA ====== */
+#minimapWrap{position:absolute;top:70px;right:12px;z-index:60;padding:8px;display:none}
+#minimap{display:block;image-rendering:pixelated;border:1px solid #233023}
+#minimapWrap .mmTitle{font-size:7px;color:#7da77d;text-align:center;margin-top:6px;letter-spacing:1px}
+
+/* ====== BRUJULA ====== */
+#compass{
+  position:absolute;top:12px;left:50%;transform:translateX(-50%);z-index:60;
+  padding:8px 14px;text-align:center;display:none;
+}
+#compassArrow{font-size:20px;color:var(--cyan);display:inline-block;text-shadow:0 0 12px var(--cyan);transition:transform .1s linear}
+#compassDist{font-size:7px;color:var(--cyan);margin-top:4px}
+
+/* ====== TOASTS ====== */
+#toasts{position:absolute;bottom:96px;left:50%;transform:translateX(-50%);z-index:80;display:flex;flex-direction:column;gap:8px;align-items:center;pointer-events:none;width:90%;max-width:640px}
+.toast{
+  background:var(--panel);border:2px solid #3a4a3a;border-left:6px solid var(--green);
+  padding:10px 16px;font-size:8px;line-height:1.7;border-radius:4px;max-width:100%;
+  animation:toastIn .3s ease-out;box-shadow:0 0 16px rgba(0,0,0,.8);
+}
+.toast.lore{border-left-color:var(--purple);color:#d9c2ff;max-width:560px;text-align:center}
+.toast.warn{border-left-color:var(--red);color:#ffb0b0}
+.toast.gold{border-left-color:var(--gold);color:var(--gold)}
+.toast.fade{animation:toastOut .4s ease-in forwards}
+@keyframes toastIn{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:translateY(0)}}
+@keyframes toastOut{to{opacity:0;transform:translateY(-10px)}}
+
+/* ====== MENSAJE CENTRAL ====== */
+#bigMsg{
+  position:absolute;top:38%;left:50%;transform:translate(-50%,-50%);z-index:90;
+  text-align:center;display:none;padding:22px 30px;max-width:86%;
+  border:3px solid var(--red);background:rgba(20,0,0,.92);border-radius:8px;
+  box-shadow:0 0 40px rgba(255,0,0,.5);animation:bigPulse 1s ease-in-out infinite;
+}
+#bigMsgTitle{color:var(--red);font-size:13px;margin-bottom:12px;letter-spacing:1px}
+#bigMsgSub{color:#ccc;font-size:8px;line-height:1.8}
+#bigMsgKey{
+  display:inline-block;margin-top:12px;padding:7px 14px;border:2px solid var(--gold);
+  color:var(--gold);font-size:9px;border-radius:4px;animation:blinkSoft 1.2s infinite;
+}
+@keyframes bigPulse{0%,100%{box-shadow:0 0 20px rgba(255,0,0,.4)}50%{box-shadow:0 0 55px rgba(255,0,0,.85)}}
+@keyframes blinkSoft{0%,100%{opacity:1}50%{opacity:.45}}
+
+/* ====== MODALES ====== */
+.modal{
+  position:fixed;inset:0;z-index:300;background:rgba(0,0,0,.78);
+  display:flex;align-items:center;justify-content:center;padding:16px;
+  backdrop-filter:blur(3px);animation:modalIn .22s ease-out;
+}
+@keyframes modalIn{from{opacity:0}to{opacity:1}}
+.modalBox{
+  position:relative;background:#0b0e12;border:3px solid #4a3b20;border-radius:10px;
+  width:100%;max-width:660px;max-height:88vh;overflow:hidden;display:flex;flex-direction:column;
+  box-shadow:0 0 60px rgba(0,0,0,.95), inset 0 0 40px rgba(20,14,4,.6);
+  animation:boxIn .28s cubic-bezier(.2,1.4,.4,1);
+}
+@keyframes boxIn{from{opacity:0;transform:scale(.85) translateY(20px)}to{opacity:1;transform:scale(1) translateY(0)}}
+.modalHead{
+  padding:16px 52px 14px 20px;border-bottom:2px solid #4a3b20;position:relative;
+  background:linear-gradient(180deg,#181208,#0b0e12);
+}
+.modalTitle{color:var(--gold);font-size:12px;letter-spacing:2px;line-height:1.6}
+.modalSub{color:#8a7a55;font-size:7px;margin-top:7px;letter-spacing:1px}
+.modalClose{
+  position:absolute;top:12px;right:12px;width:32px;height:32px;border:2px solid var(--red);
+  background:#1a0505;color:var(--red);font-family:inherit;font-size:11px;cursor:pointer;
+  border-radius:4px;transition:all .15s;
+}
+.modalClose:hover{background:var(--red);color:#000;transform:rotate(90deg)}
+.modalBody{padding:16px 20px 20px;overflow-y:auto;overscroll-behavior:contain}
+.modalBody::-webkit-scrollbar{width:9px}
+.modalBody::-webkit-scrollbar-track{background:#0a0a0a}
+.modalBody::-webkit-scrollbar-thumb{background:#4a3b20;border-radius:5px}
+.modalBody p{font-size:8px;line-height:2;color:#c9c2b2;margin-bottom:14px}
+.modalBody p b{color:var(--bone)}
+.modalBody p .rd{color:var(--red)} .modalBody p .cy{color:var(--cyan)}
+.modalBody p .gd{color:var(--gold)} .modalBody p .pu{color:var(--purple)} .modalBody p .gr{color:var(--green)}
+.loreFirst{border-left:4px solid var(--purple);padding-left:12px;color:#d9c2ff !important;font-style:italic}
+
+/* tabs ayuda */
+.helpTabs{display:flex;gap:8px;padding:12px 20px 0;border-bottom:2px solid #4a3b20;background:#0d1015}
+.helpTab{
+  flex:1;padding:11px 6px;background:#12161c;border:2px solid #2a2f36;border-bottom:none;
+  color:#7a8291;font-family:inherit;font-size:8px;cursor:pointer;border-radius:6px 6px 0 0;
+  transition:all .15s;letter-spacing:1px;
+}
+.helpTab:hover{color:#ccc;border-color:#4a5560}
+.helpTab.active{background:#1c1408;color:var(--gold);border-color:#4a3b20;box-shadow:inset 0 3px 0 var(--gold)}
+.ctrlTable{width:100%;border-collapse:collapse;margin:4px 0 14px}
+.ctrlTable td{font-size:8px;padding:8px 6px;border-bottom:1px solid #1d232b;line-height:1.7;color:#b9b2a2}
+.ctrlTable td:first-child{color:var(--gold);white-space:nowrap;width:42%}
+.key{display:inline-block;border:1px solid #5a5a4a;border-bottom-width:3px;border-radius:4px;padding:3px 7px;background:#181818;color:#fff;font-size:8px;margin:1px}
+.objList{list-style:none}
+.objList li{font-size:8px;line-height:1.9;margin-bottom:12px;padding-left:20px;position:relative;color:#c9c2b2}
+.objList li::before{content:'▸';position:absolute;left:2px;top:0}
+.tipsBox{border:1px dashed #4a3b20;border-radius:6px;padding:12px;margin-top:6px;background:rgba(30,22,8,.35)}
+.tipsBox div{font-size:7px;line-height:2;color:#9a8f70;margin-bottom:6px}
+.tipsBox div::before{content:'✦ ';color:var(--gold)}
+
+/* diario */
+.jEntry{border-left:4px solid var(--purple);background:#120e1a;padding:12px 14px;margin-bottom:10px;border-radius:0 6px 6px 0}
+.jEntry .jLvl{color:var(--purple);font-size:7px;margin-bottom:8px;letter-spacing:1px}
+.jEntry .jTxt{color:#d9c2ff;font-size:8px;line-height:2;font-style:italic}
+.jEmpty{text-align:center;color:#666;font-size:8px;line-height:2;padding:30px 10px}
+
+/* pausa */
+.setRow{display:flex;align-items:center;gap:12px;margin-bottom:16px;font-size:8px}
+.setRow label{width:110px;color:#8a9a8a}
+input[type=range]{flex:1;accent-color:var(--amber);height:6px}
+.qBtns{display:flex;gap:6px}
+.qBtn{padding:7px 10px;font-family:inherit;font-size:7px;background:#12161c;border:2px solid #2a2f36;color:#7a8291;cursor:pointer;border-radius:4px}
+.qBtn.active{border-color:var(--amber);color:var(--amber)}
+.pauseBtns{display:flex;flex-direction:column;gap:10px;margin-top:18px}
+
+/* ====== BOTONES GENÉRICOS ====== */
+.btn{
+  padding:15px 26px;font-family:inherit;font-size:10px;cursor:pointer;border-radius:5px;
+  background:#101410;color:var(--green);border:2px solid var(--green);letter-spacing:1px;
+  transition:all .2s ease;position:relative;
+}
+.btn:hover{background:var(--green);color:#000;box-shadow:0 0 24px rgba(57,255,106,.6);transform:translateY(-2px)}
+.btnRed{color:var(--red);border-color:var(--red);background:#140808}
+.btnRed:hover{background:var(--red);color:#000;box-shadow:0 0 24px rgba(255,42,42,.6)}
+.btnGold{color:var(--gold);border-color:var(--gold);background:#171204}
+.btnGold:hover{background:var(--gold);color:#000;box-shadow:0 0 24px rgba(255,215,0,.6)}
+.btnGhost{color:#9a9a8a;border-color:#4a4a42;background:transparent;font-size:8px}
+.btnGhost:hover{background:#2a2a24;color:#fff;box-shadow:none}
+
+/* ====== PANTALLAS ====== */
+.screen{
+  position:fixed;inset:0;z-index:200;display:flex;flex-direction:column;
+  align-items:center;justify-content:center;text-align:center;padding:20px;
+  background:radial-gradient(ellipse at center,#0d0d12 0%,#000 78%);
+}
+.screen.hidden,.hidden{display:none !important}
+#startBgFog{
+  position:absolute;inset:0;overflow:hidden;pointer-events:none;
+}
+.fogBlob{position:absolute;border-radius:50%;filter:blur(60px);opacity:.16;animation:fogDrift 16s ease-in-out infinite alternate}
+@keyframes fogDrift{from{transform:translate(0,0) scale(1)}to{transform:translate(60px,-40px) scale(1.3)}}
+.gameTitle{
+  position:relative;z-index:2;color:var(--red);font-size:clamp(18px,4.6vw,40px);line-height:1.5;
+  text-shadow:0 0 14px rgba(255,42,42,.8);animation:glitchy 2.4s infinite;margin-bottom:10px;
+}
+@keyframes glitchy{
+  0%,88%,100%{text-shadow:0 0 14px rgba(255,42,42,.8);transform:none}
+  90%{text-shadow:-3px 0 var(--cyan),3px 0 var(--green);transform:translateX(2px)}
+  92%{text-shadow:3px 0 var(--red),-3px 0 #ff0;transform:translateX(-2px)}
+  94%{text-shadow:0 0 20px rgba(255,42,42,.9);transform:none}
+}
+.edition{
+  position:relative;z-index:2;color:var(--gold);font-size:clamp(8px,1.6vw,12px);
+  letter-spacing:4px;margin-bottom:26px;animation:blinkSoft 2s infinite;
+}
+.gameDesc{position:relative;z-index:2;color:#8a9a8a;font-size:8px;line-height:2.1;margin-bottom:26px;max-width:560px}
+.gameDesc .rd{color:var(--red)}
+.helpTeaser{position:relative;z-index:2;color:var(--amber);font-size:8px;margin-bottom:22px;line-height:2;animation:blinkSoft 1.6s infinite}
+.startBtns{position:relative;z-index:2;display:flex;gap:16px;flex-wrap:wrap;justify-content:center;margin-bottom:24px}
+#recordsBox{position:relative;z-index:2;padding:14px 22px;font-size:7px;line-height:2.2;color:#8a7a55;min-width:300px}
+#recordsBox .recTitle{color:var(--gold);margin-bottom:6px;letter-spacing:2px}
+#recordsBox b{color:var(--bone)}
+#startVer{position:absolute;bottom:14px;right:16px;color:#3a3a34;font-size:7px;z-index:2}
+
+/* intro nivel */
+#introNum{color:#666;font-size:10px;margin-bottom:14px;letter-spacing:6px}
+#introName{color:var(--red);font-size:clamp(16px,4vw,30px);text-shadow:0 0 16px rgba(255,42,42,.7);margin-bottom:24px;line-height:1.5}
+#introLore{color:#9a8f70;font-size:8px;line-height:2.2;max-width:600px;margin-bottom:30px;font-style:italic}
+.enterHint{color:var(--gold);font-size:9px;animation:blinkSoft 1.3s infinite}
+.enterHint .key{margin-right:8px}
+
+/* fin de nivel / victoria */
+.endTitle{font-size:clamp(18px,4vw,34px);margin-bottom:22px;line-height:1.4}
+#leTitle{color:var(--green);text-shadow:0 0 20px rgba(57,255,106,.7)}
+#vicTitle{color:var(--gold);text-shadow:0 0 24px var(--gold),0 0 60px rgba(255,140,0,.6);animation:titleGlow 2s ease-in-out infinite alternate}
+@keyframes titleGlow{
+  from{text-shadow:0 0 16px var(--gold),0 0 40px rgba(255,140,0,.5)}
+  to{text-shadow:0 0 30px var(--gold),0 0 80px rgba(255,80,0,.8)}
+}
+.statsBox{padding:18px 26px;margin:8px 0 22px;min-width:min(420px,88vw)}
+.statRow{display:flex;justify-content:space-between;gap:30px;font-size:9px;margin-bottom:12px}
+.statRow:last-child{margin-bottom:0}
+.statL{color:#8a9a8a}
+.statR{color:var(--green)}
+#vicTwist{color:#c9b8ff;font-size:8px;line-height:2.2;max-width:560px;margin-bottom:18px;font-style:italic}
+#vicAch{margin-bottom:18px;display:flex;flex-direction:column;gap:8px;align-items:center}
+.achChip{border:1px solid var(--gold);color:var(--gold);font-size:7px;padding:8px 14px;border-radius:20px;background:rgba(40,32,6,.6);letter-spacing:1px}
+.achChip.locked{border-color:#333;color:#444;background:transparent}
+#vicRecord{color:var(--gold);font-size:10px;margin-bottom:18px;animation:blinkSoft 1s infinite;min-height:14px}
+#goTitle{color:var(--red);text-shadow:0 0 30px rgba(255,0,0,.8);font-size:clamp(16px,4vw,30px);margin-bottom:20px;line-height:1.5}
+#goSub{color:#9a8a8a;font-size:8px;line-height:2.2;max-width:520px;margin-bottom:28px}
+.victoryParticles{position:absolute;inset:0;overflow:hidden;pointer-events:none}
+.vp{position:absolute;bottom:-12px;border-radius:50%;animation:vFloat linear infinite}
+@keyframes vFloat{0%{transform:translateY(0);opacity:0}8%{opacity:1}92%{opacity:1}100%{transform:translateY(-108vh);opacity:0}}
+
+/* ====== TÁCTIL ====== */
+#touchUI{position:fixed;inset:0;z-index:55;display:none;pointer-events:none}
+#stickZone{position:absolute;left:0;bottom:0;width:46%;height:52%;pointer-events:auto}
+#lookZone{position:absolute;right:0;bottom:0;width:54%;height:52%;pointer-events:auto}
+#stickBase{
+  position:absolute;width:110px;height:110px;border-radius:50%;border:2px dashed rgba(140,180,140,.4);
+  background:rgba(20,30,20,.25);display:none;
+}
+#stickNub{
+  position:absolute;width:48px;height:48px;border-radius:50%;background:rgba(140,200,140,.35);
+  border:2px solid rgba(180,255,180,.6);display:none;
+}
+#btnRunT{
+  position:absolute;right:18px;bottom:24px;width:74px;height:74px;border-radius:50%;
+  border:2px solid var(--amber);color:var(--amber);background:rgba(30,22,4,.5);
+  font-family:inherit;font-size:9px;pointer-events:auto;
+}
+
+@media (max-width:760px){
+  #hud{transform:scale(.82);transform-origin:top left;min-width:210px}
+  #topRight{gap:7px}
+  .sqBtn{width:40px;height:40px;font-size:12px}
+  #minimapWrap{top:60px;transform:scale(.85);transform-origin:top right}
+  .gameDesc,.helpTeaser{font-size:7px}
+}
+</style>
 </head>
 <body>
-    <div id="gameContainer">
-        <canvas id="canvas"></canvas>
-        
-        <div id="ui">
-            <div class="ui-row">
-                <span class="ui-label">NIVEL:</span>
-                <span class="ui-value" id="level">1</span>
-            </div>
-            <div class="ui-row">
-                <span class="ui-label">SEÑALES:</span>
-                <span class="ui-value" id="signs">0</span>
-            </div>
-            <div class="ui-row">
-                <span class="ui-label">PASOS:</span>
-                <span class="ui-value" id="steps">0</span>
-            </div>
-            <div class="ui-row">
-                <span class="ui-label">CORDURA:</span>
-            </div>
-            <div id="sanityBar">
-                <div id="sanityFill" style="width: 100%"></div>
-                <span id="sanityValue">100%</span>
-            </div>
+<div id="gameRoot">
+  <canvas id="view"></canvas>
+  <canvas id="noiseFx"></canvas>
+  <div id="vignetteFx"></div>
+  <div id="redPulse"></div>
+  <div id="flashRed"></div>
+  <div id="flashWhite"></div>
+  <div id="burstRing"></div>
+  <div id="scanlines"></div>
+
+  <!-- HUD -->
+  <div id="hud" class="panel">
+    <div id="hudLevelName">NIVEL 1 — EL DESPERTAR</div>
+    <div class="hudRow"><span class="hudLabel">FRAGMENTOS</span><span class="hudVal" id="hudFrag">0/5</span></div>
+    <div class="hudRow"><span class="hudLabel">TIEMPO</span><span class="hudVal" id="hudTime">00:00</span></div>
+    <div class="hudRow"><span class="hudLabel">PASOS</span><span class="hudVal" id="hudSteps">0</span></div>
+    <div class="hudRow"><span class="hudLabel">CORDURA</span><span id="breaksPips">■ ■ □</span></div>
+    <div class="bar"><div class="barFill" id="sanityFill"></div><div class="barTxt" id="sanityVal">100%</div></div>
+    <div class="hudRow" style="margin-bottom:3px"><span class="hudLabel">RESISTENCIA</span></div>
+    <div class="bar" style="height:8px;margin-bottom:0"><div class="barFill" id="stamFill"></div></div>
+    <div id="hudTip">Cada paso consume tu mente. Las velas la restauran.</div>
+  </div>
+
+  <!-- BOTONERA SUPERIOR DERECHA: ¡EL SIGNO DE EXCLAMACIÓN! -->
+  <div id="topRight">
+    <button class="sqBtn" id="btnSound" title="Silenciar / activar sonido (N)">♪</button>
+    <button class="sqBtn" id="btnJournal" title="Diario de memoria (J)">✎</button>
+    <button class="sqBtn" id="btnMapTop" title="Mostrar / ocultar mapa (M)">▦</button>
+    <button class="sqBtn" id="btnHelp" title="Historia, objetivo y controles">!</button>
+  </div>
+
+  <!-- MINIMAPA -->
+  <div id="minimapWrap" class="panel">
+    <canvas id="minimap" width="120" height="120"></canvas>
+    <div class="mmTitle">NIEBLA DE GUERRA</div>
+  </div>
+
+  <!-- BRÚJULA -->
+  <div id="compass" class="panel">
+    <div id="compassArrow">▲</div>
+    <div id="compassDist">SALIDA: --</div>
+  </div>
+
+  <div id="toasts"></div>
+
+  <div id="bigMsg">
+    <div id="bigMsgTitle">TU MENTE SE HA ROTO</div>
+    <div id="bigMsgSub">El Laberinto ríe con tu voz...</div>
+    <div id="bigMsgKey">ESPACIO — RECOMPONERTE</div>
+  </div>
+
+  <!-- TÁCTIL -->
+  <div id="touchUI">
+    <div id="stickZone"><div id="stickBase"></div><div id="stickNub"></div></div>
+    <div id="lookZone"></div>
+    <button id="btnRunT">CORRER</button>
+  </div>
+
+  <!-- MODAL AYUDA (¡el que pide el signo!) -->
+  <div class="modal hidden" id="modalHelp">
+    <div class="modalBox">
+      <div class="modalHead">
+        <div class="modalTitle">¿PERDIDO EN EL LABERINTO?</div>
+        <div class="modalSub">TODO LO QUE TU MENTE DAÑADA DEBE SABER</div>
+        <button class="modalClose" data-close="modalHelp">✕</button>
+      </div>
+      <div class="helpTabs">
+        <button class="helpTab active" data-tab="historia">HISTORIA</button>
+        <button class="helpTab" data-tab="objetivo">OBJETIVO</button>
+        <button class="helpTab" data-tab="controles">CÓMO JUGAR</button>
+      </div>
+      <div class="modalBody">
+        <div id="paneHistoria">
+          <p class="loreFirst">No recuerdas tu nombre. Recuerdas el frío de la piedra a través de tu espalda, el olor a humedad antigua, y una voz que susurra tu nombre equivocado una y otra vez.</p>
+          <p>Dicen que este <b class="rd">Laberinto</b> no fue construido: fue <b>soñado</b>. Que crece alimentándose de la cordura de quienes lo caminan, y que cada pasillo que recorres ya lo recorrió alguien que dejó de existir el día que olvidó por qué estaba huyendo.</p>
+          <p>Las <b class="rd">SOMBRAS</b> que patrullan los pasillos no son monstruos. Son <b>recuerdos</b>: pedazos de tu propia historia que enterraste tan hondo que aprendieron a caminar solos. No te cazan por odio. Te cazan porque <b>te reconocen</b>.</p>
+          <p>Por los corredores brillan los <b class="pu">FRAGMENTOS DE MEMORIA</b>: treinta piezas de lo que fuiste, grabadas en la piedra por quienquiera que fueras antes de despertar aquí. Reúnelos todos y quizá entiendas por qué estás vivo... o qué quedaba de ti para estarlo.</p>
+          <p>Cuidado con tu <b class="gr">CORDURA</b>. El Laberinto la devora con cada paso, con cada giro, con cada segundo que piensas. Si cae a cero, tu mente se rompe y las sombras se acercan un poco más. Tres colapsos... y el Laberinto te <b class="rd">borra</b>.</p>
+          <p>Hay cinco círculos de este infierno. Cinco umbrales con nombre propio. Y al final del quinto, una puerta que no se abre: <b class="cy">se rinde</b>.</p>
+          <p>¿Estás lo bastante cuerdo para descubrir la verdad?</p>
         </div>
-        
-        <div id="controls">
-            <div class="control-row">W/A/S/D - MOVERSE</div>
-            <div class="control-row">FLECHAS - GIRAR</div>
-            <div class="control-row">SHIFT - CORRER</div>
-            <div class="control-row">ESC - SALIR</div>
+        <div id="paneObjetivo" class="hidden">
+          <ul class="objList">
+            <li><b class="cy">ESCAPA.</b> Encuentra el <b class="cy">PORTAL DE SALIDA</b> (luz azul giratoria) de cada uno de los 5 niveles. La pared de la puerta vibra con luz fría cuando te acercas.</li>
+            <li><b class="pu">RECUERDA.</b> Recolecta los <b class="pu">FRAGMENTOS DE MEMORIA</b> (?) escondidos en el laberinto. Completar todos los de un nivel sana tu mente y desbloquea su línea en tu Diario (J).</li>
+            <li><b class="gr">SOBREVIVE.</b> Tu <b class="gr">CORDURA</b> baja con cada paso (y más si corres o te acercas a las Sombras). Si llega a 0, colapsas. A los 3 colapsos, todo se acaba.</li>
+            <li><b style="color:var(--amber)">ALIMENTA LA LUZ.</b> Las <b style="color:var(--amber)">VELAS</b> restauran cordura y su estallido de luz <b>ahuyenta a las Sombras cercanas</b>.</li>
+            <li><b class="gd">ORIÉNTATE.</b> La <b class="gd">BRÚJULA</b> apunta a la salida durante 20 segundos. El <b class="gd">MAPA ROTO</b> revela el nivel completo en tu minimapa (M).</li>
+            <li><b class="rd">EVITA.</b> Las <b class="rd">RUNAS</b> en el suelo son trampas: te desorientan o te teletransportan. Las <b class="rd">SOMBRAS</b> drenan tu mente al tocarte.</li>
+            <li><b class="gr">LA REGLA DE ORO:</b> pararte a pensar también consume cordura. Pero morir corriendo no es mejor plan.</li>
+          </ul>
         </div>
-        
-        <div id="message">
-            <div style="color: #f00; font-size: 14px; margin-bottom: 10px;">¡HAS PERDIDO LA CORDURA!</div>
-            <div style="color: #fff; font-size: 10px;">El laberinto te ha consumido...</div>
-            <div style="color: #fff; font-size: 10px; margin-top: 10px;">Presiona ESPACIO para recuperarte</div>
+        <div id="paneControles" class="hidden">
+          <table class="ctrlTable">
+            <tr><td><span class="key">W</span> <span class="key">↑</span></td><td>Avanzar</td></tr>
+            <tr><td><span class="key">S</span> <span class="key">↓</span></td><td>Retroceder</td></tr>
+            <tr><td><span class="key">A</span> <span class="key">D</span></td><td>Deslizarse a los lados</td></tr>
+            <tr><td><span class="key">←</span> <span class="key">→</span> / RATÓN</td><td>Girar (clic en la pantalla para capturar el ratón)</td></tr>
+            <tr><td><span class="key">SHIFT</span></td><td>Correr — gasta RESISTENCIA y quema cordura más rápido</td></tr>
+            <tr><td><span class="key">M</span></td><td>Mostrar / ocultar el minimapa</td></tr>
+            <tr><td><span class="key">J</span></td><td>Diario de memoria (fragmentos recuperados)</td></tr>
+            <tr><td><span class="key">N</span></td><td>Silenciar / activar sonido</td></tr>
+            <tr><td><span class="key">ESC</span> <span class="key">P</span></td><td>Pausa (ajustes, reiniciar nivel)</td></tr>
+            <tr><td><span class="key">ESPACIO</span></td><td>Confirmar / recomponerte tras un colapso</td></tr>
+          </table>
+          <div class="tipsBox">
+            <div>Las Sombras HUYEN de la luz que estalla al recoger una vela. Úsala como arma.</div>
+            <div>Las sombras son más lentas que tú... si corres. Pero correr quema resistencia: adminístrala.</div>
+            <div>El minimapa solo revela lo que has visto (niebla de guerra). Caminar con M abierto ayuda.</div>
+            <div>Si te pierdes por completo: sigue una pared con la mano. Siempre lleva a algún sitio.</div>
+            <div>Los muros cerca del portal Susurran con luz azulada. Escucha con los ojos.</div>
+            <div>En el móvil: pulgar izquierdo para moverte, derecho para mirar, botón para correr.</div>
+          </div>
         </div>
-        
-        <div id="startScreen">
-            <div id="title">LABERINTO DE LA LOCURA</div>
-            <div style="color: #f00; font-size: 10px; margin-bottom: 20px; text-align: center; max-width: 600px; line-height: 1.5;">
-                Un juego donde tu mente es el enemigo<br>
-                Encuentra la salida antes de perder la cordura<br>
-                Cada paso consume tu energía mental
-            </div>
-            <button id="startButton">COMENZAR EL SUFRIMIENTO</button>
-        </div>
-        
-        <div id="loading">
-            <div>GENERANDO LABERINTO</div>
-            <div class="loading-dots">
-                <span>.</span><span>.</span><span>.</span>
-            </div>
-        </div>
-        
-        <div id="victoryAnimation">
-            <div id="particles"></div>
-            <div id="victoryContent">
-                <div id="victoryTitle">¡LIBERTAD!</div>
-                <div id="victoryMessage">
-                    <div class="victoryLine">HAS SUPERADO LA PRUEBA MÁS DURA</div>
-                    <div class="victoryLine">TU MENTE ES FUERTE</div>
-                    <div class="victoryLine">TU ESPÍRITU INDÓMITO</div>
-                    <div class="victoryLine">NUNCA TE RINDAS</div>
-                </div>
-                <div id="victoryStats">
-                    <div class="statRow">
-                        <span class="statLabel">TIEMPO:</span>
-                        <span class="statValue" id="victoryTime">00:00</span>
-                    </div>
-                    <div class="statRow">
-                        <span class="statLabel">PASOS:</span>
-                        <span class="statValue" id="victorySteps">0</span>
-                    </div>
-                    <div class="statRow">
-                        <span class="statLabel">SEÑALES:</span>
-                        <span class="statValue" id="victorySigns">0</span>
-                    </div>
-                    <div class="statRow">
-                        <span class="statLabel">NIVEL:</span>
-                        <span class="statValue" id="victoryLevel">1</span>
-                    </div>
-                </div>
-                <button id="continueButton">CONTINUAR EL VIAJE</button>
-                <div id="spaceHint">
-                    <span class="spaceKey">ESPACIO</span>
-                    <span>PARA CONTINUAR</span>
-                </div>
-            </div>
-        </div>
+      </div>
     </div>
-    
-    <script>
-        class Game {
-            constructor() {
-                this.canvas = document.getElementById('canvas');
-                this.ctx = this.canvas.getContext('2d');
-                
-                this.setupCanvas();
-                
-                this.level = 1;
-                this.mazeSize = 25;
-                this.maze = [];
-                this.exit = null;
-                this.signs = [];
-                this.energizers = [];
-                this.traps = [];
-                this.specialRooms = [];
-                
-                this.player = {
-                    x: 1.5,
-                    y: 1.5,
-                    angle: 0,
-                    speed: 0.05,
-                    rotSpeed: 0.03,
-                    sanity: 100,
-                    signs: 0,
-                    steps: 0,
-                    stepDistance: 0,
-                    disorientation: 0
-                };
-                
-                this.keys = {};
-                this.fov = Math.PI / 3;
-                this.numRays = 120;
-                this.maxDepth = 20;
-                
-                this.gameRunning = false;
-                this.exitFound = false;
-                this.insaneMode = false;
-                this.startTime = 0;
-                
-                this.setupEventListeners();
-                this.generateDenseMaze();
-            }
-            
-            setupCanvas() {
-                this.canvas.width = window.innerWidth * 0.9;
-                this.canvas.height = window.innerHeight * 0.9;
-                
-                window.addEventListener('resize', () => {
-                    this.canvas.width = window.innerWidth * 0.9;
-                    this.canvas.height = window.innerHeight * 0.9;
-                });
-            }
-            
-            setupEventListeners() {
-                document.addEventListener('keydown', (e) => {
-                    this.keys[e.key.toLowerCase()] = true;
-                    
-                    if (e.key === 'Escape') {
-                        this.resetToStart();
-                    }
-                    
-                    if (e.key === ' ' || e.key === 'Spacebar') {
-                        e.preventDefault();
-                        
-                        if (this.insaneMode) {
-                            this.recoverFromInsanity();
-                        }
-                        
-                        if (this.exitFound) {
-                            this.continueToNextLevel();
-                        }
-                    }
-                });
-                
-                document.addEventListener('keyup', (e) => {
-                    this.keys[e.key.toLowerCase()] = false;
-                });
-                
-                document.getElementById('startButton').addEventListener('click', () => {
-                    this.start();
-                });
-                
-                document.getElementById('continueButton').addEventListener('click', () => {
-                    this.continueToNextLevel();
-                });
-            }
-            
-            resetToStart() {
-                this.gameRunning = false;
-                this.exitFound = false;
-                this.insaneMode = false;
-                document.getElementById('victoryAnimation').style.display = 'none';
-                document.getElementById('startScreen').style.display = 'flex';
-                this.level = 1;
-                this.player.sanity = 100;
-                this.player.signs = 0;
-                this.player.steps = 0;
-                this.player.stepDistance = 0;
-                this.player.disorientation = 0;
-                document.getElementById('level').textContent = '1';
-                document.getElementById('signs').textContent = '0';
-                document.getElementById('steps').textContent = '0';
-                document.getElementById('sanityValue').textContent = '100%';
-                document.getElementById('sanityFill').style.width = '100%';
-                document.getElementById('message').style.display = 'none';
-            }
-            
-            generateDenseMaze() {
-                this.maze = Array(this.mazeSize).fill().map(() => Array(this.mazeSize).fill(1));
-                
-                const stack = [];
-                const startX = 1;
-                const startY = 1;
-                this.maze[startY][startX] = 0;
-                stack.push({x: startX, y: startY});
-                
-                const directions = [
-                    {dx: 0, dy: -2},
-                    {dx: 2, dy: 0},
-                    {dx: 0, dy: 2},
-                    {dx: -2, dy: 0}
-                ];
-                
-                while (stack.length > 0) {
-                    const current = stack[stack.length - 1];
-                    const neighbors = [];
-                    
-                    for (const dir of directions) {
-                        const nx = current.x + dir.dx;
-                        const ny = current.y + dir.dy;
-                        
-                        if (nx > 0 && nx < this.mazeSize - 1 && 
-                            ny > 0 && ny < this.mazeSize - 1 && 
-                            this.maze[ny][nx] === 1) {
-                            neighbors.push({x: nx, y: ny, dx: dir.dx / 2, dy: dir.dy / 2});
-                        }
-                    }
-                    
-                    if (neighbors.length > 0) {
-                        const next = neighbors[Math.floor(Math.random() * neighbors.length)];
-                        this.maze[next.y][next.x] = 0;
-                        this.maze[current.y + next.dy][current.x + next.dx] = 0;
-                        stack.push({x: next.x, y: next.y});
-                    } else {
-                        stack.pop();
-                    }
-                }
-                
-                for (let y = 1; y < this.mazeSize - 1; y++) {
-                    for (let x = 1; x < this.mazeSize - 1; x++) {
-                        if (this.maze[y][x] === 1) {
-                            const adjacentWalls = 
-                                (this.maze[y-1][x] === 1 ? 1 : 0) +
-                                (this.maze[y+1][x] === 1 ? 1 : 0) +
-                                (this.maze[y][x-1] === 1 ? 1 : 0) +
-                                (this.maze[y][x+1] === 1 ? 1 : 0);
-                            
-                            if (adjacentWalls < 2 && Math.random() < 0.3) {
-                                this.maze[y][x] = 0;
-                            }
-                        }
-                    }
-                }
-                
-                this.placeExit();
-                this.placeSigns();
-                this.placeEnergizers();
-                this.placeSpecialRooms();
-                this.placeTraps();
-            }
-            
-            placeExit() {
-                let placed = false;
-                while (!placed) {
-                    const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                    const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                    
-                    if (this.maze[y][x] === 0) {
-                        this.exit = {x, y};
-                        this.maze[y][x] = 0;
-                        placed = true;
-                    }
-                }
-            }
-            
-            placeSigns() {
-                this.signs = [];
-                const numSigns = 3 + Math.floor(this.level / 2);
-                
-                for (let i = 0; i < numSigns; i++) {
-                    let placed = false;
-                    let attempts = 0;
-                    while (!placed && attempts < 100) {
-                        const x = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
-                        const y = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
-                        
-                        if (this.maze[y][x] === 0 && 
-                            !(x === this.exit.x && y === this.exit.y)) {
-                            this.signs.push({
-                                x: x + 0.5,
-                                y: y + 0.5,
-                                collected: false,
-                                message: this.getRandomHint()
-                            });
-                            placed = true;
-                        }
-                        attempts++;
-                    }
-                }
-            }
-            
-            placeEnergizers() {
-                this.energizers = [];
-                const numEnergizers = Math.max(1, Math.floor(this.mazeSize / 8));
-                
-                for (let i = 0; i < numEnergizers; i++) {
-                    let placed = false;
-                    let attempts = 0;
-                    while (!placed && attempts < 200) {
-                        const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                        const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                        
-                        let tooClose = false;
-                        for (const energizer of this.energizers) {
-                            const dist = Math.sqrt(Math.pow(x - energizer.x, 2) + Math.pow(y - energizer.y, 2));
-                            if (dist < 5) {
-                                tooClose = true;
-                                break;
-                            }
-                        }
-                        
-                        if (this.maze[y][x] === 0 && !tooClose) {
-                            this.energizers.push({
-                                x: x + 0.5,
-                                y: y + 0.5,
-                                collected: false,
-                                value: 15 + Math.floor(Math.random() * 10)
-                            });
-                            placed = true;
-                        }
-                        attempts++;
-                    }
-                }
-            }
-            
-            placeSpecialRooms() {
-                const numRooms = 2 + Math.floor(Math.random() * 2);
-                
-                for (let i = 0; i < numRooms; i++) {
-                    let placed = false;
-                    let attempts = 0;
-                    while (!placed && attempts < 50) {
-                        const roomWidth = 3 + Math.floor(Math.random() * 3);
-                        const roomHeight = 3 + Math.floor(Math.random() * 3);
-                        const x = Math.floor(Math.random() * (this.mazeSize - roomWidth - 2)) + 1;
-                        const y = Math.floor(Math.random() * (this.mazeSize - roomHeight - 2)) + 1;
-                        
-                        let canPlace = true;
-                        for (let ry = y; ry < y + roomHeight; ry++) {
-                            for (let rx = x; rx < x + roomWidth; rx++) {
-                                if (this.maze[ry][rx] === 0) {
-                                    canPlace = false;
-                                    break;
-                                }
-                            }
-                            if (!canPlace) break;
-                        }
-                        
-                        if (canPlace) {
-                            const roomType = Math.random() > 0.5 ? 'forest' : 'cave';
-                            this.specialRooms.push({
-                                x: x,
-                                y: y,
-                                width: roomWidth,
-                                height: roomHeight,
-                                type: roomType
-                            });
-                            
-                            for (let ry = y; ry < y + roomHeight; ry++) {
-                                for (let rx = x; rx < x + roomWidth; rx++) {
-                                    this.maze[ry][rx] = 0;
-                                }
-                            }
-                            
-                            const entranceX = x + Math.floor(Math.random() * roomWidth);
-                            const entranceY = y + Math.floor(Math.random() * roomHeight);
-                            this.maze[entranceY][entranceX] = 0;
-                            
-                            placed = true;
-                        }
-                        attempts++;
-                    }
-                }
-            }
-            
-            placeTraps() {
-                const numTraps = 1 + Math.floor(this.level / 3);
-                this.traps = [];
-                
-                for (let i = 0; i < numTraps; i++) {
-                    let placed = false;
-                    let attempts = 0;
-                    while (!placed && attempts < 100) {
-                        const x = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
-                        const y = Math.floor(Math.random() * (this.mazeSize - 2)) + 1;
-                        
-                        if (this.maze[y][x] === 0 && 
-                            Math.abs(x - this.exit.x) + Math.abs(y - this.exit.y) > 3) {
-                            this.traps.push({
-                                x: x + 0.5,
-                                y: y + 0.5,
-                                type: Math.random() > 0.5 ? 'spin' : 'teleport',
-                                triggered: false
-                            });
-                            placed = true;
-                        }
-                        attempts++;
-                    }
-                }
-            }
-            
-            getRandomHint() {
-                const hints = [
-                    "LA SALIDA ESTÁ MUY LEJOS",
-                    "NO CONFÍES EN TUS OJOS",
-                    "HAY SALAS OCULTAS",
-                    "BUSCA ENERGÍA ANTES DE PERDER LA CORDURA",
-                    "EL TIEMPO SE AGOTA",
-                    "LA OSCURIDAD CONSUME",
-                    "SIGUE LA PARED DERECHA",
-                    "LA SALIDA ESTÁ EN UNA ESQUINA",
-                    "NO GIRES EN CÍRCULOS",
-                    "LA LOCURA ES CERCA"
-                ];
-                return hints[Math.floor(Math.random() * hints.length)];
-            }
-            
-            update() {
-                if (!this.gameRunning || this.exitFound) return;
-                
-                const moveSpeed = this.player.speed * (this.player.sanity > 30 ? 1 : 0.5);
-                const rotSpeed = this.player.rotSpeed;
-                const oldX = this.player.x;
-                const oldY = this.player.y;
-                
-                if (this.keys['arrowleft']) {
-                    this.player.angle -= rotSpeed;
-                }
-                if (this.keys['arrowright']) {
-                    this.player.angle += rotSpeed;
-                }
-                
-                let dx = 0, dy = 0;
-                if (this.keys['w']) {
-                    dx = Math.cos(this.player.angle) * moveSpeed;
-                    dy = Math.sin(this.player.angle) * moveSpeed;
-                }
-                if (this.keys['s']) {
-                    dx = -Math.cos(this.player.angle) * moveSpeed;
-                    dy = -Math.sin(this.player.angle) * moveSpeed;
-                }
-                if (this.keys['a']) {
-                    dx = Math.cos(this.player.angle - Math.PI/2) * moveSpeed;
-                    dy = Math.sin(this.player.angle - Math.PI/2) * moveSpeed;
-                }
-                if (this.keys['d']) {
-                    dx = Math.cos(this.player.angle + Math.PI/2) * moveSpeed;
-                    dy = Math.sin(this.player.angle + Math.PI/2) * moveSpeed;
-                }
-                
-                const newX = this.player.x + dx;
-                const newY = this.player.y + dy;
-                
-                if (!this.checkCollision(newX, newY)) {
-                    this.player.x = newX;
-                    this.player.y = newY;
-                    
-                    const distance = Math.sqrt(dx * dx + dy * dy);
-                    this.player.stepDistance += distance;
-                    
-                    if (this.player.stepDistance >= 0.5) {
-                        this.player.steps++;
-                        this.player.stepDistance = 0;
-                        document.getElementById('steps').textContent = this.player.steps;
-                    }
-                    
-                    if (distance > 0.001) {
-                        if (this.keys['shift']) {
-                            this.player.sanity = Math.max(0, this.player.sanity - 0.15);
-                        } else {
-                            this.player.sanity = Math.max(0, this.player.sanity - 0.05);
-                        }
-                        
-                        this.updateSanityUI();
-                    }
-                }
-                
-                this.checkSignCollection();
-                this.checkEnergizerCollection();
-                this.checkTrapTrigger();
-                this.checkExit();
-            }
-            
-            checkCollision(x, y) {
-                const margin = 0.2;
-                const corners = [
-                    {x: x - margin, y: y - margin},
-                    {x: x + margin, y: y - margin},
-                    {x: x - margin, y: y + margin},
-                    {x: x + margin, y: y + margin}
-                ];
-                
-                for (const corner of corners) {
-                    const mapX = Math.floor(corner.x);
-                    const mapY = Math.floor(corner.y);
-                    
-                    if (mapX < 0 || mapX >= this.mazeSize || 
-                        mapY < 0 || mapY >= this.mazeSize || 
-                        this.maze[mapY][mapX] === 1) {
-                        return true;
-                    }
-                }
-                return false;
-            }
-            
-            checkSignCollection() {
-                this.signs.forEach(sign => {
-                    if (!sign.collected) {
-                        const dx = this.player.x - sign.x;
-                        const dy = this.player.y - sign.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 0.5) {
-                            sign.collected = true;
-                            this.player.signs++;
-                            document.getElementById('signs').textContent = this.player.signs;
-                            this.showHint(sign.message);
-                        }
-                    }
-                });
-            }
-            
-            checkEnergizerCollection() {
-                this.energizers.forEach(energizer => {
-                    if (!energizer.collected) {
-                        const dx = this.player.x - energizer.x;
-                        const dy = this.player.y - energizer.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 0.5) {
-                            energizer.collected = true;
-                            this.player.sanity = Math.min(100, this.player.sanity + energizer.value);
-                            this.updateSanityUI();
-                            this.showEnergyBoost(energizer.value);
-                        }
-                    }
-                });
-            }
-            
-            checkTrapTrigger() {
-                this.traps.forEach(trap => {
-                    if (!trap.triggered) {
-                        const dx = this.player.x - trap.x;
-                        const dy = this.player.y - trap.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 0.5) {
-                            trap.triggered = true;
-                            this.triggerTrap(trap.type);
-                        }
-                    }
-                });
-            }
-            
-            checkExit() {
-                const dx = this.player.x - (this.exit.x + 0.5);
-                const dy = this.player.y - (this.exit.y + 0.5);
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 0.8) {
-                    this.win();
-                }
-            }
-            
-            updateSanityUI() {
-                const sanityPercent = Math.floor(this.player.sanity);
-                document.getElementById('sanityValue').textContent = sanityPercent + '%';
-                document.getElementById('sanityFill').style.width = sanityPercent + '%';
-                
-                if (sanityPercent < 30) {
-                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #8B0000, #CD5C5C)';
-                } else if (sanityPercent < 60) {
-                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #4B4B00, #CCCC00)';
-                } else {
-                    document.getElementById('sanityFill').style.background = 'linear-gradient(90deg, #4a4a4a, #666)';
-                }
-                
-                if (this.player.sanity <= 0 && !this.insaneMode) {
-                    this.enterInsanityMode();
-                }
-            }
-            
-            enterInsanityMode() {
-                this.insaneMode = true;
-                this.player.sanity = 0;
-                document.getElementById('message').style.display = 'block';
-                
-                this.player.disorientation = 1;
-                
-                if (navigator.vibrate) {
-                    navigator.vibrate([100, 50, 100, 50, 200]);
-                }
-            }
-            
-            recoverFromInsanity() {
-                this.insaneMode = false;
-                this.player.sanity = 20;
-                this.player.disorientation = 0;
-                document.getElementById('message').style.display = 'none';
-                this.updateSanityUI();
-            }
-            
-            castRay(angle) {
-                const cos = Math.cos(angle);
-                const sin = Math.sin(angle);
-                
-                for (let depth = 0; depth < this.maxDepth; depth += 0.05) {
-                    const x = this.player.x + cos * depth;
-                    const y = this.player.y + sin * depth;
-                    
-                    if (x < 0 || x >= this.mazeSize || y < 0 || y >= this.mazeSize) {
-                        return {depth: this.maxDepth, wall: 1};
-                    }
-                    
-                    const mapX = Math.floor(x);
-                    const mapY = Math.floor(y);
-                    
-                    if (this.maze[mapY][mapX] === 1) {
-                        return {depth: depth, wall: 1, x: x, y: y};
-                    }
-                }
-                
-                return {depth: this.maxDepth, wall: 0};
-            }
-            
-            render() {
-                const width = this.canvas.width;
-                const height = this.canvas.height;
-                
-                const gradient = this.ctx.createLinearGradient(0, 0, 0, height);
-                
-                if (this.player.sanity > 70) {
-                    gradient.addColorStop(0, '#2a2a2a');
-                    gradient.addColorStop(1, '#1a1a1a');
-                } else if (this.player.sanity > 40) {
-                    gradient.addColorStop(0, '#252525');
-                    gradient.addColorStop(0.5, '#2a1a1a');
-                    gradient.addColorStop(1, '#1a0a0a');
-                } else {
-                    gradient.addColorStop(0, '#1a1a1a');
-                    gradient.addColorStop(0.5, '#1a0a0a');
-                    gradient.addColorStop(1, '#0a0a0a');
-                }
-                
-                this.ctx.fillStyle = gradient;
-                this.ctx.fillRect(0, 0, width, height);
-                
-                const rayWidth = width / this.numRays;
-                
-                for (let i = 0; i < this.numRays; i++) {
-                    let rayAngle = this.player.angle - this.fov / 2 + (i / this.numRays) * this.fov;
-                    
-                    if (this.insaneMode) {
-                        rayAngle += Math.sin(Date.now() * 0.01 + i * 0.1) * 0.3;
-                    }
-                    
-                    const ray = this.castRay(rayAngle);
-                    
-                    if (ray.wall === 1) {
-                        const wallHeight = (height / ray.depth) * 0.8;
-                        const wallTop = (height - wallHeight) / 2;
-                        
-                        let color = '#333';
-                        
-                        const exitDistance = Math.sqrt(
-                            Math.pow(this.player.x - (this.exit.x + 0.5), 2) + 
-                            Math.pow(this.player.y - (this.exit.y + 0.5), 2)
-                        );
-                        
-                        const rayDistance = Math.sqrt(
-                            Math.pow(this.player.x - ray.x, 2) + 
-                            Math.pow(this.player.y - ray.y, 2)
-                        );
-                        
-                        if (exitDistance < 5 && rayDistance < 5) {
-                            const intensity = 1 - (exitDistance / 5);
-                            const r = Math.floor(40 + intensity * 60);
-                            const g = Math.floor(40 + intensity * 80);
-                            const b = Math.floor(80 + intensity * 100);
-                            color = `rgb(${r}, ${g}, ${b})`;
-                        } else if (this.specialRooms.length > 0) {
-                            const room = this.specialRooms.find(r => 
-                                ray.x >= r.x && ray.x < r.x + r.width &&
-                                ray.y >= r.y && ray.y < r.y + r.height
-                            );
-                            
-                            if (room && room.type === 'forest') {
-                                const brightness = Math.max(40, 100 - ray.depth * 8);
-                                const green = Math.floor(brightness + 20);
-                                color = `rgb(${Math.floor(brightness * 0.7)}, ${green}, ${Math.floor(brightness * 0.6)})`;
-                            } else if (room && room.type === 'cave') {
-                                const brightness = Math.max(35, 80 - ray.depth * 6);
-                                color = `rgb(${Math.floor(brightness * 0.8)}, ${Math.floor(brightness * 0.6)}, ${Math.floor(brightness * 0.4)})`;
-                            }
-                        }
-                        
-                        const correctedDepth = ray.depth * Math.cos(rayAngle - this.player.angle);
-                        const brightness = Math.max(25, 150 / (1 + correctedDepth * correctedDepth * 0.3));
-                        
-                        this.ctx.fillStyle = color;
-                        this.ctx.globalAlpha = brightness / 100;
-                        
-                        const x = Math.floor(i * rayWidth);
-                        const brickHeight = 8;
-                        
-                        for (let y = 0; y < wallHeight; y += brickHeight) {
-                            const pixelY = Math.floor(wallTop + y);
-                            this.ctx.fillRect(x, pixelY, Math.ceil(rayWidth) + 1, brickHeight - 1);
-                        }
-                        
-                        this.ctx.globalAlpha = 1;
-                    }
-                }
-                
-                this.signs.forEach(sign => {
-                    if (!sign.collected) {
-                        const dx = sign.x - this.player.x;
-                        const dy = sign.y - this.player.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 4) {
-                            const angle = Math.atan2(dy, dx) - this.player.angle;
-                            const normalizedAngle = ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
-                            
-                            if (Math.abs(normalizedAngle) < this.fov / 2) {
-                                const screenX = width / 2 + (normalizedAngle / this.fov) * width;
-                                const size = Math.max(6, 100 / distance);
-                                const screenY = height / 2;
-                                
-                                const pulse = Math.sin(Date.now() * 0.002) * 0.2 + 0.3;
-                                this.ctx.fillStyle = `rgba(100, 0, 150, ${pulse})`;
-                                this.ctx.beginPath();
-                                this.ctx.arc(screenX, screenY, size / 2, 0, Math.PI * 2);
-                                this.ctx.fill();
-                                
-                                this.ctx.fillStyle = '#999';
-                                this.ctx.font = `${size}px monospace`;
-                                this.ctx.textAlign = 'center';
-                                this.ctx.fillText('?', screenX, screenY + size/4);
-                            }
-                        }
-                    }
-                });
-                
-                this.energizers.forEach(energizer => {
-                    if (!energizer.collected) {
-                        const dx = energizer.x - this.player.x;
-                        const dy = energizer.y - this.player.y;
-                        const distance = Math.sqrt(dx * dx + dy * dy);
-                        
-                        if (distance < 6) {
-                            const angle = Math.atan2(dy, dx) - this.player.angle;
-                            const normalizedAngle = ((angle + Math.PI) % (2 * Math.PI)) - Math.PI;
-                            
-                            if (Math.abs(normalizedAngle) < this.fov / 2) {
-                                const screenX = width / 2 + (normalizedAngle / this.fov) * width;
-                                const size = Math.max(10, 140 / distance);
-                                const screenY = height / 2;
-                                
-                                const pulse = Math.sin(Date.now() * 0.003) * 0.4 + 0.6;
-                                this.ctx.fillStyle = `rgba(100, 255, 100, ${pulse})`;
-                                this.ctx.fillRect(screenX - size/2, screenY - size/2, size, size);
-                                
-                                this.ctx.fillStyle = '#555';
-                                this.ctx.font = `${size * 0.8}px monospace`;
-                                this.ctx.textAlign = 'center';
-                                this.ctx.fillText('+' + energizer.value, screenX, screenY + size/3);
-                            }
-                        }
-                    }
-                });
-                
-                if (this.player.sanity < 50) {
-                    const vignette = this.ctx.createRadialGradient(
-                        width / 2, height / 2, 0,
-                        width / 2, height / 2, width / 2
-                    );
-                    const darkness = 1 - (this.player.sanity / 100);
-                    vignette.addColorStop(0, `rgba(0, 0, 0, ${darkness * 0.2})`);
-                    vignette.addColorStop(0.7, `rgba(0, 0, 0, ${darkness * 0.4})`);
-                    vignette.addColorStop(1, `rgba(0, 0, 0, ${darkness * 0.7})`);
-                    this.ctx.fillStyle = vignette;
-                    this.ctx.fillRect(0, 0, width, height);
-                }
-                
-                if (this.player.sanity < 30 || this.insaneMode) {
-                    const imageData = this.ctx.getImageData(0, 0, width, height);
-                    const data = imageData.data;
-                    const noiseIntensity = this.insaneMode ? 0.15 : 0.05;
-                    
-                    for (let i = 0; i < data.length; i += 4) {
-                        if (Math.random() < noiseIntensity) {
-                            const noise = Math.random() * 60 - 30;
-                            data[i] += noise;
-                            data[i + 1] += noise;
-                            data[i + 2] += noise;
-                        }
-                    }
-                    this.ctx.putImageData(imageData, 0, 0);
-                }
-                
-                if (this.insaneMode) {
-                    const imageData = this.ctx.getImageData(0, 0, width, height);
-                    const data = imageData.data;
-                    for (let i = 0; i < data.length; i += 4) {
-                        if (Math.random() < 0.1) {
-                            data[i] = 255 - data[i];
-                            data[i + 1] = Math.random() * 255;
-                        }
-                    }
-                    this.ctx.putImageData(imageData, 0, 0);
-                }
-            }
-            
-            showHint(text) {
-                const hint = document.createElement('div');
-                hint.style.cssText = `
-                    position: absolute;
-                    top: 50%;
-                    left: 50%;
-                    transform: translate(-50%, -50%);
-                    background: rgba(50, 0, 100, 0.95);
-                    color: #ccc;
-                    padding: 20px;
-                    font-size: 10px;
-                    font-family: 'Press Start 2P', cursive;
-                    text-align: center;
-                    z-index: 500;
-                    animation: fadeInOut 4s ease-in-out;
-                    border: 2px solid #333;
-                    box-shadow: 0 0 30px rgba(100, 0, 150, 0.8);
-                    max-width: 80%;
-                `;
-                hint.textContent = text;
-                document.getElementById('gameContainer').appendChild(hint);
-                
-                setTimeout(() => hint.remove(), 4000);
-            }
-            
-            showEnergyBoost(value) {
-                const boost = document.createElement('div');
-                boost.className = 'energyBoost';
-                boost.textContent = `+${value}% CORDURA`;
-                document.getElementById('gameContainer').appendChild(boost);
-                
-                setTimeout(() => boost.remove(), 1000);
-            }
-            
-            triggerTrap(type) {
-                if (type === 'spin') {
-                    this.player.angle += (Math.random() - 0.5) * Math.PI * 1.5;
-                    this.player.sanity -= 15;
-                } else if (type === 'teleport') {
-                    let teleported = false;
-                    let attempts = 0;
-                    while (!teleported && attempts < 50) {
-                        const x = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                        const y = Math.floor(Math.random() * (this.mazeSize - 4)) + 2;
-                        if (this.maze[y][x] === 0) {
-                            this.player.x = x + 0.5;
-                            this.player.y = y + 0.5;
-                            teleported = true;
-                            this.player.sanity -= 20;
-                        }
-                        attempts++;
-                    }
-                }
-                this.updateSanityUI();
-            }
-            
-            win() {
-                this.exitFound = true;
-                this.gameRunning = false;
-                
-                const elapsed = Math.floor((Date.now() - this.startTime) / 1000);
-                const minutes = Math.floor(elapsed / 60);
-                const seconds = elapsed % 60;
-                
-                this.showEpicVictoryAnimation(minutes, seconds);
-            }
-            
-            showEpicVictoryAnimation(minutes, seconds) {
-                const victoryDiv = document.getElementById('victoryAnimation');
-                victoryDiv.style.display = 'flex';
-                
-                // Actualizar estadísticas
-                document.getElementById('victoryTime').textContent = 
-                    `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
-                document.getElementById('victorySteps').textContent = this.player.steps;
-                document.getElementById('victorySigns').textContent = this.player.signs;
-                document.getElementById('victoryLevel').textContent = this.level;
-                
-                // Crear efecto de partículas épico
-                this.createEpicParticles();
-                
-                // Crear efecto de ondas de choque
-                this.createShockwaves();
-                
-                // Mostrar logros si corresponde
-                this.checkAchievements();
-                
-                // Vibración para dispositivos móviles
-                if (navigator.vibrate) {
-                    navigator.vibrate([200, 100, 200, 100, 400]);
-                }
-                
-                // Reproducir sonido de victoria (simulado visualmente)
-                this.createVisualSoundwaves();
-            }
-            
-            createEpicParticles() {
-                const particlesContainer = document.getElementById('particles');
-                particlesContainer.innerHTML = '';
-                
-                // Partículas principales
-                for (let i = 0; i < 100; i++) {
-                    const particle = document.createElement('div');
-                    particle.className = 'particle';
-                    particle.style.left = Math.random() * 100 + '%';
-                    particle.style.animationDelay = Math.random() * 10 + 's';
-                    particle.style.animationDuration = (8 + Math.random() * 8) + 's';
-                    
-                    // Colores variados para efecto arcoíris
-                    const colors = [
-                        'rgba(255, 100, 100, 1)',
-                        'rgba(100, 255, 100, 1)',
-                        'rgba(100, 100, 255, 1)',
-                        'rgba(255, 255, 100, 1)',
-                        'rgba(255, 100, 255, 1)',
-                        'rgba(100, 255, 255, 1)'
-                    ];
-                    const color = colors[Math.floor(Math.random() * colors.length)];
-                    particle.style.background = `radial-gradient(circle, ${color} 0%, ${color.replace('1)', '0)')} 70%)`;
-                    particle.style.width = (3 + Math.random() * 5) + 'px';
-                    particle.style.height = particle.style.width;
-                    
-                    particlesContainer.appendChild(particle);
-                }
-                
-                // Partículas de estrellas
-                for (let i = 0; i < 50; i++) {
-                    const star = document.createElement('div');
-                    star.className = 'particle';
-                    star.style.left = Math.random() * 100 + '%';
-                    star.style.animationDelay = Math.random() * 10 + 's';
-                    star.style.animationDuration = (6 + Math.random() * 10) + 's';
-                    star.style.background = 'white';
-                    star.style.width = '2px';
-                    star.style.height = '2px';
-                    star.style.boxShadow = '0 0 6px white';
-                    
-                    particlesContainer.appendChild(star);
-                }
-            }
-            
-            createShockwaves() {
-                const victoryDiv = document.getElementById('victoryAnimation');
-                
-                for (let i = 0; i < 3; i++) {
-                    setTimeout(() => {
-                        const shockwave = document.createElement('div');
-                        shockwave.style.cssText = `
-                            position: absolute;
-                            top: 50%;
-                            left: 50%;
-                            transform: translate(-50%, -50%);
-                            width: 100px;
-                            height: 100px;
-                            border: 3px solid rgba(100, 200, 255, 0.8);
-                            border-radius: 50%;
-                            animation: shockwave 2s ease-out forwards;
-                            pointer-events: none;
-                        `;
-                        
-                        const style = document.createElement('style');
-                        style.textContent = `
-                            @keyframes shockwave {
-                                0% {
-                                    width: 100px;
-                                    height: 100px;
-                                    opacity: 1;
-                                }
-                                100% {
-                                    width: 800px;
-                                    height: 800px;
-                                    opacity: 0;
-                                }
-                            }
-                        `;
-                        document.head.appendChild(style);
-                        
-                        victoryDiv.appendChild(shockwave);
-                        setTimeout(() => shockwave.remove(), 2000);
-                    }, i * 500);
-                }
-            }
-            
-            createVisualSoundwaves() {
-                const victoryDiv = document.getElementById('victoryAnimation');
-                
-                for (let i = 0; i < 8; i++) {
-                    const bar = document.createElement('div');
-                    bar.style.cssText = `
-                        position: absolute;
-                        bottom: 50px;
-                        left: ${50 - 20 + i * 5}%;
-                        width: 3%;
-                        height: 20px;
-                        background: linear-gradient(to top, #0066cc, #00aaff);
-                        animation: soundwave ${0.5 + Math.random() * 0.5}s ease-in-out infinite;
-                        animation-delay: ${i * 0.1}s;
-                        transform-origin: bottom;
-                    `;
-                    
-                    victoryDiv.appendChild(bar);
-                }
-                
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes soundwave {
-                        0%, 100% { transform: scaleY(0.5); }
-                        50% { transform: scaleY(1.5); }
-                    }
-                `;
-                document.head.appendChild(style);
-                
-                setTimeout(() => {
-                    victoryDiv.querySelectorAll('[style*="soundwave"]').forEach(bar => bar.remove());
-                }, 5000);
-            }
-            
-            checkAchievements() {
-                const achievements = [];
-                
-                if (this.player.steps < 100) {
-                    achievements.push("EXPLORADOR RÁPIDO");
-                }
-                
-                if (this.player.signs >= 5) {
-                    achievements.push("BUSCADOR DE VERDADES");
-                }
-                
-                if (this.player.sanity > 50) {
-                    achievements.push("MENTE FUERTE");
-                }
-                
-                if (this.level > 3) {
-                    achievements.push("SUPERVIVIENTE");
-                }
-                
-                achievements.forEach((achievement, index) => {
-                    setTimeout(() => {
-                        this.showAchievement(achievement);
-                    }, 2000 + index * 1500);
-                });
-            }
-            
-            showAchievement(text) {
-                const achievement = document.createElement('div');
-                achievement.className = 'achievement';
-                achievement.innerHTML = `
-                    <div style="color: #ffd700; margin-bottom: 5px;">¡LOGRO DESBLOQUEADO!</div>
-                    <div style="color: #fff;">${text}</div>
-                `;
-                
-                document.getElementById('gameContainer').appendChild(achievement);
-                
-                setTimeout(() => {
-                    achievement.style.animation = 'slideOut 0.5s ease-in forwards';
-                    setTimeout(() => achievement.remove(), 500);
-                }, 3000);
-                
-                const style = document.createElement('style');
-                style.textContent = `
-                    @keyframes slideOut {
-                        0% { right: 20px; opacity: 1; }
-                        100% { right: -300px; opacity: 0; }
-                    }
-                `;
-                document.head.appendChild(style);
-            }
-            
-            continueToNextLevel() {
-                document.getElementById('victoryAnimation').style.display = 'none';
-                this.nextLevel();
-            }
-            
-            nextLevel() {
-                this.level++;
-                this.mazeSize = Math.min(35, 25 + this.level * 2);
-                this.player.signs = 0;
-                this.player.steps = 0;
-                this.player.stepDistance = 0;
-                this.player.sanity = 100;
-                this.player.disorientation = 0;
-                this.exitFound = false;
-                this.insaneMode = false;
-                this.startTime = Date.now();
-                
-                document.getElementById('level').textContent = this.level;
-                document.getElementById('signs').textContent = '0';
-                document.getElementById('steps').textContent = '0';
-                document.getElementById('sanityValue').textContent = '100%';
-                document.getElementById('sanityFill').style.width = '100%';
-                document.getElementById('message').style.display = 'none';
-                
-                this.generateDenseMaze();
-                this.gameRunning = true;
-            }
-            
-            start() {
-                document.getElementById('startScreen').style.display = 'none';
-                document.getElementById('loading').style.display = 'none';
-                this.gameRunning = true;
-                this.startTime = Date.now();
-                this.gameLoop();
-            }
-            
-            gameLoop() {
-                this.update();
-                this.render();
-                requestAnimationFrame(() => this.gameLoop());
-            }
+  </div>
+
+  <!-- MODAL DIARIO -->
+  <div class="modal hidden" id="modalJournal">
+    <div class="modalBox">
+      <div class="modalHead">
+        <div class="modalTitle">DIARIO DE MEMORIA</div>
+        <div class="modalSub" id="journalCount">0 / 30 FRAGMENTOS RECUPERADOS</div>
+        <button class="modalClose" data-close="modalJournal">✕</button>
+      </div>
+      <div class="modalBody" id="journalList"></div>
+    </div>
+  </div>
+
+  <!-- MODAL PAUSA -->
+  <div class="modal hidden" id="modalPause">
+    <div class="modalBox" style="max-width:440px">
+      <div class="modalHead">
+        <div class="modalTitle">PAUSA</div>
+        <div class="modalSub">EL LABERINTO ESPERA. SIEMPRE ESPERA.</div>
+        <button class="modalClose" data-close="modalPause">✕</button>
+      </div>
+      <div class="modalBody">
+        <div class="setRow"><label>VOLUMEN</label><input type="range" id="volRange" min="0" max="100" value="80"></div>
+        <div class="setRow"><label>SENSIBILIDAD</label><input type="range" id="sensRange" min="20" max="200" value="100"></div>
+        <div class="setRow"><label>CALIDAD</label>
+          <div class="qBtns">
+            <button class="qBtn" data-q="alta">ALTA</button>
+            <button class="qBtn active" data-q="media">MEDIA</button>
+            <button class="qBtn" data-q="baja">BAJA</button>
+          </div>
+        </div>
+        <div class="pauseBtns">
+          <button class="btn" id="btnResume">REANUDAR</button>
+          <button class="btn btnGold" id="btnRestartLvl">REINICIAR NIVEL</button>
+          <button class="btn btnGhost" id="btnAbandon">ABANDONAR AL MENÚ</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- PANTALLA INICIO -->
+  <div class="screen" id="screenStart">
+    <div id="startBgFog"></div>
+    <div class="gameTitle">LABERINTO DE LA LOCURA</div>
+    <div class="edition">— EDICIÓN PESADILLA —</div>
+    <div class="gameDesc">
+      Tu mente es el enemigo. El Laberinto la devora con cada paso.<br>
+      5 niveles · 30 fragmentos de memoria · Sombras que te reconocen<br>
+      Encuentra la salida antes de que el Laberinto te borre.
+    </div>
+    <div class="helpTeaser">¿Primera vez? Pulsa el signo <b style="color:var(--gold)">!</b> (arriba a la derecha) para conocer tu historia</div>
+    <div class="startBtns">
+      <button class="btn btnRed" id="btnStart">COMENZAR EL SUFRIMIENTO</button>
+      <button class="btn btnGold" id="btnHow">CÓMO JUGAR</button>
+    </div>
+    <div id="recordsBox" class="panel">
+      <div class="recTitle">≡ MEMORIA DEL LABERINTO ≡</div>
+      <div>MEJOR ESCAPE TOTAL: <b id="recTotal">—</b></div>
+      <div>FRAGMENTOS RÉCORD: <b id="recFrags">0 / 30</b></div>
+    </div>
+    <div id="startVer">v2.0 — construido para hacerte sufrir mejor</div>
+  </div>
+
+  <!-- PANTALLA INTRO NIVEL -->
+  <div class="screen hidden" id="screenIntro">
+    <div id="introNum">— NIVEL 1 DE 5 —</div>
+    <div id="introName">EL DESPERTAR</div>
+    <div id="introLore">...</div>
+    <div class="enterHint"><span class="key">ESPACIO</span> O TOCA LA PANTALLA PARA ENTRAR</div>
+  </div>
+
+  <!-- PANTALLA FIN DE NIVEL -->
+  <div class="screen hidden" id="screenLevelEnd">
+    <div class="endTitle" id="leTitle">NIVEL SUPERADO</div>
+    <div class="statsBox panel">
+      <div class="statRow"><span class="statL">TIEMPO DEL NIVEL</span><span class="statR" id="leTime">00:00</span></div>
+      <div class="statRow"><span class="statL">PASOS</span><span class="statR" id="leSteps">0</span></div>
+      <div class="statRow"><span class="statL">FRAGMENTOS</span><span class="statR" id="leFrag">0/0</span></div>
+      <div class="statRow"><span class="statL">COLAPSO MENTAL</span><span class="statR" id="leBreaks">0 VECES</span></div>
+    </div>
+    <div id="leBonus" style="color:var(--gold);font-size:9px;margin-bottom:20px;min-height:14px"></div>
+    <button class="btn" id="btnNext">DESCENDER MÁS PROFUNDO</button>
+    <div class="enterHint" style="margin-top:16px"><span class="key">ESPACIO</span> PARA CONTINUAR</div>
+  </div>
+
+  <!-- PANTALLA VICTORIA -->
+  <div class="screen hidden" id="screenVictory">
+    <div class="victoryParticles" id="victoryParticles"></div>
+    <div class="endTitle" id="vicTitle">¡LIBERTAD!</div>
+    <div id="vicTwist">La puerta no se abrió. Se rindió.<br>Y al cruzarla entiendes la última línea: el Laberinto nunca fue una prisión. <b>Era una puerta... y tú la soñaste.</b></div>
+    <div class="statsBox panel">
+      <div class="statRow"><span class="statL">TIEMPO TOTAL</span><span class="statR" id="vicTime">00:00</span></div>
+      <div class="statRow"><span class="statL">PASOS TOTALES</span><span class="statR" id="vicSteps">0</span></div>
+      <div class="statRow"><span class="statL">FRAGMENTOS DE MEMORIA</span><span class="statR" id="vicFrags">0/30</span></div>
+      <div class="statRow"><span class="statL">COLAPSOS MENTALES</span><span class="statR" id="vicBreaks">0</span></div>
+    </div>
+    <div id="vicAch"></div>
+    <div id="vicRecord"></div>
+    <button class="btn btnGold" id="btnMenu">VOLVER AL INICIO</button>
+  </div>
+
+  <!-- PANTALLA GAME OVER -->
+  <div class="screen hidden" id="screenGameOver">
+    <div id="goTitle">EL LABERINTO TE HA BORRADO</div>
+    <div id="goSub">Tres veces se rompió tu mente. Tres veces bastaron.<br>Hay una piedra nueva en el pasillo del nivel que tiene tu cara.</div>
+    <div class="startBtns">
+      <button class="btn btnRed" id="btnRetry">INTENTAR EL NIVEL DE NUEVO</button>
+      <button class="btn btnGhost" id="btnQuit">ABANDONAR AL MENÚ</button>
+    </div>
+  </div>
+</div>
+
+<script>
+'use strict';
+/* ============================================================
+   LABERINTO DE LA LOCURA — EDICIÓN PESADILLA
+   Motor: raycasting DDA texturizado + sprites con z-buffer
+   Audio: 100% procedural (WebAudio) — sin archivos externos
+   ============================================================ */
+
+/* ============ UTILIDADES ============ */
+const TAU = Math.PI * 2;
+const FOV = Math.PI / 3;
+const PLANE_LEN = Math.tan(FOV / 2);
+const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
+const lerp = (a, b, t) => a + (b - a) * t;
+const rnd = (a, b) => a + Math.random() * (b - a);
+const ri = (a, b) => Math.floor(a + Math.random() * (b - a + 1));
+const pick = arr => arr[(Math.random() * arr.length) | 0];
+const hyp = Math.hypot;
+const fmtTime = s => { s = Math.max(0, Math.floor(s)); return String((s / 60) | 0).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
+const $ = id => document.getElementById(id);
+
+/* ============ CONFIG DE NIVELES ============ */
+const LEVELS = [
+  { name: 'EL DESPERTAR', size: 21, fragments: 5, candles: 5, compass: 0, mapItem: 0, traps: 2, shadows: 2,
+    tex: 'asylum', fogRGB: [14, 18, 16], ambFreq: 52, ambTone: 'asylum',
+    lore: 'El suelo es frío. La luz no existe: se filtra de donde no debería. Algo, en el fondo del pasillo, respira con tu mismo ritmo.' },
+  { name: 'CATACUMBAS', size: 25, fragments: 6, candles: 5, compass: 1, mapItem: 0, traps: 3, shadows: 3,
+    tex: 'catacomb', fogRGB: [20, 15, 10], ambFreq: 44, ambTone: 'deep',
+    lore: 'Los muros aquí están apilados con huesos que no encajan entre sí. Como si alguien los hubiera ordenado a prisa, huyendo de algo que conocía su nombre.' },
+  { name: 'EL BOSQUE AHOGADO', size: 27, fragments: 6, candles: 6, compass: 1, mapItem: 1, traps: 3, shadows: 4,
+    tex: 'forest', fogRGB: [10, 16, 11], ambFreq: 38, ambTone: 'wind',
+    lore: 'Huele a lluvia muerta. En este nivel, las salas abiertas están cubiertas de musgo que late. Tu reflejo ya no camina contigo: se ha quedado un nivel atrás, mirándote.' },
+  { name: 'LAS ENTRAÑAS', size: 29, fragments: 6, candles: 6, compass: 1, mapItem: 1, traps: 4, shadows: 5,
+    tex: 'cave', fogRGB: [18, 12, 9], ambFreq: 33, ambTone: 'deep',
+    lore: 'La piedra es cálida aquí. Pulsa despacio, como un corazón durmiendo. Empiezas a sospechar que no estás dentro de un laberinto: estás dentro de alguien.' },
+  { name: 'LA MENTE ROTA', size: 31, fragments: 7, candles: 7, compass: 1, mapItem: 1, traps: 4, shadows: 6,
+    tex: 'nightmare', fogRGB: [24, 6, 10], ambFreq: 27, ambTone: 'hell',
+    lore: 'Estás tan hondo que el Laberinto ya no disfraza su forma. Los pasillos dibujan tu firma. La puerta final no se abre: espera a que entiendas. Y entonces se rendirá.' }
+];
+const TOTAL_FRAGMENTS = LEVELS.reduce((a, l) => a + l.fragments, 0);
+
+/* ============ LORE: 30 FRAGMENTOS DE MEMORIA ============ */
+const LORE = [
+  /* NIVEL 1 */
+  'No recuerdas tu nombre. Las paredes, en cambio, lo recuerdan por ti. Lo han escrito setenta veces. Con cal. Con algo que no es cal.',
+  'Encontraste tu propia letra en una piedra: "NO CONFÍES EN LA SEGUNDA SALIDA". No recuerdas haberla escrito. La handwriting tiembla igual que la tuya.',
+  'Dicen que el Laberinto crece con el miedo de quienes lo caminan. Eso explicaría por qué los pasillos de hoy no estaban ayer.',
+  'Las sombras no te odian. Eso es lo peor. Te miran como se mira una foto antigua: con ternura y con hambre.',
+  'Hay una taza de té aún humeante en una sala vacía. Aún sabe a tu infancia. Bebiste sin pensarlo. ¿Desde cuándo piensas tan poco?',
+  /* NIVEL 2 */
+  'Contaste los huesos de una hornacina: eran treinta. Como los fragmentos que buscas. Como los años que no recuerdas.',
+  'Un eco repite tu voz desde antes de que hables. Llegas siempre medio segundo tarde a tus propias conversaciones.',
+  'Aquí enterraron algo que tenía tu cara. La lápida está tallada con cariño. La fecha es mañana.',
+  'Las velas no iluminan: recuerdan luz. Por eso arden con colores que no existen y calientan memorias en vez de piel.',
+  'El Laberinto no castiga. Colecciona. Y tú eres la pieza que falta en el centro de su vitrina.',
+  'Aprendiste a leer las runas trampa sin darte cuenta. Tu cuerpo las esquiva antes de que tus ojos las vean. ¿Quién te entrenó?',
+  /* NIVEL 3 */
+  'El musgo late como un corazón durmiendo. Lo tocaste y soñaste un jardín que ya no existe en ningún mapa del mundo despierto.',
+  'Tu reflejo se quedó en el nivel anterior. Desde entonces caminas sin verte. Algunas noches lo oyes tomar té al otro lado del muro.',
+  'Los árboles de este bosque ahogado crecen hacia abajo. Sus raíces son ramas que alguien recuerda mal.',
+  'Cada vela que enciendes es un recuerdo que arde. Cuando se acaba, ya no lo tienes. La luz también cobra lo suyo.',
+  'Encontraste un pasillo que se repite exactamente cada once puertas. Lo sabes porque lo caminas exactamente cada once puertas.',
+  'Una sombra te dijo tu nombre. El verdadero. Escapaste antes de oír el apellido: el apellido es lo que borra.',
+  /* NIVEL 4 */
+  'La piedra es cálida y pulsa. Ya lo sospechas: no caminas por dentro de un laberinto. Caminas por dentro de alguien. Y está despertando.',
+  'Las entrañas del suelo muestran cicatrices con forma de tu firma. Firmaste algo aquí. Algo con tinta roja y muchas páginas.',
+  'Comprendiste el truco: los pasillos no se mueven. Se detienen. Es tu mente la que corre adelante sin avisarte y el mundo tarda en alcanzarla.',
+  'Una sombra te abrazó en vez de atacar. Duró lo que un latido. Lloró con tus lágrimas, que aún estaban calientes de otra vida.',
+  'El mapa roto que encontraste es una foto de familia. Lo doblaste como si fuera papel para no verlo otra vez.',
+  'Hay una puerta pintada en una pared. Detrás del dibujo, la piedra está gastada: muchos la intentaron abrir. Todos pintaron la misma puerta.',
+  /* NIVEL 5 */
+  'Estás tan hondo que el Laberinto dejó de disfrazarse. Los muros tienen tus miedos de niño. Los techos, tus miedos de adulto. El suelo, los que vienen.',
+  'La voz que susurra tu nombre equivocado eres tú. Es la primera palabra que dijiste en tu vida y la última que escucharás. Se llama igual y no es la misma.',
+  'Los fragmentos forman una frase en el suelo del quinto nivel, tallada desde dentro: "EL QUE LO SUEÑA PUEDE DESPERTAR". Las letras tiemblan con tu misma letra.',
+  'Recogiste el último recuerdo y pesaba como un mar. Dentro había un incendio, una decisión, y una puerta cerrada con llave por dentro.',
+  'Las sombras ya no te persiguen: te escoltan. Se quitan el rostro al pasar y debajo no hay nada: son tus apellidos. Todos los que dejaste de ser.',
+  'La puerta final no se abre. Se rinde. Se rinde cuando el que la mira deja de querer salir para vengarse y vuelve a querer salir para vivir.',
+  'Entiendes. El Laberinto nunca fue una prisión. Era una puerta. Y tú la soñaste desde el otro lado, cada noche, durante treinta años. Hora de despertar.'
+];
+
+/* ============ MOTOR DE AUDIO PROCEDURAL ============ */
+const AudioSys = {
+  ctx: null, master: null, sfx: null, ambBus: null, muted: false, volume: 0.8,
+  noiseBuf: null, shadowGain: null, shadowLp: null, ambNodes: [], nextBeat: 0,
+
+  ensure() {
+    if (!this.ctx) {
+      try {
+        this.ctx = new (window.AudioContext || window.webkitAudioContext)();
+        this.master = this.ctx.createGain();
+        this.master.gain.value = this.muted ? 0 : this.volume;
+        this.master.connect(this.ctx.destination);
+        this.sfx = this.ctx.createGain(); this.sfx.gain.value = 0.9; this.sfx.connect(this.master);
+        this.ambBus = this.ctx.createGain(); this.ambBus.gain.value = 0.5; this.ambBus.connect(this.master);
+        // buffer de ruido compartido
+        const len = this.ctx.sampleRate * 2;
+        this.noiseBuf = this.ctx.createBuffer(1, len, this.ctx.sampleRate);
+        const d = this.noiseBuf.getChannelData(0);
+        for (let i = 0; i < len; i++) d[i] = Math.random() * 2 - 1;
+        // bus de "presencia de sombra": rugido grave continuo cuya intensidad sube al acercarse
+        const osc = this.ctx.createOscillator(); osc.type = 'sawtooth'; osc.frequency.value = 38;
+        const osc2 = this.ctx.createOscillator(); osc2.type = 'sawtooth'; osc2.frequency.value = 41.7;
+        const lp = this.ctx.createBiquadFilter(); lp.type = 'lowpass'; lp.frequency.value = 140; lp.Q.value = 6;
+        const g = this.ctx.createGain(); g.gain.value = 0;
+        const nsrc = this.ctx.createBufferSource(); nsrc.buffer = this.noiseBuf; nsrc.loop = true;
+        const nlp = this.ctx.createBiquadFilter(); nlp.type = 'lowpass'; nlp.frequency.value = 300;
+        const ng = this.ctx.createGain(); ng.gain.value = 0.35;
+        osc.connect(lp); osc2.connect(lp); nsrc.connect(nlp); nlp.connect(ng); ng.connect(lp);
+        lp.connect(g); g.connect(this.sfx);
+        osc.start(); osc2.start(); nsrc.start();
+        this.shadowGain = g;
+      } catch (e) { /* audio no disponible */ }
+    }
+    if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume();
+  },
+  t() { return this.ctx ? this.ctx.currentTime : 0; },
+  env(node, t0, peak, a, d) {
+    node.gain.setValueAtTime(0.0001, t0);
+    node.gain.linearRampToValueAtTime(peak, t0 + a);
+    node.gain.exponentialRampToValueAtTime(0.0001, t0 + a + d);
+  },
+  osc(type, freq, t0, dur, peak, dest, detune) {
+    if (!this.ctx) return;
+    const o = this.ctx.createOscillator(); o.type = type;
+    o.frequency.setValueAtTime(freq, t0);
+    if (detune) o.frequency.exponentialRampToValueAtTime(Math.max(20, detune), t0 + dur);
+    const g = this.ctx.createGain(); this.env(g, t0, peak, 0.008, dur);
+    o.connect(g); g.connect(dest || this.sfx); o.start(t0); o.stop(t0 + dur + 0.1);
+  },
+  noise(t0, dur, peak, fType, fFreq, dest, fQ) {
+    if (!this.ctx) return;
+    const src = this.ctx.createBufferSource(); src.buffer = this.noiseBuf;
+    src.loop = true; src.playbackRate.value = rnd(0.85, 1.15);
+    const f = this.ctx.createBiquadFilter(); f.type = fType || 'lowpass'; f.frequency.value = fFreq || 800; if (fQ) f.Q.value = fQ;
+    const g = this.ctx.createGain(); this.env(g, t0, peak, 0.005, dur);
+    src.connect(f); f.connect(g); g.connect(dest || this.sfx);
+    src.start(t0); src.stop(t0 + dur + 0.1);
+    return f;
+  },
+  footstep(run) {
+    if (!this.ctx) return; const t0 = this.t();
+    this.noise(t0, 0.09, run ? 0.14 : 0.08, 'lowpass', run ? 500 : 380);
+    this.osc('sine', run ? 88 : 72, t0, 0.07, 0.05);
+  },
+  heartbeat(intensity) {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sine', 54, t0, 0.12, 0.22 * intensity, this.sfx, 38);
+    this.osc('sine', 48, t0 + 0.16, 0.14, 0.16 * intensity, this.sfx, 34);
+  },
+  whisper() {
+    if (!this.ctx) return; const t0 = this.t();
+    const f = this.noise(t0, 1.4, 0.05, 'bandpass', rnd(700, 1200), this.sfx, 9);
+    if (f) f.frequency.linearRampToValueAtTime(rnd(300, 2400), t0 + 1.3);
+  },
+  pickupCandle() {
+    if (!this.ctx) return; const t0 = this.t();
+    [523, 659, 784].forEach((f, i) => this.osc('sine', f, t0 + i * 0.06, 0.22, 0.09));
+    this.noise(t0, 0.3, 0.06, 'highpass', 3000);
+  },
+  pickupFragment() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sine', 392, t0, 0.3, 0.08);
+    this.osc('sine', 466, t0 + 0.1, 0.3, 0.08);
+    this.osc('triangle', 622, t0 + 0.2, 0.5, 0.07);
+    this.noise(t0 + 0.2, 0.5, 0.025, 'highpass', 5000);
+  },
+  pickupTool() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('triangle', 660, t0, 0.15, 0.09);
+    this.osc('triangle', 880, t0 + 0.09, 0.25, 0.09);
+  },
+  trapHit() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sawtooth', 220, t0, 0.4, 0.14, this.sfx, 55);
+    this.noise(t0, 0.35, 0.12, 'lowpass', 900);
+  },
+  teleport() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sine', 200, t0, 0.5, 0.12, this.sfx, 1200);
+    this.osc('sine', 1200, t0 + 0.05, 0.4, 0.06, this.sfx, 180);
+  },
+  shadowHit() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sawtooth', 130, t0, 0.45, 0.2, this.sfx, 40);
+    this.noise(t0, 0.3, 0.18, 'lowpass', 700);
+    this.osc('square', 66, t0 + 0.05, 0.3, 0.1, this.sfx, 30);
+  },
+  sting() {
+    if (!this.ctx) return; const t0 = this.t();
+    [110, 116.5, 220, 233].forEach(f => this.osc('sawtooth', f, t0, 1.2, 0.05, this.sfx, f * 0.5));
+    this.noise(t0, 1.0, 0.06, 'bandpass', 500, this.sfx, 4);
+  },
+  levelJingle() {
+    if (!this.ctx) return; const t0 = this.t();
+    [523, 659, 784, 1046].forEach((f, i) => this.osc('triangle', f, t0 + i * 0.13, 0.35, 0.1));
+  },
+  fanfare() {
+    if (!this.ctx) return; const t0 = this.t();
+    const seq = [392, 523, 659, 784, 659, 784, 1046, 1046];
+    seq.forEach((f, i) => this.osc('triangle', f, t0 + i * 0.16, 0.4, 0.11));
+    [131, 196].forEach(f => this.osc('sine', f, t0, 2.2, 0.07));
+  },
+  uiClick() { if (this.ctx) this.osc('square', 880, this.t(), 0.05, 0.04); },
+  doorOpen() {
+    if (!this.ctx) return; const t0 = this.t();
+    this.osc('sine', 70, t0, 1.6, 0.16, this.sfx, 45);
+    this.noise(t0, 1.4, 0.08, 'lowpass', 260);
+  },
+  setAmbient(def) {
+    if (!this.ctx) return;
+    this.ambNodes.forEach(n => { try { if (n.stop) { n.stop(); } else { n.disconnect(); } } catch (e) {} });
+    this.ambNodes = [];
+    const t0 = this.t();
+    const mk = (type, freq, peak, lfoRate, lfoAmt) => {
+      const o = this.ctx.createOscillator(); o.type = type; o.frequency.value = freq;
+      const g = this.ctx.createGain(); g.gain.value = peak;
+      const lfo = this.ctx.createOscillator(); lfo.frequency.value = lfoRate;
+      const lg = this.ctx.createGain(); lg.gain.value = lfoAmt;
+      lfo.connect(lg); lg.connect(g.gain);
+      o.connect(g); g.connect(this.ambBus);
+      o.start(t0); lfo.start(t0);
+      this.ambNodes.push(o, lfo);
+    };
+    mk('sine', def.ambFreq, 0.05, 0.07, 0.025);
+    mk('sine', def.ambFreq * 1.007 + 0.7, 0.04, 0.045, 0.02);
+    mk('triangle', def.ambFreq * 2.02, 0.012, 0.11, 0.01);
+    const wind = this.ctx.createBufferSource(); wind.buffer = this.noiseBuf; wind.loop = true;
+    const wf = this.ctx.createBiquadFilter(); wf.type = 'bandpass'; wf.frequency.value = 320; wf.Q.value = 0.7;
+    const wg = this.ctx.createGain(); wg.gain.value = 0.02;
+    const wlfo = this.ctx.createOscillator(); wlfo.frequency.value = 0.05;
+    const wlg = this.ctx.createGain(); wlg.gain.value = 0.018;
+    wlfo.connect(wlg); wlg.connect(wg.gain);
+    wind.connect(wf); wf.connect(wg); wg.connect(this.ambBus);
+    wind.start(t0); wlfo.start(t0);
+    this.ambNodes.push(wind, wlfo);
+  },
+  setShadowProximity(p) {
+    if (this.shadowGain) this.shadowGain.gain.setTargetAtTime(clamp(p, 0, 1) * 0.4, this.t(), 0.25);
+  },
+  setVolume(v) { this.volume = v; if (this.master) this.master.gain.value = this.muted ? 0 : v; },
+  toggleMute() {
+    this.muted = !this.muted;
+    if (this.master) this.master.gain.value = this.muted ? 0 : this.volume;
+    return this.muted;
+  }
+};
+/* ============================================================
+   TEXTURAS PROCEDURALES (64x64) + VARIANTES DE NIEBLA
+   ============================================================ */
+const FOG_N = 12;
+const MAX_VIS = 13;
+const FOG_K = (FOG_N - 1) / MAX_VIS;
+const fogIdx = d => { const f = (d * FOG_K) | 0; return f < 0 ? 0 : (f > FOG_N - 1 ? FOG_N - 1 : f); };
+
+function texCanvas(draw) {
+  const cv = document.createElement('canvas'); cv.width = 64; cv.height = 64;
+  const c = cv.getContext('2d'); draw(c);
+  return cv;
+}
+function buildFogSets(cv, fogRGB) {
+  const im = cv.getContext('2d').getImageData(0, 0, 64, 64);
+  const src = im.data, sets = [];
+  for (let f = 0; f < FOG_N; f++) {
+    const k = 1 - 0.92 * (f / (FOG_N - 1));
+    const fr = fogRGB[0] * (1 - k), fg = fogRGB[1] * (1 - k), fb = fogRGB[2] * (1 - k);
+    const arr = new Uint32Array(64 * 64);
+    for (let i = 0; i < 4096; i++) {
+      const a = src[i * 4 + 3];
+      if (a === 0) { arr[i] = 0; continue; }
+      const rr = ((src[i * 4] * k + fr) | 0), gg = ((src[i * 4 + 1] * k + fg) | 0), bb = ((src[i * 4 + 2] * k + fb) | 0);
+      arr[i] = ((a << 24) | (bb << 16) | (gg << 8) | rr) >>> 0;
+    }
+    sets.push(arr);
+  }
+  return sets;
+}
+
+/* --- generadores de muros por tema --- */
+function drawBricks(c, base, mortar, brickW, brickH, jitter) {
+  c.fillStyle = mortar; c.fillRect(0, 0, 64, 64);
+  let row = 0;
+  for (let y = 0; y < 64; y += brickH) {
+    const off = (row % 2) * (brickW / 2);
+    for (let x = -brickW; x < 64 + brickW; x += brickW) {
+      const v = ri(-jitter, jitter);
+      c.fillStyle = `rgb(${base[0] + v},${base[1] + v},${base[2] + v})`;
+      c.fillRect(x + off + 1, y + 1, brickW - 2, brickH - 2);
+    }
+    row++;
+  }
+}
+function addStains(c, n, col, aMax) {
+  for (let i = 0; i < n; i++) {
+    c.fillStyle = `rgba(${col},${rnd(0.08, aMax)})`;
+    c.beginPath();
+    c.ellipse(rnd(0, 64), rnd(0, 64), rnd(3, 11), rnd(4, 14), rnd(0, 3), 0, TAU);
+    c.fill();
+  }
+}
+const WALL_GENS = {
+  asylum(c) {
+    drawBricks(c, [46, 54, 44], '#161a14', 21, 16, 8);
+    addStains(c, 7, '10,14,10', 0.4);
+    addStains(c, 3, '90,100,85', 0.14);
+    c.strokeStyle = 'rgba(20,24,18,.7)'; c.lineWidth = 1;
+    for (let i = 0; i < 3; i++) {
+      c.beginPath(); c.moveTo(rnd(0, 60), rnd(0, 20));
+      c.lineTo(rnd(4, 60), rnd(30, 62)); c.stroke();
+    }
+  },
+  catacomb(c) {
+    drawBricks(c, [58, 49, 40], '#1c1712', 32, 32, 7);
+    addStains(c, 8, '20,14,8', 0.42);
+    // huesos
+    for (let i = 0; i < 5; i++) {
+      c.fillStyle = `rgba(112,100,78,${rnd(0.35, 0.7)})`;
+      const x = rnd(4, 56), y = rnd(4, 56);
+      c.fillRect(x, y, ri(6, 14), 3);
+      c.fillRect(x + 2, y - 2, 3, 7);
+    }
+    c.strokeStyle = 'rgba(15,10,6,.8)';
+    for (let i = 0; i < 4; i++) {
+      c.beginPath(); c.moveTo(rnd(0, 64), ri(8, 56));
+      for (let s = 0; s < 4; s++) c.lineTo(rnd(0, 64), ri(8, 56));
+      c.stroke();
+    }
+  },
+  forest(c) {
+    c.fillStyle = '#1e2a18'; c.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 16; i++) {
+      const x = rnd(0, 62), w = rnd(2, 6), v = ri(-14, 14);
+      c.fillStyle = `rgb(${30 + v},${42 + v},${24 + v})`;
+      c.fillRect(x, 0, w, 64);
+    }
+    for (let i = 0; i < 3; i++) {
+      c.fillStyle = 'rgba(12,18,9,.85)';
+      c.beginPath(); c.arc(rnd(6, 58), rnd(8, 56), ri(3, 6), 0, TAU); c.fill();
+    }
+    c.fillStyle = 'rgba(50,72,38,.5)'; c.fillRect(0, 0, 64, 5);
+    addStains(c, 4, '8,14,8', 0.3);
+  },
+  cave(c) {
+    c.fillStyle = '#2b2723'; c.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 26; i++) {
+      const v = ri(-16, 14);
+      c.fillStyle = `rgba(${43 + v},${39 + v},${35 + v},.9)`;
+      c.beginPath(); c.arc(rnd(0, 64), rnd(0, 64), rnd(3, 10), 0, TAU); c.fill();
+    }
+    c.strokeStyle = 'rgba(10,8,6,.8)'; c.lineWidth = 1;
+    for (let i = 0; i < 5; i++) {
+      c.beginPath(); c.moveTo(rnd(0, 64), rnd(0, 20));
+      for (let s = 0; s < 5; s++) c.lineTo(rnd(0, 64), rnd(0, 64));
+      c.stroke();
+    }
+    const gr = c.createLinearGradient(0, 30, 0, 64);
+    gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(1, 'rgba(0,0,0,.45)');
+    c.fillStyle = gr; c.fillRect(0, 0, 64, 64);
+  },
+  nightmare(c) {
+    drawBricks(c, [42, 22, 28], '#100a0e', 16, 16, 9);
+    addStains(c, 6, '8,2,4', 0.5);
+    c.save();
+    c.strokeStyle = '#c22828'; c.shadowColor = '#ff2020'; c.shadowBlur = 5; c.lineWidth = 1.4;
+    for (let i = 0; i < 3; i++) {
+      c.beginPath();
+      let x = rnd(4, 60), y = rnd(2, 12); c.moveTo(x, y);
+      for (let s = 0; s < 4; s++) { x += rnd(-14, 14); y += rnd(8, 16); c.lineTo(x, y); }
+      c.stroke();
+    }
+    c.restore();
+  }
+};
+function genDoorCanvas(c) {
+  c.fillStyle = '#0a0d12'; c.fillRect(0, 0, 64, 64);
+  c.fillStyle = '#151c26'; c.fillRect(5, 5, 54, 54);
+  c.fillStyle = '#0c1018'; c.fillRect(12, 12, 40, 46);
+  // remaches
+  c.fillStyle = '#39424e';
+  for (const [x, y] of [[8, 8], [54, 8], [8, 54], [54, 54], [31, 8], [31, 54]]) {
+    c.beginPath(); c.arc(x, y, 2.2, 0, TAU); c.fill();
+  }
+  // espiral luminosa
+  c.save(); c.translate(32, 34);
+  for (let i = 0; i < 4; i++) {
+    c.strokeStyle = `rgba(89,214,255,${0.9 - i * 0.18})`;
+    c.shadowColor = '#59d6ff'; c.shadowBlur = 6;
+    c.lineWidth = 2;
+    c.beginPath(); c.arc(0, 0, 5 + i * 5.5, i * 1.2, i * 1.2 + 4.2); c.stroke();
+  }
+  c.shadowBlur = 10; c.fillStyle = 'rgba(160,230,255,.9)';
+  c.beginPath(); c.arc(0, 0, 3.4, 0, TAU); c.fill();
+  c.restore();
+}
+function genFloorCanvas(def) {
+  const bases = { asylum: [30, 34, 29], catacomb: [38, 33, 27], forest: [24, 32, 21], cave: [33, 29, 26], nightmare: [30, 15, 20] };
+  const b = bases[def.tex] || [30, 30, 30];
+  return texCanvas(c => {
+    c.fillStyle = `rgb(${b[0]},${b[1]},${b[2]})`; c.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 130; i++) {
+      const v = ri(-9, 9);
+      c.fillStyle = `rgba(${b[0] + v},${b[1] + v},${b[2] + v},.8)`;
+      c.fillRect(rnd(0, 63), rnd(0, 63), ri(1, 3), ri(1, 3));
+    }
+    c.strokeStyle = 'rgba(0,0,0,.5)'; c.lineWidth = 1;
+    c.strokeRect(0.5, 0.5, 32, 32); c.strokeRect(32.5, 32.5, 32, 32);
+    addStains(c, 4, '0,0,0', 0.35);
+  });
+}
+function genCeilCanvas() {
+  return texCanvas(c => {
+    c.fillStyle = '#0c0e12'; c.fillRect(0, 0, 64, 64);
+    for (let i = 0; i < 60; i++) {
+      const v = ri(-4, 5);
+      c.fillStyle = `rgba(${12 + v},${13 + v},${17 + v},.9)`;
+      c.fillRect(rnd(0, 63), rnd(0, 63), ri(2, 6), ri(2, 6));
+    }
+    addStains(c, 3, '0,0,0', 0.4);
+  });
+}
+
+/* --- sprites procedurales (transparentes) --- */
+const SPRITES = {};
+function buildSprites() {
+  const mk = (draw, frames, fogCol) => {
+    const out = [];
+    for (let f = 0; f < frames; f++) {
+      const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+      const c = cv.getContext('2d'); draw(c, f);
+      out.push({ fog: buildFogSets(cv, fogCol || [0, 0, 0]) });
+    }
+    return out;
+  };
+  SPRITES.fragment = mk((c) => {
+    const g = c.createRadialGradient(32, 32, 2, 32, 32, 26);
+    g.addColorStop(0, 'rgba(200,150,255,.95)'); g.addColorStop(0.45, 'rgba(140,80,230,.5)'); g.addColorStop(1, 'rgba(90,40,180,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(32, 32, 26, 0, TAU); c.fill();
+    c.fillStyle = '#f4ecff'; c.font = 'bold 30px monospace'; c.textAlign = 'center'; c.textBaseline = 'middle';
+    c.shadowColor = '#c090ff'; c.shadowBlur = 8; c.fillText('?', 32, 34);
+  }, 1);
+  SPRITES.candle = mk((c, f) => {
+    const g = c.createRadialGradient(32, 26, 3, 32, 26, 24);
+    g.addColorStop(0, 'rgba(255,190,90,.55)'); g.addColorStop(1, 'rgba(255,150,50,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(32, 26, 24, 0, TAU); c.fill();
+    c.fillStyle = '#ddd2b8'; c.fillRect(27, 34, 10, 22);
+    c.fillStyle = '#b8ab8e'; c.fillRect(27, 34, 3, 22);
+    c.strokeStyle = '#555'; c.lineWidth = 1.4;
+    c.beginPath(); c.moveTo(32, 34); c.lineTo(32, 29); c.stroke();
+    c.save(); c.translate(32, 26); if (f === 1) c.rotate(0.18);
+    const fg = c.createRadialGradient(0, 0, 1, 0, 0, 8);
+    fg.addColorStop(0, '#fff8d0'); fg.addColorStop(0.5, '#ffc23e'); fg.addColorStop(1, 'rgba(255,110,20,0)');
+    c.fillStyle = fg; c.beginPath(); c.ellipse(0, 0, 4, 8, 0, 0, TAU); c.fill();
+    c.restore();
+  }, 2);
+  SPRITES.compass = mk((c) => {
+    const g = c.createRadialGradient(32, 32, 2, 32, 32, 22);
+    g.addColorStop(0, 'rgba(255,230,150,.5)'); g.addColorStop(1, 'rgba(255,210,80,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(32, 32, 22, 0, TAU); c.fill();
+    c.strokeStyle = '#d8a820'; c.lineWidth = 4;
+    c.beginPath(); c.arc(32, 32, 15, 0, TAU); c.stroke();
+    c.fillStyle = '#14161c'; c.beginPath(); c.arc(32, 32, 13, 0, TAU); c.fill();
+    c.fillStyle = '#d03030';
+    c.beginPath(); c.moveTo(32, 20); c.lineTo(36, 32); c.lineTo(28, 32); c.closePath(); c.fill();
+    c.fillStyle = '#e8e8e8';
+    c.beginPath(); c.moveTo(32, 44); c.lineTo(36, 32); c.lineTo(28, 32); c.closePath(); c.fill();
+    c.fillStyle = '#d8a820'; c.beginPath(); c.arc(32, 32, 2.4, 0, TAU); c.fill();
+  }, 1);
+  SPRITES.map = mk((c) => {
+    const g = c.createRadialGradient(32, 32, 2, 32, 32, 24);
+    g.addColorStop(0, 'rgba(230,210,150,.4)'); g.addColorStop(1, 'rgba(200,180,110,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(32, 32, 24, 0, TAU); c.fill();
+    c.save(); c.translate(32, 32); c.rotate(-0.12);
+    c.fillStyle = '#c9b68a'; c.fillRect(-18, -13, 36, 26);
+    c.fillStyle = '#b5a077'; c.fillRect(-18, -13, 36, 4); c.fillRect(-18, 9, 36, 4);
+    c.strokeStyle = '#7a6a48'; c.lineWidth = 1;
+    c.beginPath(); c.moveTo(-14, -6); c.lineTo(-2, 2); c.lineTo(6, -4); c.lineTo(14, 4); c.stroke();
+    c.strokeStyle = '#a03030'; c.lineWidth = 2;
+    c.beginPath(); c.moveTo(9, 4); c.lineTo(15, 10); c.moveTo(15, 4); c.lineTo(9, 10); c.stroke();
+    c.restore();
+  }, 1);
+  SPRITES.portal = mk((c, f) => {
+    c.save(); c.translate(32, 32); c.rotate(f * (TAU / 3));
+    const g = c.createRadialGradient(0, 0, 3, 0, 0, 28);
+    g.addColorStop(0, 'rgba(210,245,255,.95)'); g.addColorStop(0.4, 'rgba(89,214,255,.55)'); g.addColorStop(1, 'rgba(40,120,220,0)');
+    c.fillStyle = g; c.beginPath(); c.arc(0, 0, 28, 0, TAU); c.fill();
+    for (let i = 0; i < 3; i++) {
+      c.strokeStyle = `rgba(120,220,255,${0.85 - i * 0.2})`;
+      c.shadowColor = '#59d6ff'; c.shadowBlur = 7; c.lineWidth = 2.4;
+      c.beginPath(); c.arc(0, 0, 7 + i * 6.5, i * 2.1, i * 2.1 + 3.6); c.stroke();
+    }
+    c.restore();
+  }, 3);
+  SPRITES.shadow = mk((c, f) => {
+    const sway = f === 0 ? -2 : (f === 1 ? 2 : 0);
+    c.save(); c.translate(sway, 0);
+    const g = c.createRadialGradient(32, 30, 4, 32, 34, 26);
+    g.addColorStop(0, 'rgba(14,10,22,.96)'); g.addColorStop(1, 'rgba(5,4,10,.55)');
+    c.fillStyle = g;
+    // cuerpo informal
+    c.beginPath();
+    c.moveTo(32, 6);
+    c.bezierCurveTo(42, 8, 46, 20, 44, 34);
+    c.bezierCurveTo(50, 44, 42, 56, 32, 58);
+    c.bezierCurveTo(22, 56, 14, 44, 20, 34);
+    c.bezierCurveTo(18, 20, 22, 8, 32, 6);
+    c.fill();
+    if (f === 2) { // ataque: brazos extendidos
+      c.fillStyle = 'rgba(10,7,16,.9)';
+      c.beginPath(); c.ellipse(10, 26, 12, 5, 0.5, 0, TAU); c.fill();
+      c.beginPath(); c.ellipse(54, 26, 12, 5, -0.5, 0, TAU); c.fill();
+    }
+    // ojos
+    c.shadowColor = '#ff3030'; c.shadowBlur = 6;
+    c.fillStyle = f === 2 ? '#ff5040' : '#e02020';
+    c.beginPath(); c.arc(26, 22, f === 2 ? 3.4 : 2.4, 0, TAU); c.fill();
+    c.beginPath(); c.arc(38, 22, f === 2 ? 3.4 : 2.4, 0, TAU); c.fill();
+    c.restore();
+  }, 3);
+  SPRITES.phantom = mk((c) => {
+    c.fillStyle = 'rgba(150,150,170,.45)';
+    c.beginPath();
+    c.moveTo(32, 8);
+    c.bezierCurveTo(44, 10, 46, 24, 42, 40);
+    c.bezierCurveTo(46, 52, 38, 58, 32, 54);
+    c.bezierCurveTo(26, 58, 18, 52, 22, 40);
+    c.bezierCurveTo(18, 24, 20, 10, 32, 8);
+    c.fill();
+    c.fillStyle = 'rgba(230,230,255,.6)';
+    c.beginPath(); c.arc(27, 24, 2, 0, TAU); c.fill();
+    c.beginPath(); c.arc(37, 24, 2, 0, TAU); c.fill();
+  }, 1);
+  SPRITES.trap = mk((c, f) => {
+    const a = f === 0 ? 0.35 : 0.7;
+    c.strokeStyle = `rgba(255,60,40,${a})`; c.lineWidth = 2;
+    c.shadowColor = '#ff2020'; c.shadowBlur = 4;
+    c.beginPath(); c.arc(32, 32, 22, 0, TAU); c.stroke();
+    c.beginPath(); c.arc(32, 32, 14, 0, TAU); c.stroke();
+    for (let i = 0; i < 6; i++) {
+      const ang = i * (TAU / 6) + f * 0.4;
+      c.beginPath();
+      c.moveTo(32 + Math.cos(ang) * 14, 32 + Math.sin(ang) * 14);
+      c.lineTo(32 + Math.cos(ang) * 22, 32 + Math.sin(ang) * 22);
+      c.stroke();
+    }
+    c.fillStyle = `rgba(255,80,50,${a})`;
+    c.beginPath(); c.arc(32, 32, 3.4, 0, TAU); c.fill();
+  }, 2);
+}
+
+/* ============ GENERACIÓN DE LABERINTO ============ */
+function generateLevel(def) {
+  const S = def.size;
+  const grid = new Uint8Array(S * S).fill(1);
+  const at = (x, y) => y * S + x;
+
+  // 1) backtracker sobre celdas impares
+  const stack = [[1, 1]];
+  grid[at(1, 1)] = 0;
+  const dirs2 = [[0, -2], [2, 0], [0, 2], [-2, 0]];
+  while (stack.length) {
+    const cur = stack[stack.length - 1];
+    const nb = [];
+    for (const d of dirs2) {
+      const nx = cur[0] + d[0], ny = cur[1] + d[1];
+      if (nx > 0 && nx < S - 1 && ny > 0 && ny < S - 1 && grid[at(nx, ny)] === 1) nb.push([nx, ny, d[0], d[1]]);
+    }
+    if (nb.length) {
+      const n = pick(nb);
+      grid[at(cur[0] + n[2] / 2, cur[1] + n[3] / 2)] = 0;
+      grid[at(n[0], n[1])] = 0;
+      stack.push([n[0], n[1]]);
+    } else stack.pop();
+  }
+
+  // 2) trenzado: abrir callejones sin salida (escapar de Sombras es posible)
+  for (let y = 1; y < S - 1; y++) for (let x = 1; x < S - 1; x++) {
+    if (grid[at(x, y)] !== 0) continue;
+    let open = 0;
+    for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) if (grid[at(x + d[0], y + d[1])] === 0) open++;
+    if (open === 1 && Math.random() < 0.45) {
+      const cands = [];
+      for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+        const wx = x + d[0], wy = y + d[1], bx = x + d[0] * 2, by = y + d[1] * 2;
+        if (wx > 0 && wx < S - 1 && wy > 0 && wy < S - 1 && grid[at(wx, wy)] === 1 &&
+            bx > 0 && bx < S - 1 && by > 0 && by < S - 1 && grid[at(bx, by)] === 0) cands.push(d);
+      }
+      if (cands.length) { const d = pick(cands); grid[at(x + d[0], y + d[1])] = 0; }
+    }
+  }
+
+  // 3) salas especiales (tesoros)
+  const region = new Uint8Array(S * S);
+  const rooms = [];
+  for (let r = 1; r <= 3; r++) {
+    let placed = false;
+    for (let t = 0; t < 70 && !placed; t++) {
+      const w = ri(3, 5), h = ri(3, 5);
+      const x = ri(1, S - w - 2), y = ri(1, S - h - 2);
+      let clear = true;
+      for (let yy = y - 1; yy <= y + h && clear; yy++) for (let xx = x - 1; xx <= x + w; xx++) {
+        if (grid[at(xx, yy)] === 0) { clear = false; break; }
+      }
+      if (!clear) continue;
+      for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) { grid[at(xx, yy)] = 0; region[at(xx, yy)] = r; }
+      // puerta: muro del anillo con piso de sala y piso exterior
+      const doorCands = [];
+      for (let yy = y - 1; yy <= y + h; yy++) for (let xx = x - 1; xx <= x + w; xx++) {
+        if (xx < 1 || yy < 1 || xx >= S - 1 || yy >= S - 1) continue;
+        if (grid[at(xx, yy)] !== 1) continue;
+        if (xx >= x && xx < x + w && yy >= y && yy < y + h) continue;
+        let adjRoom = false, adjOut = false;
+        for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          const nx = xx + d[0], ny = yy + d[1];
+          if (nx >= x && nx < x + w && ny >= y && ny < y + h) adjRoom = true;
+          else if (nx > 0 && ny > 0 && nx < S - 1 && ny < S - 1 && grid[at(nx, ny)] === 0) adjOut = true;
         }
-        
-        const game = new Game();
-        
-        setTimeout(() => {
-            document.getElementById('loading').style.display = 'none';
-        }, 1500);
-    </script>
+        if (adjRoom && adjOut) doorCands.push([xx, yy]);
+      }
+      if (doorCands.length) {
+        const d = pick(doorCands); grid[at(d[0], d[1])] = 0;
+        rooms.push({ x, y, w, h, type: r % 2 === 1 ? 'forest' : 'cave' });
+        placed = true;
+      } else {
+        for (let yy = y; yy < y + h; yy++) for (let xx = x; xx < x + w; xx++) { grid[at(xx, yy)] = 1; region[at(xx, yy)] = 0; }
+      }
+    }
+  }
+
+  // 4) BFS desde el inicio
+  const dist = new Int32Array(S * S).fill(-1);
+  const q = [at(1, 1)]; dist[at(1, 1)] = 0;
+  for (let qi = 0; qi < q.length; qi++) {
+    const cur = q[qi], cx = cur % S, cy = (cur / S) | 0, d0 = dist[cur];
+    for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+      const nx = cx + d[0], ny = cy + d[1];
+      if (nx < 0 || ny < 0 || nx >= S || ny >= S) continue;
+      const ni = at(nx, ny);
+      if (grid[ni] === 0 && dist[ni] < 0) { dist[ni] = d0 + 1; q.push(ni); }
+    }
+  }
+
+  // 5) salida = celda alcanzable más lejana
+  let exitCell = at(1, 1), bestD = -1;
+  for (let i = 0; i < S * S; i++) if (grid[i] === 0 && dist[i] > bestD) { bestD = dist[i]; exitCell = i; }
+  const ex = exitCell % S, ey = (exitCell / S) | 0;
+  // puerta (muro tipo 2) junto a la salida
+  let exitWall = -1;
+  for (const d of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+    const wx = ex + d[0], wy = ey + d[1];
+    if (wx >= 0 && wy >= 0 && wx < S && wy < S && grid[at(wx, wy)] === 1) { grid[at(wx, wy)] = 2; exitWall = at(wx, wy); break; }
+  }
+
+  // 6) colocación de entidades
+  const floors = [];
+  for (let i = 0; i < S * S; i++) if (grid[i] === 0 && dist[i] >= 0) floors.push(i);
+  const manh = (a, b) => Math.abs((a % S) - (b % S)) + Math.abs(((a / S) | 0) - ((b / S) | 0));
+  const placeN = (count, opts) => {
+    const out = [];
+    let guard = 0;
+    while (out.length < count && guard++ < 4000) {
+      const c = pick(floors);
+      const d = dist[c];
+      if (d < (opts.minDist || 0)) continue;
+      if (opts.maxDist && d > opts.maxDist) continue;
+      if (c === exitCell) continue;
+      if (opts.minStart !== undefined && manh(c, at(1, 1)) < opts.minStart) continue;
+      if (opts.sep && out.some(o => manh(o, c) < opts.sep)) continue;
+      if (opts.corridorOnly) {
+        let open = 0, first = null, second = null;
+        for (const dd of [[1, 0], [-1, 0], [0, 1], [0, -1]]) {
+          if (grid[at((c % S) + dd[0], ((c / S) | 0) + dd[1])] === 0) {
+            open++;
+            if (!first) first = dd; else second = dd;
+          }
+        }
+        if (open !== 2 || !first || !second || (first[0] === -second[0] && first[1] === -second[1]) === false) continue;
+      }
+      if (opts.nearExit && manh(c, exitCell) < opts.nearExit) continue;
+      out.push(c);
+    }
+    return out;
+  };
+
+  const fragCells = placeN(def.fragments, { minDist: 5, sep: 4 });
+  const candleCells = placeN(def.candles, { minDist: 3, sep: 4 });
+  const trapCells = placeN(def.traps, { minDist: 4, sep: 5, corridorOnly: true, nearExit: 4 });
+  const shadowCells = placeN(def.shadows, { minDist: 8, sep: 3 });
+  const toolCells = [];
+  if (def.compass) toolCells.push({ cell: placeN(1, { minDist: (bestD * 0.3) | 0, maxDist: (bestD * 0.6) | 0 })[0], type: 'compass' });
+  if (def.mapItem) toolCells.push({ cell: placeN(1, { minDist: (bestD * 0.55) | 0 })[0], type: 'map' });
+
+  // dirección inicial del jugador: hacia el vecino abierto
+  let startDir = 0;
+  if (grid[at(2, 1)] === 0) startDir = 0; else startDir = Math.PI / 2;
+
+  const fragBase = LEVELS.slice(0, LEVELS.indexOf(def)).reduce((a, l) => a + l.fragments, 0);
+  return {
+    S, grid, region, dist, rooms, exitCell, exitWall, bestD,
+    startX: 1.5, startY: 1.5, startDir,
+    fragments: fragCells.map((c, k) => ({ x: (c % S) + 0.5, y: ((c / S) | 0) + 0.5, taken: false, loreIdx: fragBase + k })),
+    candles: candleCells.map(c => ({ x: (c % S) + 0.5, y: ((c / S) | 0) + 0.5, taken: false })),
+    tools: toolCells.filter(t => t.cell !== undefined).map(t => ({ x: (t.cell % S) + 0.5, y: ((t.cell / S) | 0) + 0.5, type: t.type, taken: false })),
+    traps: trapCells.map(c => ({ x: (c % S) + 0.5, y: ((c / S) | 0) + 0.5, type: Math.random() < 0.5 ? 'spin' : 'teleport', used: false })),
+    shadows: shadowCells.map(c => ({ x: (c % S) + 0.5, y: ((c / S) | 0) + 0.5, dir: rnd(0, TAU), state: 'roam', loseT: 0, fleeT: 0, cool: 0, animT: rnd(0, 1), lastX: 0, lastY: 0 })),
+    portal: { x: (exitCell % S) + 0.5, y: ((exitCell / S) | 0) + 0.5 }
+  };
+}
+/* ============================================================
+   ESTADO GLOBAL + GAMEPLAY
+   ============================================================ */
+const G = {
+  state: 'menu',
+  level: 1,
+  world: null,
+  seen: null,
+  player: null,
+  levelTime: 0, totalTime: 0,
+  journal: [],
+  totalSteps: 0, totalFrags: 0, totalBreaks: 0, shadowHits: 0, usedMap: false,
+  insane: false,
+  shake: 0, flashRed: 0, flashWhite: 0, burst: 0, dread: 0,
+  hallucT: 8, phantoms: [],
+  mapOpen: false,
+  settings: { quality: 'media', vol: 0.8, sens: 1 },
+  stepAcc: 0, bobT: 0, lastBobSin: 0,
+  texs: null,
+  frameCount: 0,
+  modalResume: false,
+  helpSeenOnce: false
+};
+const keys = {};
+
+function newPlayer() {
+  return {
+    x: G.world.startX, y: G.world.startY, dir: G.world.startDir,
+    sanity: 100, stamina: 100, steps: 0, breaks: 0, frags: 0,
+    compassT: 0, hasMap: false, invulnT: 0, spinT: 0, spinVel: 0, bobY: 0
+  };
+}
+
+/* ============ COLISIONES Y LÍNEA DE VISIÓN ============ */
+function cellAt(x, y) {
+  const S = G.world.S;
+  if (x < 0 || y < 0 || x >= S || y >= S) return 1;
+  return G.world.grid[(y | 0) * S + (x | 0)];
+}
+function canMove(x, y, r) {
+  r = r || 0.22;
+  return cellAt(x - r, y - r) === 0 && cellAt(x + r, y - r) === 0 &&
+         cellAt(x - r, y + r) === 0 && cellAt(x + r, y + r) === 0;
+}
+function hasLOS(ax, ay, bx, by) {
+  const dx = bx - ax, dy = by - ay;
+  const d = hyp(dx, dy);
+  const steps = Math.ceil(d / 0.12);
+  for (let i = 1; i < steps; i++) {
+    const t = i / steps;
+    if (cellAt(ax + dx * t, ay + dy * t) !== 0) return false;
+  }
+  return true;
+}
+
+/* ============ UPDATE MAESTRO ============ */
+function update(dt) {
+  const P = G.player;
+  G.frameCount++;
+
+  updatePlayer(dt);
+  updateShadows(dt);
+  updateHallucinations(dt);
+  updateAudioFrame(dt);
+  if (G.burst > 0) G.burst = Math.max(0, G.burst - dt * 1.4);
+  if (G.shake > 0) G.shake = Math.max(0, G.shake - dt * 1.8);
+  if (G.flashRed > 0) G.flashRed = Math.max(0, G.flashRed - dt * 2.2);
+  if (G.flashWhite > 0) G.flashWhite = Math.max(0, G.flashWhite - dt * 3.2);
+
+  // niebla de guerra
+  if (G.frameCount % 6 === 0 && !P.hasMap) markSeen();
+
+  // brújula
+  if (P.compassT > 0) P.compassT -= dt;
+}
+
+function updatePlayer(dt) {
+  const P = G.player;
+  // giro por teclado
+  const rotSpd = 2.7 * dt * (P.spinT > 0 ? 0.35 : 1);
+  if (keys['arrowleft']) P.dir -= rotSpd;
+  if (keys['arrowright']) P.dir += rotSpd;
+  // trampa de giro
+  if (P.spinT > 0) { P.spinT -= dt; P.dir += P.spinVel * dt; }
+  if (P.invulnT > 0) P.invulnT -= dt;
+
+  // movimiento
+  let f = 0, s = 0;
+  if (keys['w'] || keys['arrowup']) f += 1;
+  if (keys['s'] || keys['arrowdown']) f -= 1;
+  if (keys['a']) s -= 1;
+  if (keys['d']) s += 1;
+  if (Touch.active) { f += Touch.f; s += Touch.s; }
+  const mLen = hyp(f, s);
+  if (mLen > 1) { f /= mLen; s /= mLen; }
+
+  const wantRun = (keys['shift'] || Touch.run) && mLen > 0.1;
+  let run = false;
+  if (wantRun && P.stamina > 0) run = true;
+  else if (wantRun && P.stamina <= 0) run = false;
+  if (P.stamina <= 0 && wantRun) run = false;
+
+  let spd = run ? 3.6 : 2.15;
+  if (P.sanity < 25) spd *= 0.85;
+
+  const dirX = Math.cos(P.dir), dirY = Math.sin(P.dir);
+  const dx = (dirX * f - dirY * s) * spd * dt;
+  const dy = (dirY * f + dirX * s) * spd * dt;
+
+  let moved = 0;
+  if (mLen > 0.05) {
+    if (canMove(P.x + dx, P.y)) { P.x += dx; moved += Math.abs(dx); }
+    if (canMove(P.x, P.y + dy)) { P.y += dy; moved += Math.abs(dy); }
+  }
+
+  // resistencia
+  if (run && moved > 0) P.stamina = Math.max(0, P.stamina - 26 * dt);
+  else P.stamina = Math.min(100, P.stamina + 16 * dt);
+
+  // pasos y balanceo
+  if (moved > 0.0005) {
+    G.stepAcc += moved;
+    if (G.stepAcc >= 0.5) { G.stepAcc -= 0.5; P.steps++; G.totalSteps++; }
+    G.bobT += dt * (run ? 11 : 7);
+    const bs = Math.sin(G.bobT);
+    P.bobY = bs * 2.4;
+    if (G.lastBobSin < -0.55 && bs >= -0.55) AudioSys.footstep(run);
+    G.lastBobSin = bs;
+  } else {
+    P.bobY *= 0.86;
+  }
+
+  // cordura: el Laberinto devora
+  if (!G.insane) {
+    let drain = moved > 0.0005 ? 0.6 : 0.15;
+    if (run && moved > 0.0005) drain += 1.2;
+    drain += 3 * G.dread;
+    P.sanity = Math.max(0, P.sanity - drain * dt);
+    if (P.sanity <= 0) enterInsanity();
+  }
+
+  // recogidas
+  checkPickups();
+  // portal
+  const pt = G.world.portal;
+  if (hyp(P.x - pt.x, P.y - pt.y) < 0.75 && !G.insane) levelComplete();
+}
+
+/* ============ RECOGIDAS Y TRAMPAS ============ */
+function checkPickups() {
+  const P = G.player, W = G.world;
+  for (const fr of W.fragments) {
+    if (!fr.taken && hyp(P.x - fr.x, P.y - fr.y) < 0.5) {
+      fr.taken = true; P.frags++; G.totalFrags++;
+      G.journal.push(fr.loreIdx);
+      AudioSys.pickupFragment();
+      addToast('“' + LORE[fr.loreIdx] + '”', 'lore', 7);
+      if (W.fragments.every(x => x.taken)) {
+        P.sanity = Math.min(100, P.sanity + 15);
+        addToast('MEMORIA DEL NIVEL COMPLETA · +15 CORDURA', 'gold', 4.5);
+        AudioSys.levelJingle();
+      }
+    }
+  }
+  for (const cd of W.candles) {
+    if (!cd.taken && hyp(P.x - cd.x, P.y - cd.y) < 0.5) {
+      cd.taken = true;
+      const v = 22 + ri(0, 8);
+      P.sanity = Math.min(100, P.sanity + v);
+      AudioSys.pickupCandle();
+      addToast('VELA ENCENDIDA · +' + v + ' CORDURA', 'gold', 3);
+      lightBurst();
+    }
+  }
+  for (const tl of W.tools) {
+    if (!tl.taken && hyp(P.x - tl.x, P.y - tl.y) < 0.55) {
+      tl.taken = true;
+      AudioSys.pickupTool();
+      if (tl.type === 'compass') {
+        P.compassT = 20;
+        addToast('BRÚJULA DEL OLVIDO · apunta a la salida (20s)', 'gold', 4);
+      } else {
+        P.hasMap = true; G.usedMap = true;
+        G.seen.fill(1);
+        addToast('MAPA ROTO · el nivel quedó revelado en tu mente (M)', 'gold', 4);
+      }
+    }
+  }
+  for (const tr of W.traps) {
+    if (!tr.used && hyp(P.x - tr.x, P.y - tr.y) < 0.45 && !G.insane) {
+      tr.used = true;
+      if (tr.type === 'spin') {
+        P.spinT = 1.0; P.spinVel = rnd(4.5, 6.5) * (Math.random() < 0.5 ? -1 : 1);
+        P.sanity = Math.max(0, P.sanity - 8);
+        AudioSys.trapHit();
+        addToast('RUNA DE VÉRTIGO · el mundo gira', 'warn', 3);
+      } else {
+        P.sanity = Math.max(0, P.sanity - 10);
+        teleportPlayer();
+        AudioSys.teleport();
+        addToast('RUNA DE EXILIO · el Laberinto te movió', 'warn', 3);
+      }
+      G.shake = Math.max(G.shake, 0.5);
+    }
+  }
+}
+function teleportPlayer() {
+  const P = G.player, W = G.world, S = W.S;
+  for (let i = 0; i < 300; i++) {
+    const c = (Math.random() * S * S) | 0;
+    if (W.grid[c] === 0) {
+      const x = (c % S) + 0.5, y = ((c / S) | 0) + 0.5;
+      if (hyp(x - P.x, y - P.y) > 6 && hyp(x - W.portal.x, y - W.portal.y) > 2.5) {
+        P.x = x; P.y = y;
+        G.flashWhite = Math.max(G.flashWhite, 0.7);
+        return;
+      }
+    }
+  }
+}
+function lightBurst() {
+  G.burst = 1; G.flashWhite = Math.max(G.flashWhite, 0.55);
+  for (const sh of G.world.shadows) {
+    if (hyp(sh.x - G.player.x, sh.y - G.player.y) < 5.5) {
+      sh.fleeT = 4.5; sh.state = 'flee';
+    }
+  }
+}
+
+/* ============ IA DE LAS SOMBRAS ============ */
+function updateShadows(dt) {
+  const P = G.player;
+  let maxDread = 0;
+  for (const sh of G.world.shadows) {
+    sh.animT += dt;
+    if (sh.cool > 0) sh.cool -= dt;
+    const dx = P.x - sh.x, dy = P.y - sh.y;
+    const d = hyp(dx, dy);
+    const los = d < 11 && hasLOS(sh.x, sh.y, P.x, P.y);
+
+    if (sh.state === 'flee') {
+      sh.fleeT -= dt;
+      moveShadow(sh, Math.atan2(-dy, -dx), 2.6 * dt, dt);
+      if (sh.fleeT <= 0) sh.state = 'roam';
+    } else if (sh.state === 'roam') {
+      if ((los && d < 7.5) || d < 1.7) {
+        sh.state = 'chase'; sh.loseT = 0;
+        shadowAlert();
+      }
+      sh.wanderT = (sh.wanderT || 0) - dt;
+      if (sh.wanderT === undefined || sh.wanderT <= 0) {
+        if (Math.random() < 0.65 && sh.dir !== undefined) sh.dir += rnd(-0.4, 0.4);
+        else sh.dir = rnd(0, TAU);
+        sh.wanderT = rnd(0.8, 2.2);
+      }
+      const ox = sh.x, oy = sh.y;
+      moveShadow(sh, sh.dir, 1.15 * dt, dt);
+      if (Math.abs(sh.x - ox) + Math.abs(sh.y - oy) < 0.001) { sh.dir = rnd(0, TAU); }
+    } else { // chase
+      if (los) { sh.lastX = P.x; sh.lastY = P.y; sh.loseT = 0; }
+      else sh.loseT += dt;
+      const tx = los ? P.x : (sh.lastX !== undefined ? sh.lastX : P.x);
+      const ty = los ? P.y : (sh.lastY !== undefined ? sh.lastY : P.y);
+      moveShadow(sh, Math.atan2(ty - sh.y, tx - sh.x), 2.5 * dt, dt);
+      if (!los && sh.lastX !== undefined && sh.loseT > 3.5 && hyp(sh.x - sh.lastX, sh.y - sh.lastY) < 0.7) sh.state = 'roam';
+      if (d < 0.72 && sh.cool <= 0 && P.invulnT <= 0 && !G.insane) shadowHitPlayer(sh, dx, dy);
+    }
+    const dr = clamp(1 - d / 4.5, 0, 1) * (sh.state === 'chase' ? 1 : 0.55);
+    if (dr > maxDread) maxDread = dr;
+  }
+  G.dread = lerp(G.dread, maxDread, dt * 4);
+}
+function moveShadow(sh, ang, step, dt) {
+  const nx = Math.cos(ang) * step, ny = Math.sin(ang) * step;
+  if (canMove(sh.x + nx, sh.y, 0.28)) sh.x += nx;
+  if (canMove(sh.x, sh.y + ny, 0.28)) sh.y += ny;
+}
+function shadowHitPlayer(sh, dx, dy) {
+  const P = G.player;
+  P.sanity = Math.max(0, P.sanity - 12);
+  P.invulnT = 1.3; sh.cool = 1.8;
+  G.shake = 0.7; G.flashRed = 1;
+  G.shadowHits++;
+  AudioSys.shadowHit();
+  if (navigator.vibrate) navigator.vibrate([90, 40, 90]);
+  // retroceso de la sombra
+  const d = hyp(dx, dy) || 1;
+  const bx = sh.x - (dx / d) * 0.9, by = sh.y - (dy / d) * 0.9;
+  if (canMove(bx, by, 0.28)) { sh.x = bx; sh.y = by; }
+  if (P.sanity <= 0) enterInsanity();
+}
+function shadowAlert() {
+  AudioSys.osc('sawtooth', 160, AudioSys.t(), 0.35, 0.09, AudioSys.sfx, 68);
+  AudioSys.noise(AudioSys.t(), 0.25, 0.05, 'lowpass', 500);
+}
+
+/* ============ ALUCINACIONES ============ */
+function updateHallucinations(dt) {
+  const P = G.player;
+  for (let i = G.phantoms.length - 1; i >= 0; i--) {
+    G.phantoms[i].t -= dt;
+    if (G.phantoms[i].t <= 0) G.phantoms.splice(i, 1);
+  }
+  if (P.sanity > 70 || G.insane) return;
+  G.hallucT -= dt * (P.sanity < 30 ? 1.7 : 1);
+  if (G.hallucT > 0) return;
+  G.hallucT = lerp(4.5, 15, P.sanity / 70) + rnd(0, 5);
+  const roll = Math.random();
+  AudioSys.whisper();
+  if (roll < 0.38) {
+    // fantasma frente al jugador
+    const a = P.dir + rnd(-0.5, 0.5);
+    for (let dd = 3.4; dd >= 2; dd -= 0.4) {
+      const x = P.x + Math.cos(a) * dd, y = P.y + Math.sin(a) * dd;
+      if (canMove(x, y, 0.3) && hasLOS(P.x, P.y, x, y)) { G.phantoms.push({ x, y, t: 0.55 }); break; }
+    }
+  } else if (roll < 0.6) {
+    let n = ri(2, 4);
+    const iv = setInterval(() => { AudioSys.footstep(false); if (--n <= 0) clearInterval(iv); }, 330);
+  } else if (roll < 0.78) {
+    G.flashWhite = Math.max(G.flashWhite, 0.28);
+  } else if (roll < 0.92) {
+    AudioSys.osc('sawtooth', 120, AudioSys.t(), 0.5, 0.05, AudioSys.sfx, 55);
+  } else {
+    G.shake = Math.max(G.shake, 0.35);
+  }
+}
+
+/* ============ AUDIO POR FRAME ============ */
+function updateAudioFrame(dt) {
+  const P = G.player;
+  AudioSys.setShadowProximity(G.dread);
+  if (!G.insane && P.sanity < 32 && AudioSys.ctx) {
+    const now = AudioSys.ctx.currentTime;
+    if (now > AudioSys.nextBeat) {
+      AudioSys.heartbeat(clamp(1.3 - P.sanity / 40, 0.4, 1.2));
+      AudioSys.nextBeat = now + lerp(0.42, 1.05, P.sanity / 32);
+    }
+  }
+}
+
+/* ============ CORDURA: COLAPSO ============ */
+function enterInsanity() {
+  const P = G.player;
+  P.sanity = 0;
+  G.insane = true;
+  G.totalBreaks++;
+  P.breaks++;
+  G.shake = 1; G.flashRed = 1;
+  AudioSys.sting();
+  if (navigator.vibrate) navigator.vibrate([150, 60, 150, 60, 300]);
+  if (P.breaks >= 3) { setTimeout(() => gameOver(), 900); return; }
+  $('bigMsgTitle').textContent = 'TU MENTE SE HA ROTO';
+  $('bigMsgSub').textContent = pick([
+    'El Laberinto ríe con tu voz...',
+    'Las paredes cantan tu nombre equivocado...',
+    'Ves el pasillo de tu infancia donde no hay pasillo...',
+    'Las sombras te piden que te quedes...'
+  ]);
+  $('bigMsg').style.display = 'block';
+}
+function recoverInsanity() {
+  G.insane = false;
+  G.player.sanity = 30;
+  $('bigMsg').style.display = 'none';
+  G.flashWhite = 0.8;
+  AudioSys.doorOpen();
+  addToast('TE RECOMPONES · +30 CORDURA · colapso ' + G.player.breaks + '/3', 'warn', 4);
+}
+
+/* ============ NIEBLA DE GUERRA ============ */
+function markSeen() {
+  const W = G.world, P = G.player, S = W.S, seen = G.seen;
+  const R = 3.6;
+  const x0 = Math.max(0, (P.x - R) | 0), x1 = Math.min(S - 1, (P.x + R) | 0);
+  const y0 = Math.max(0, (P.y - R) | 0), y1 = Math.min(S - 1, (P.y + R) | 0);
+  for (let y = y0; y <= y1; y++) for (let x = x0; x <= x1; x++) {
+    const c = y * S + x;
+    if (seen[c]) continue;
+    if (hyp(x + 0.5 - P.x, y + 0.5 - P.y) <= R && hasLOS(P.x, P.y, x + 0.5, y + 0.5)) seen[c] = 1;
+  }
+}
+
+/* ============ CICLO DE NIVELES ============ */
+function startGame() {
+  G.journal = [];
+  G.totalTime = 0; G.totalSteps = 0; G.totalFrags = 0; G.totalBreaks = 0;
+  G.shadowHits = 0; G.usedMap = false;
+  G.level = 1;
+  G.player = null; // sin arrastre de colapsos de la partida anterior
+  showIntro();
+}
+function loadLevel() {
+  const def = LEVELS[G.level - 1];
+  G.world = generateLevel(def);
+  G.seen = new Uint8Array(G.world.S * G.world.S);
+  G.seen[1 * G.world.S + 1] = 1;
+  buildLevelTextures(def);
+  const oldBreaks = G.player ? G.player.breaks : 0;
+  const carrySanity = G.player ? Math.min(100, G.player.sanity + 40) : 100;
+  G.player = newPlayer();
+  G.player.breaks = oldBreaks;
+  if (G.level > 1) G.player.sanity = carrySanity;
+  G.levelTime = 0; G.dread = 0; G.hallucT = 9;
+  G.phantoms = []; G.insane = false;
+  $('bigMsg').style.display = 'none';
+  AudioSys.setAmbient(def);
+}
+function showIntro() {
+  loadLevel();
+  const def = LEVELS[G.level - 1];
+  $('introNum').textContent = '— NIVEL ' + G.level + ' DE ' + LEVELS.length + ' —';
+  $('introName').textContent = def.name;
+  $('introLore').textContent = def.lore;
+  $('hudLevelName').textContent = 'NIVEL ' + G.level + ' — ' + def.name;
+  $('hudFrag').textContent = '0/' + def.fragments;
+  hideAllScreens();
+  $('screenIntro').classList.remove('hidden');
+  G.state = 'intro';
+}
+function enterLevel() {
+  hideAllScreens();
+  G.state = 'play';
+  AudioSys.ensure();
+  AudioSys.setAmbient(LEVELS[G.level - 1]);
+}
+function levelComplete() {
+  G.totalTime += G.levelTime;
+  AudioSys.levelJingle();
+  AudioSys.doorOpen();
+  const def = LEVELS[G.level - 1];
+  const allFrag = G.world.fragments.every(f => f.taken);
+  $('leTime').textContent = fmtTime(G.levelTime);
+  $('leSteps').textContent = G.player.steps;
+  $('leFrag').textContent = G.player.frags + '/' + def.fragments;
+  $('leBreaks').textContent = (G.player.breaks) + ' VECES';
+  $('leBonus').textContent = allFrag ? '★ MEMORIA COMPLETA — llevas ' + G.totalFrags + '/' + TOTAL_FRAGMENTS + ' fragmentos' : '';
+  $('btnNext').textContent = G.level >= LEVELS.length ? 'CRUZAR LA PUERTA FINAL' : 'DESCENDER MÁS PROFUNDO';
+  hideAllScreens();
+  $('screenLevelEnd').classList.remove('hidden');
+  G.state = 'levelend';
+}
+function nextLevel() {
+  if (G.level >= LEVELS.length) { showVictory(); return; }
+  G.level++;
+  showIntro();
+}
+function gameOver() {
+  G.state = 'gameover';
+  hideAllScreens();
+  $('screenGameOver').classList.remove('hidden');
+  AudioSys.sting();
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function retryLevel() {
+  G.player.breaks = 0;
+  showIntro();
+}
+
+/* ============ RÉCORDS Y LOGROS ============ */
+const REC_KEY = 'lolo_pesadilla_v2';
+function loadRecords() {
+  try { return JSON.parse(localStorage.getItem(REC_KEY)) || { bestTotal: null, bestFrags: 0 }; }
+  catch (e) { return { bestTotal: null, bestFrags: 0 }; }
+}
+function saveRecords(rec) { try { localStorage.setItem(REC_KEY, JSON.stringify(rec)); } catch (e) {} }
+function showVictory() {
+  const rec = loadRecords();
+  let isRecord = false;
+  if (rec.bestTotal === null || G.totalTime < rec.bestTotal) { rec.bestTotal = G.totalTime; isRecord = true; }
+  if (G.totalFrags > rec.bestFrags) { rec.bestFrags = G.totalFrags; isRecord = true; }
+  saveRecords(rec);
+
+  $('vicTime').textContent = fmtTime(G.totalTime);
+  $('vicSteps').textContent = G.totalSteps;
+  $('vicFrags').textContent = G.totalFrags + '/' + TOTAL_FRAGMENTS;
+  $('vicBreaks').textContent = G.totalBreaks;
+  $('vicRecord').textContent = isRecord ? '★ ¡NUEVO RÉCORD PERSONAL! ★' : '';
+
+  const achs = [
+    ['MENTE DE ACERO', G.totalBreaks === 0],
+    ['COLECCIONISTA DE MEMORIAS', G.totalFrags === TOTAL_FRAGMENTS],
+    ['INTOCABLE', G.shadowHits === 0],
+    ['SIN MAPA, SIN BRÚJULA', !G.usedMap],
+    ['VELOCISTA DEL INFIERNO', G.totalTime < 720]
+  ];
+  $('vicAch').innerHTML = achs.map(a =>
+    '<div class="achChip' + (a[1] ? '' : ' locked') + '">' + (a[1] ? '★ ' : '🔒 ') + a[0] + '</div>'
+  ).join('');
+
+  // partículas
+  const vp = $('victoryParticles');
+  vp.innerHTML = '';
+  const cols = ['#ffd700', '#ff8c00', '#59d6ff', '#b26bff', '#39ff6a', '#fff'];
+  for (let i = 0; i < 90; i++) {
+    const p = document.createElement('div');
+    p.className = 'vp';
+    const sz = rnd(3, 8);
+    p.style.cssText = 'left:' + rnd(0, 100) + '%;width:' + sz + 'px;height:' + sz + 'px;background:' + pick(cols) +
+      ';box-shadow:0 0 ' + (sz * 2) + 'px ' + pick(cols) + ';animation-duration:' + rnd(6, 13) + 's;animation-delay:' + rnd(0, 10) + 's;opacity:.85';
+    vp.appendChild(p);
+  }
+  hideAllScreens();
+  $('screenVictory').classList.remove('hidden');
+  G.state = 'victory';
+  AudioSys.fanfare();
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function updateRecordsUI() {
+  const rec = loadRecords();
+  $('recTotal').textContent = rec.bestTotal ? fmtTime(rec.bestTotal) : '—';
+  $('recFrags').textContent = rec.bestFrags + ' / ' + TOTAL_FRAGMENTS;
+}
+/* ============================================================
+   RENDERIZADOR: raycasting DDA texturizado + sprites z-buffer
+   ============================================================ */
+const viewCanvas = $('view');
+const vctx = viewCanvas.getContext('2d');
+const noiseCv = $('noiseFx');
+const nctx = noiseCv.getContext('2d');
+noiseCv.width = 140; noiseCv.height = 80;
+
+let RW = 0, RH = 0, imgData = null, px32 = null, zbuf = null;
+
+function setupRenderBuffers() {
+  const q = G.settings.quality;
+  RH = q === 'alta' ? 300 : (q === 'media' ? 240 : 180);
+  const aspect = window.innerWidth / Math.max(1, window.innerHeight);
+  RW = Math.max(160, Math.round(RH * aspect / 2) * 2);
+  viewCanvas.width = RW; viewCanvas.height = RH;
+  imgData = vctx.createImageData(RW, RH);
+  px32 = new Uint32Array(imgData.data.buffer);
+  zbuf = new Float32Array(RW);
+}
+
+/* --- texturas por nivel --- */
+function buildLevelTextures(def) {
+  const fr = def.fogRGB;
+  const wallCv = texCanvas(c => WALL_GENS[def.tex](c));
+  const mkRoom = type => {
+    const cv = document.createElement('canvas'); cv.width = cv.height = 64;
+    const c = cv.getContext('2d'); c.drawImage(wallCv, 0, 0);
+    c.globalCompositeOperation = 'source-atop';
+    c.fillStyle = type === 'forest' ? 'rgba(46,100,46,.45)' : 'rgba(130,88,40,.45)';
+    c.fillRect(0, 0, 64, 64);
+    return cv;
+  };
+  G.texs = {
+    wall: buildFogSets(wallCv, fr),
+    roomF: buildFogSets(mkRoom('forest'), fr),
+    roomC: buildFogSets(mkRoom('cave'), fr),
+    door: buildFogSets(texCanvas(genDoorCanvas), [6, 16, 24]),
+    floor: buildFogSets(genFloorCanvas(def), fr),
+    ceil: buildFogSets(genCeilCanvas(), fr)
+  };
+  G.roomType = G.world.rooms.map(r => r.type);
+}
+
+/* --- render 3D --- */
+function render3d() {
+  const P = G.player, W = G.world, S = W.S, T = G.texs, t = G.frameT;
+  const dirX = Math.cos(P.dir), dirY = Math.sin(P.dir);
+  const planeX = -dirY * PLANE_LEN, planeY = dirX * PLANE_LEN;
+  const horizon = (RH >> 1) + (P.bobY | 0);
+  const posZ = 0.5 * RH;
+  const BLACK = 0xFF000000;
+
+  // ===== suelo y techo proyectados =====
+  const rdx0 = dirX - planeX, rdy0 = dirY - planeY;
+  const rdx1 = dirX + planeX, rdy1 = dirY + planeY;
+  // techo
+  for (let y = 0; y < horizon; y++) {
+    const rowD = posZ / (horizon - y);
+    const off = y * RW;
+    if (rowD > MAX_VIS) { px32.fill(BLACK, off, off + RW); continue; }
+    const stepX = rowD * (rdx1 - rdx0) / RW, stepY = rowD * (rdy1 - rdy0) / RW;
+    let fx = P.x + rowD * rdx0, fy = P.y + rowD * rdy0;
+    const tex = T.ceil[fogIdx(rowD)];
+    for (let x = 0; x < RW; x++) {
+      const ty = ((fy * 64) | 0) & 63, tx = ((fx * 64) | 0) & 63;
+      px32[off + x] = tex[(ty << 6) | tx];
+      fx += stepX; fy += stepY;
+    }
+  }
+  // suelo
+  for (let y = horizon + 1; y < RH; y++) {
+    const rowD = posZ / (y - horizon);
+    const off = y * RW;
+    if (rowD > MAX_VIS) { px32.fill(BLACK, off, off + RW); continue; }
+    const stepX = rowD * (rdx1 - rdx0) / RW, stepY = rowD * (rdy1 - rdy0) / RW;
+    let fx = P.x + rowD * rdx0, fy = P.y + rowD * rdy0;
+    const tex = T.floor[fogIdx(rowD)];
+    for (let x = 0; x < RW; x++) {
+      const ty = ((fy * 64) | 0) & 63, tx = ((fx * 64) | 0) & 63;
+      px32[off + x] = tex[(ty << 6) | tx];
+      fx += stepX; fy += stepY;
+    }
+  }
+
+  // ===== muros (DDA) =====
+  for (let x = 0; x < RW; x++) {
+    const camX = 2 * x / RW - 1;
+    const rdx = dirX + planeX * camX, rdy = dirY + planeY * camX;
+    let mapX = P.x | 0, mapY = P.y | 0;
+    const ddx = rdx === 0 ? 1e30 : Math.abs(1 / rdx);
+    const ddy = rdy === 0 ? 1e30 : Math.abs(1 / rdy);
+    let stepX, stepY, sdx, sdy;
+    if (rdx < 0) { stepX = -1; sdx = (P.x - mapX) * ddx; } else { stepX = 1; sdx = (mapX + 1 - P.x) * ddx; }
+    if (rdy < 0) { stepY = -1; sdy = (P.y - mapY) * ddy; } else { stepY = 1; sdy = (mapY + 1 - P.y) * ddy; }
+    let side = 0, val = 0;
+    for (let g = 0; g < 160; g++) {
+      if (sdx < sdy) { sdx += ddx; mapX += stepX; side = 0; }
+      else { sdy += ddy; mapY += stepY; side = 1; }
+      if (mapX < 0 || mapY < 0 || mapX >= S || mapY >= S) { val = 0; break; }
+      val = W.grid[mapY * S + mapX];
+      if (val >= 1) break;
+    }
+    if (val < 1) { zbuf[x] = 1e9; continue; }
+    let perp = side === 0 ? sdx - ddx : sdy - ddy;
+    if (perp < 0.02) perp = 0.02;
+    zbuf[x] = perp;
+    const lh = (RH / perp) | 0;
+    let y0 = horizon - (lh >> 1), y1 = y0 + lh;
+    const texStep = 64 / lh;
+    let texPos = y0 < 0 ? -y0 * texStep : 0;
+    if (y0 < 0) y0 = 0;
+    if (y1 > RH) y1 = RH;
+    let wallX = side === 0 ? P.y + perp * rdy : P.x + perp * rdx;
+    wallX -= Math.floor(wallX);
+    let tx = (wallX * 64) | 0;
+    if ((side === 0 && rdx > 0) || (side === 1 && rdy < 0)) tx = 63 - tx;
+    let tex;
+    if (val === 2) tex = T.door;
+    else {
+      const r = W.region[mapY * S + mapX];
+      tex = r ? (G.roomType[r - 1] === 'forest' ? T.roomF : T.roomC) : T.wall;
+    }
+    let fi = perp * FOG_K + (side === 1 ? 1.3 : 0);
+    fi = fi < 0 ? 0 : (fi > FOG_N - 1 ? FOG_N - 1 : fi) | 0;
+    const td = tex[fi];
+    for (let y = y0; y < y1; y++) {
+      const ty = texPos | 0; texPos += texStep;
+      px32[y * RW + x] = td[((ty & 63) << 6) | tx];
+    }
+  }
+
+  // ===== sprites =====
+  const list = [];
+  for (const fr of W.fragments) if (!fr.taken)
+    list.push({ x: fr.x, y: fr.y, spr: SPRITES.fragment, fi: 0, elev: 0.14 + Math.sin(t * 2.2 + fr.x * 3.1) * 0.045, h: 0.55 });
+  for (const cd of W.candles) if (!cd.taken)
+    list.push({ x: cd.x, y: cd.y, spr: SPRITES.candle, fi: ((t * 9) | 0) % 2, elev: 0.03, h: 0.5 });
+  for (const tl of W.tools) if (!tl.taken)
+    list.push({ x: tl.x, y: tl.y, spr: tl.type === 'compass' ? SPRITES.compass : SPRITES.map, fi: 0, elev: 0.14 + Math.sin(t * 2 + tl.x * 2) * 0.04, h: 0.5 });
+  list.push({ x: W.portal.x, y: W.portal.y, spr: SPRITES.portal, fi: ((t * 6) | 0) % 3, elev: 0.04, h: 0.85 });
+  for (const tr of W.traps) if (!tr.used)
+    list.push({ x: tr.x, y: tr.y, spr: SPRITES.trap, fi: ((t * 3) | 0) % 2, elev: 0.01, h: 0.34 });
+  for (const sh of W.shadows) {
+    const d = hyp(P.x - sh.x, P.y - sh.y);
+    const fi = (sh.state === 'chase' && d < 1.7) ? 2 : (((sh.animT * 2.6) | 0) % 2);
+    list.push({ x: sh.x, y: sh.y, spr: SPRITES.shadow, fi, elev: 0, h: 0.95 });
+  }
+  for (const ph of G.phantoms)
+    list.push({ x: ph.x, y: ph.y, spr: SPRITES.phantom, fi: 0, elev: 0, h: 0.9 });
+
+  for (const s of list) { const dx = s.x - P.x, dy = s.y - P.y; s.d2 = dx * dx + dy * dy; }
+  list.sort((a, b) => b.d2 - a.d2);
+
+  const invDet = 1 / (planeX * dirY - dirX * planeY);
+  for (const s of list) {
+    if (s.d2 > MAX_VIS * MAX_VIS) continue;
+    const rx = s.x - P.x, ry = s.y - P.y;
+    const tY = invDet * (-planeY * rx + planeX * ry);
+    if (tY < 0.18) continue;
+    const tX = invDet * (dirY * rx - dirX * ry);
+    const scrX = ((RW / 2) * (1 + tX / tY)) | 0;
+    const hpx = (RH * s.h / tY) | 0;
+    const wpx = hpx;
+    if (hpx < 2) continue;
+    const bottom = (horizon + (RH * 0.5 - RH * s.elev) / tY) | 0;
+    const top = bottom - hpx;
+    const half = wpx >> 1;
+    const x0 = Math.max(0, scrX - half), x1 = Math.min(RW, scrX + half);
+    if (x1 <= x0) continue;
+    let fi = fogIdx(tY);
+    const td = s.spr[s.fi].fog[fi];
+    const yA = Math.max(0, top), yB = Math.min(RH, bottom);
+    if (yB <= yA) continue;
+    const leftPx = scrX - half;
+    for (let x = x0; x < x1; x++) {
+      if (zbuf[x] <= tY) continue;
+      const texX = (((x - leftPx) * 64 / wpx) | 0) & 63;
+      for (let y = yA; y < yB; y++) {
+        const texY = (((y - top) * 64 / hpx) | 0) & 63;
+        const c = td[(texY << 6) | texX];
+        if ((c >>> 24) > 60) px32[y * RW + x] = c;
+      }
+    }
+  }
+
+  vctx.putImageData(imgData, 0, 0);
+}
+
+/* --- minimapa --- */
+function drawMinimap() {
+  if (!G.world) return;
+  const W = G.world, S = W.S, seen = G.seen, P = G.player;
+  const cv = $('minimap'), px = 4, size = S * px;
+  if (cv.width !== size) { cv.width = size; cv.height = size; }
+  const c = cv.getContext('2d');
+  c.fillStyle = '#04060a'; c.fillRect(0, 0, size, size);
+  for (let y = 0; y < S; y++) for (let x = 0; x < S; x++) {
+    const cell = y * S + x;
+    if (!seen[cell]) continue;
+    const v = W.grid[cell];
+    if (v === 0) {
+      const r = W.region[cell];
+      c.fillStyle = r ? (G.roomType[r - 1] === 'forest' ? '#1d3524' : '#322616') : '#1c2836';
+    } else if (v === 2) c.fillStyle = '#59d6ff';
+    else c.fillStyle = '#3d5240';
+    c.fillRect(x * px, y * px, px, px);
+  }
+  if (seen[(W.portal.y | 0) * S + (W.portal.x | 0)] || P.compassT > 0 || P.hasMap) {
+    c.fillStyle = '#59d6ff'; c.shadowColor = '#59d6ff'; c.shadowBlur = 6;
+    c.beginPath(); c.arc(W.portal.x * px, W.portal.y * px, 3.4, 0, TAU); c.fill();
+    c.shadowBlur = 0;
+  }
+  c.save(); c.translate(P.x * px, P.y * px); c.rotate(P.dir);
+  c.fillStyle = '#ffd700';
+  c.beginPath(); c.moveTo(6, 0); c.lineTo(-3.5, -4); c.lineTo(-3.5, 4); c.closePath(); c.fill();
+  c.restore();
+}
+
+/* --- FX post-proceso (capas DOM) --- */
+function updateFX(dt) {
+  G.frameT += dt;
+  const P = G.player;
+  // ruido
+  const insane = G.insane;
+  const sanityF = P ? clamp((45 - P.sanity) / 45, 0, 1) : 0;
+  const noiseOp = insane ? 0.5 : (sanityF * 0.32 + G.dread * 0.18);
+  const ncv = nctx.canvas;
+  if (noiseOp > 0.02) {
+    const img = nctx.createImageData(ncv.width, ncv.height);
+    const d = img.data;
+    for (let i = 0; i < d.length; i += 4) {
+      const v = (Math.random() * 255) | 0;
+      d[i] = v; d[i + 1] = v; d[i + 2] = v; d[i + 3] = 255;
+    }
+    nctx.putImageData(img, 0, 0);
+    noiseCv.style.opacity = noiseOp.toFixed(2);
+  } else noiseCv.style.opacity = '0';
+
+  if (P && (G.state === 'play')) {
+    // viñeta + pulso rojo
+    $('vignetteFx').style.opacity = clamp((100 - P.sanity) / 100, 0, 1) * 0.8 + G.dread * 0.2;
+    $('redPulse').style.opacity = (G.dread * 0.55 + (P.invulnT > 0 ? 0.25 : 0)).toFixed(2);
+    // distorsión por locura / cordura baja
+    if (insane) {
+      const hue = (G.frameT * 240) % 360;
+      viewCanvas.style.filter = 'hue-rotate(' + hue.toFixed(0) + 'deg) saturate(1.8) contrast(1.3)';
+    } else if (P.sanity < 28) {
+      viewCanvas.style.filter = 'saturate(1.25) contrast(1.1)';
+    } else viewCanvas.style.filter = '';
+    // temblor
+    if (G.shake > 0.01) {
+      const a = G.shake * 9;
+      viewCanvas.style.transform = 'translate(' + (rnd(-a, a)).toFixed(1) + 'px,' + (rnd(-a, a)).toFixed(1) + 'px)';
+    } else viewCanvas.style.transform = '';
+  } else if (G.state !== 'play') {
+    viewCanvas.style.transform = '';
+    if (!G.insane) viewCanvas.style.filter = '';
+  }
+  // flashes
+  $('flashRed').style.opacity = G.flashRed.toFixed(2);
+  $('flashWhite').style.opacity = G.flashWhite.toFixed(2);
+  // anillo de luz (vela)
+  const ring = $('burstRing');
+  if (G.burst > 0.01) {
+    ring.style.opacity = G.burst.toFixed(2);
+    const sc = 1 + (1 - G.burst) * 26;
+    ring.style.transform = 'translate(-50%,-50%) scale(' + sc.toFixed(1) + ')';
+  } else ring.style.opacity = '0';
+}
+/* ============================================================
+   INPUT + UI + LOOP PRINCIPAL
+   ============================================================ */
+const Touch = { active: false, f: 0, s: 0, run: false, stickId: -1, lookId: -1, ox: 0, oy: 0, lx: 0 };
+const IS_TOUCH = ('ontouchstart' in window) || (navigator.maxTouchPoints > 0);
+
+/* ---------- teclado ---------- */
+window.addEventListener('keydown', e => {
+  const k = e.key.toLowerCase();
+  keys[k] = true;
+  if (k === ' ' || k.startsWith('arrow')) e.preventDefault();
+  const st = G.state;
+  if (st === 'menu') { if (k === 'enter' || k === ' ') { AudioSys.ensure(); startGame(); } }
+  else if (st === 'intro') { if (k === 'enter' || k === ' ') enterLevel(); }
+  else if (st === 'play') {
+    if (k === 'escape' || k === 'p') pauseGame();
+    else if (k === 'm') toggleMap();
+    else if (k === 'j') openJournal();
+    else if (k === 'n') toggleSound();
+    else if (k === 'h') openHelp();
+    else if (k === ' ' && G.insane) recoverInsanity();
+  }
+  else if (st === 'pause') { if (k === 'escape' || k === 'p' || k === ' ') resumeGame(); }
+  else if (st === 'help') { if (k === 'escape' || k === 'h') closeHelp(); }
+  else if (st === 'journal') { if (k === 'escape' || k === 'j') closeJournal(); }
+  else if (st === 'levelend') { if (k === 'enter' || k === ' ') nextLevel(); }
+  else if (st === 'victory') { if (k === 'enter' || k === ' ') backToMenu(); }
+  else if (st === 'gameover') { if (k === 'enter' || k === ' ') retryLevel(); }
+});
+window.addEventListener('keyup', e => { keys[e.key.toLowerCase()] = false; });
+
+/* ---------- ratón ---------- */
+viewCanvas.addEventListener('click', () => {
+  if (G.state === 'play' && !document.pointerLockElement) {
+    try { viewCanvas.requestPointerLock(); } catch (err) {}
+  }
+});
+document.addEventListener('mousemove', e => {
+  if (document.pointerLockElement === viewCanvas && G.state === 'play' && G.player) {
+    G.player.dir += e.movementX * 0.0022 * G.settings.sens;
+  }
+});
+
+/* ---------- táctil ---------- */
+function bindTouch() {
+  const stickZone = $('stickZone'), lookZone = $('lookZone');
+  const base = $('stickBase'), nub = $('stickNub');
+  stickZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (Touch.stickId >= 0) return;
+    const t = e.changedTouches[0];
+    Touch.stickId = t.identifier;
+    Touch.ox = t.clientX; Touch.oy = t.clientY;
+    base.style.display = 'block'; nub.style.display = 'block';
+    base.style.left = (Touch.ox - 55) + 'px'; base.style.top = (Touch.oy - 55) + 'px';
+    nub.style.left = (Touch.ox - 24) + 'px'; nub.style.top = (Touch.oy - 24) + 'px';
+  }, { passive: false });
+  stickZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.identifier !== Touch.stickId) continue;
+      let dx = t.clientX - Touch.ox, dy = t.clientY - Touch.oy;
+      const d = hyp(dx, dy);
+      if (d > 52) { dx = dx / d * 52; dy = dy / d * 52; }
+      nub.style.left = (Touch.ox + dx - 24) + 'px'; nub.style.top = (Touch.oy + dy - 24) + 'px';
+      let f = -dy / 42, s = dx / 42;
+      if (Math.abs(f) < 0.14) f = 0; if (Math.abs(s) < 0.14) s = 0;
+      Touch.f = clamp(f, -1, 1); Touch.s = clamp(s, -1, 1);
+      Touch.active = Touch.f !== 0 || Touch.s !== 0;
+    }
+  }, { passive: false });
+  const stickEnd = e => {
+    for (const t of e.changedTouches) {
+      if (t.identifier !== Touch.stickId) continue;
+      Touch.stickId = -1; Touch.active = false; Touch.f = 0; Touch.s = 0;
+      base.style.display = 'none'; nub.style.display = 'none';
+    }
+  };
+  stickZone.addEventListener('touchend', stickEnd);
+  stickZone.addEventListener('touchcancel', stickEnd);
+
+  lookZone.addEventListener('touchstart', e => {
+    e.preventDefault();
+    if (Touch.lookId >= 0) return;
+    const t = e.changedTouches[0];
+    Touch.lookId = t.identifier; Touch.lx = t.clientX;
+  }, { passive: false });
+  lookZone.addEventListener('touchmove', e => {
+    e.preventDefault();
+    for (const t of e.changedTouches) {
+      if (t.identifier !== Touch.lookId) continue;
+      if (G.state === 'play' && G.player) G.player.dir += (t.clientX - Touch.lx) * 0.005 * G.settings.sens;
+      Touch.lx = t.clientX;
+    }
+  }, { passive: false });
+  const lookEnd = e => {
+    for (const t of e.changedTouches) if (t.identifier === Touch.lookId) Touch.lookId = -1;
+  };
+  lookZone.addEventListener('touchend', lookEnd);
+  lookZone.addEventListener('touchcancel', lookEnd);
+
+  $('btnRunT').addEventListener('touchstart', e => { e.preventDefault(); Touch.run = true; }, { passive: false });
+  $('btnRunT').addEventListener('touchend', e => { e.preventDefault(); Touch.run = false; }, { passive: false });
+}
+
+/* ---------- helpers UI ---------- */
+function bindBtn(id, fn) {
+  const el = $(id);
+  if (el) el.addEventListener('click', e => { AudioSys.ensure(); AudioSys.uiClick(); fn(e); if (el.blur) el.blur(); });
+}
+function hideAllScreens() {
+  ['screenStart', 'screenIntro', 'screenLevelEnd', 'screenVictory', 'screenGameOver'].forEach(id => $(id).classList.add('hidden'));
+}
+function addToast(txt, cls, dur) {
+  const box = $('toasts');
+  while (box.children.length >= 4) box.removeChild(box.firstChild);
+  const d = document.createElement('div');
+  d.className = 'toast ' + (cls || '');
+  d.textContent = txt;
+  box.appendChild(d);
+  setTimeout(() => { d.classList.add('fade'); setTimeout(() => d.remove(), 420); }, (dur || 3.8) * 1000);
+}
+
+/* ---------- modales ---------- */
+function openHelp() {
+  if (G.state === 'play' || G.state === 'pause') G.modalResume = true;
+  if (G.state === 'pause') $('modalPause').classList.add('hidden');
+  G.state = 'help';
+  $('modalHelp').classList.remove('hidden');
+  try { localStorage.setItem('lolo_help_seen', '1'); } catch (e) {}
+  $('btnHelp').classList.remove('attention');
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function closeHelp() {
+  $('modalHelp').classList.add('hidden');
+  if (G.modalResume) { G.modalResume = false; G.state = 'play'; }
+  else G.state = 'menu';
+  AudioSys.uiClick();
+}
+function openJournal() {
+  renderJournal();
+  if (G.state === 'play' || G.state === 'pause') G.modalResume = true;
+  if (G.state === 'pause') $('modalPause').classList.add('hidden');
+  G.state = 'journal';
+  $('modalJournal').classList.remove('hidden');
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function closeJournal() {
+  $('modalJournal').classList.add('hidden');
+  if (G.modalResume) { G.modalResume = false; G.state = 'play'; }
+  else G.state = 'menu';
+  AudioSys.uiClick();
+}
+function pauseGame() {
+  G.state = 'pause';
+  $('modalPause').classList.remove('hidden');
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+function resumeGame() {
+  $('modalPause').classList.add('hidden');
+  G.state = 'play';
+  AudioSys.uiClick();
+}
+function toggleMap() {
+  if (G.state !== 'play' && G.state !== 'pause') return;
+  G.mapOpen = !G.mapOpen;
+  $('minimapWrap').style.display = G.mapOpen ? 'block' : 'none';
+  if (G.mapOpen) drawMinimap();
+}
+function toggleSound() {
+  AudioSys.ensure();
+  const muted = AudioSys.toggleMute();
+  $('btnSound').textContent = muted ? '×' : '♪';
+  addToast(muted ? 'SONIDO SILENCIADO' : 'SONIDO ACTIVADO', '', 2);
+}
+function renderJournal() {
+  const list = $('journalList');
+  $('journalCount').textContent = G.journal.length + ' / ' + TOTAL_FRAGMENTS + ' FRAGMENTOS RECUPERADOS';
+  if (!G.journal.length) {
+    list.innerHTML = '<div class="jEmpty">Tu memoria está vacía.<br><br>Los fragmentos brillan en púrpura en la oscuridad.<br>Búscalos. Recuerda quién fuiste.</div>';
+    return;
+  }
+  list.innerHTML = G.journal.slice().sort((a, b) => a - b).map(i => {
+    let lvl = 0, acc = 0;
+    for (let l = 0; l < LEVELS.length; l++) { if (i < acc + LEVELS[l].fragments) { lvl = l; break; } acc += LEVELS[l].fragments; }
+    return '<div class="jEntry"><div class="jLvl">FRAGMENTO #' + (i + 1) + ' · ' + LEVELS[lvl].name + '</div><div class="jTxt">“' + LORE[i] + '”</div></div>';
+  }).join('');
+}
+
+/* ---------- HUD ---------- */
+let hudAcc = 0, lastTip = '';
+function hudTick(dt) {
+  const P = G.player;
+  const sf = $('sanityFill');
+  if (!P || !G.world) return;
+  const san = clamp(P.sanity, 0, 100);
+  sf.style.width = san + '%';
+  $('sanityVal').textContent = (san | 0) + '%';
+  sf.style.background = san < 30 ? 'linear-gradient(90deg,#5a0a0a,#cc2222)' :
+    (san < 60 ? 'linear-gradient(90deg,#5a4a0a,#cccc22)' : 'linear-gradient(90deg,#4a4a4a,#8a8f8a)');
+  $('stamFill').style.width = P.stamina + '%';
+
+  hudAcc += dt;
+  if (hudAcc < 0.12) return;
+  hudAcc = 0;
+  $('hudTime').textContent = fmtTime(G.levelTime);
+  $('hudSteps').textContent = P.steps;
+  $('hudFrag').textContent = P.frags + '/' + LEVELS[G.level - 1].fragments;
+  $('breaksPips').textContent = '■ '.repeat(P.breaks) + '□ '.repeat(3 - P.breaks);
+
+  const cp = $('compass');
+  if (P.compassT > 0) {
+    cp.style.display = 'block';
+    const ang = Math.atan2(G.world.portal.y - P.y, G.world.portal.x - P.x) - P.dir;
+    $('compassArrow').style.transform = 'rotate(' + (ang * 180 / Math.PI).toFixed(1) + 'deg)';
+    $('compassDist').textContent = 'SALIDA: ' + (hyp(G.world.portal.x - P.x, G.world.portal.y - P.y) | 0) + 'm · ' + Math.ceil(P.compassT) + 's';
+  } else cp.style.display = 'none';
+
+  let tip;
+  if (G.insane) tip = 'ESPACIO — recompon tu mente';
+  else if (P.compassT > 0) tip = 'La brújula no miente. El Laberinto sí.';
+  else if (G.dread > 0.45) tip = 'ALGO TE CAZA. Corre.';
+  else if (P.sanity < 25) tip = 'Tu mente se deshace. Encuentra una vela.';
+  else if (P.stamina < 20) tip = 'Sin aliento. Corre solo cuando importe.';
+  else tip = 'Cada paso consume tu mente. Las velas la restauran.';
+  if (tip !== lastTip) { lastTip = tip; $('hudTip').textContent = tip; }
+}
+
+/* ---------- cableado de UI ---------- */
+function bindUI() {
+  bindBtn('btnStart', () => { if (G.state === 'menu') startGame(); });
+  bindBtn('btnHow', () => openHelp());
+  bindBtn('btnHelp', () => { if (G.state === 'help') closeHelp(); else openHelp(); });
+  bindBtn('btnSound', () => toggleSound());
+  bindBtn('btnJournal', () => { if (G.state === 'journal') closeJournal(); else openJournal(); });
+  bindBtn('btnMapTop', () => toggleMap());
+  bindBtn('btnNext', () => { if (G.state === 'levelend') nextLevel(); });
+  bindBtn('btnMenu', () => { if (G.state === 'victory') backToMenu(); });
+  bindBtn('btnRetry', () => { if (G.state === 'gameover') retryLevel(); });
+  bindBtn('btnQuit', () => { if (G.state === 'gameover') backToMenu(); });
+  bindBtn('btnResume', () => resumeGame());
+  bindBtn('btnRestartLvl', () => { $('modalPause').classList.add('hidden'); G.player = null; showIntro(); });
+  bindBtn('btnAbandon', () => { $('modalPause').classList.add('hidden'); backToMenu(); });
+
+  document.querySelectorAll('.modalClose').forEach(b => {
+    b.addEventListener('click', () => {
+      const id = b.getAttribute('data-close');
+      $(id).classList.add('hidden');
+      AudioSys.uiClick();
+      if (id === 'modalHelp') { if (G.modalResume) { G.modalResume = false; G.state = 'play'; } else G.state = 'menu'; }
+      if (id === 'modalJournal') { if (G.modalResume) { G.modalResume = false; G.state = 'play'; } else G.state = 'menu'; }
+      if (id === 'modalPause') { G.state = 'play'; }
+    });
+  });
+  document.querySelectorAll('.helpTab').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.helpTab').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      ['historia', 'objetivo', 'controles'].forEach(p => $('pane' + p.charAt(0).toUpperCase() + p.slice(1)).classList.add('hidden'));
+      const pane = { historia: 'paneHistoria', objetivo: 'paneObjetivo', controles: 'paneControles' }[b.getAttribute('data-tab')];
+      $(pane).classList.remove('hidden');
+      AudioSys.uiClick();
+    });
+  });
+  document.querySelectorAll('.qBtn').forEach(b => {
+    b.addEventListener('click', () => {
+      document.querySelectorAll('.qBtn').forEach(x => x.classList.remove('active'));
+      b.classList.add('active');
+      G.settings.quality = b.getAttribute('data-q');
+      setupRenderBuffers();
+      AudioSys.uiClick();
+    });
+  });
+  $('volRange').addEventListener('input', e => { AudioSys.setVolume(e.target.value / 100); });
+  $('sensRange').addEventListener('input', e => { G.settings.sens = e.target.value / 100; });
+
+  $('screenIntro').addEventListener('click', () => { if (G.state === 'intro') enterLevel(); });
+  if (IS_TOUCH) bindTouch();
+}
+
+function backToMenu() {
+  hideAllScreens();
+  $('screenStart').classList.remove('hidden');
+  $('minimapWrap').style.display = 'none';
+  G.mapOpen = false;
+  G.state = 'menu';
+  updateRecordsUI();
+  if (document.pointerLockElement) document.exitPointerLock();
+}
+
+/* ---------- bucle principal ---------- */
+let lastT = 0;
+function loop(t) {
+  requestAnimationFrame(loop);
+  const dt = Math.min(0.05, (t - lastT) / 1000 || 0.016);
+  lastT = t;
+  if (G.state === 'play' && G.world && G.player) {
+    update(dt);
+    G.levelTime += dt;
+    render3d();
+    if (G.mapOpen && G.frameCount % 5 === 0) drawMinimap();
+  }
+  updateFX(dt);
+  hudTick(dt);
+}
+
+/* ---------- arranque ---------- */
+function boot() {
+  buildSprites();
+  updateRecordsUI();
+  const fog = $('startBgFog');
+  for (let i = 0; i < 7; i++) {
+    const b = document.createElement('div');
+    b.className = 'fogBlob';
+    const sz = rnd(180, 420);
+    b.style.cssText = 'width:' + sz + 'px;height:' + sz + 'px;left:' + rnd(-10, 85) + '%;top:' + rnd(-10, 75) + '%;background:' +
+      (i % 2 ? '#3a1010' : '#0f2418') + ';animation-delay:' + rnd(0, 8) + 's;animation-duration:' + rnd(10, 20) + 's';
+    fog.appendChild(b);
+  }
+  try { if (!localStorage.getItem('lolo_help_seen')) $('btnHelp').classList.add('attention'); } catch (e) {}
+  setupRenderBuffers();
+  window.addEventListener('resize', () => setupRenderBuffers());
+  bindUI();
+  requestAnimationFrame(loop);
+}
+boot();
+</script>
 </body>
 </html>
