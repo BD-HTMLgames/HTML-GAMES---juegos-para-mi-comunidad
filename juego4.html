@@ -52,7 +52,7 @@ const GAME_CSS = `
 .am-title{padding:0;gap:0}
 .am-title-wrap{display:flex;align-items:center;justify-content:center;gap:36px;width:100%;height:100%;padding:16px 34px;box-sizing:border-box}
 .am-char-zone{display:flex;flex-direction:column;align-items:center;gap:6px;flex:0 0 auto}
-.am-char-zone .am-mario-idle{width:104px}
+.am-char-zone .am-mario-idle{width:96px}
 .am-char-name{font-size:10px;color:#ffce00;text-shadow:2px 2px 0 #000;letter-spacing:2px}
 .am-char-floor{width:158px;height:14px;background:#c9612b;border:3px solid #7a3a12;box-shadow:0 5px 0 rgba(0,0,0,.4)}
 .am-menu-zone{display:flex;flex-direction:column;align-items:center;gap:13px;max-width:500px}
@@ -63,7 +63,7 @@ const GAME_CSS = `
 .am-picker-label{font-size:7px;color:#cfe0ff;text-shadow:2px 2px 0 #000;line-height:1.9;letter-spacing:1px;text-align:center}
 .am-picker-label span{display:block;font-size:11px;color:#ffce00;margin-top:2px}
 .am-char-tag{display:inline-block;margin-top:2px}
-@media (max-width:560px){.am-title-wrap{gap:16px;padding:10px 14px}.am-char-zone .am-mario-idle{width:60px}.am-char-floor{width:92px;height:11px}.am-char-name{font-size:7px}.am-logo{font-size:19px}.am-logo span{font-size:28px}.am-menu-zone{gap:8px}.am-sub{font-size:6px}.am-arrow{padding:7px 9px;font-size:9px}}
+@media (max-width:560px){.am-title-wrap{gap:16px;padding:10px 14px}.am-char-zone .am-mario-idle{width:52px}.am-char-floor{width:92px;height:11px}.am-char-name{font-size:7px}.am-logo{font-size:19px}.am-logo span{font-size:28px}.am-menu-zone{gap:8px}.am-sub{font-size:6px}.am-arrow{padding:7px 9px;font-size:9px}}
 .am-sub{font-size:8px;line-height:1.9;color:#e8f0ff;max-width:540px}
 .am-best{font-size:9px;color:#ffce00;min-height:12px}
 .am-controls{display:flex;flex-wrap:wrap;gap:8px 16px;justify-content:center;font-size:7px;color:#cfe0ff;max-width:560px}
@@ -141,7 +141,7 @@ function mountAdventurousMario(root) {
       <div class="am-layer am-title hidden" id="amTitle">
         <div class="am-title-wrap">
           <div class="am-char-zone">
-            <img class="am-mario-idle" id="amIdle" alt="Personaje seleccionado" />
+            <canvas class="am-mario-idle" id="amIdle" width="56" height="112" aria-label="Personaje seleccionado"></canvas>
             <div class="am-char-floor"></div>
             <div class="am-char-name" id="amCharName">MARIO</div>
           </div>
@@ -287,11 +287,13 @@ function mountAdventurousMario(root) {
     { id: "mario", name: "MARIO", glow: "rgba(229,37,33,.45)",
       small: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85626-removebg-preview.png",
       big: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85627-removebg-preview.png",
-      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85732-removebg-preview.png?updatedAt=1773456425085" },
+      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/85732-removebg-preview.png?updatedAt=1773456425085",
+      crop: { small: [0, 0.016, 0.9667, 0.984], big: [0.0106, 0.0029, 0.9894, 0.9971], dead: [0, 0.0302, 1, 0.9698] } },
     { id: "luigi", name: "LUIGI", glow: "rgba(40,220,90,.55)",
       small: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20peque%C3%B1o.png",
       big: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20grande.png",
-      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20lose%20(1).png" },
+      dead: "https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/luigi%20lose%20(1).png",
+      crop: { small: [0.2492, 0.275, 0.4558, 0.72], big: [0.2525, 0, 0.5017, 1], dead: [0.2146, 0.0746, 0.5708, 0.8508] } },
   ];
 
   /* ---------------- Assets ---------------- */
@@ -360,12 +362,24 @@ function mountAdventurousMario(root) {
     charIdx = ((i % CHARACTERS.length) + CHARACTERS.length) % CHARACTERS.length;
     selChar = CHARACTERS[charIdx];
     try { localStorage.setItem("am_char", selChar.id); } catch (e) { /* sin storage */ }
-    const im = img("big_" + selChar.id) || img("small_" + selChar.id);
-    if (im) ui.idle.src = im.src;
+    paintIdle();
     if (ui.charLabel) ui.charLabel.textContent = selChar.name;
     if (ui.charName) ui.charName.textContent = selChar.name;
     ui.idle.style.filter = 'drop-shadow(0 6px 0 rgba(0,0,0,.4)) drop-shadow(0 0 14px ' + selChar.glow + ')';
     if (!silent && S.mode === "TITLE" && A.sfx && A.sfx.tick) A.sfx.tick();
+  }
+  // Dibuja el sprite grande del personaje recortado (sin transparencia sobrante) en el lienzo del menú,
+  // para que MARIO y LUIGI se vean EXACTAMENTE del mismo tamaño en la pantalla de título.
+  function paintIdle() {
+    const c = ui.idle;
+    if (!c || !c.getContext) return;
+    const cx = c.getContext("2d");
+    cx.clearRect(0, 0, c.width, c.height);
+    const im = img("big_" + selChar.id);
+    if (!im) return;
+    const cr = selChar.crop ? selChar.crop.big : null;
+    if (cr) cx.drawImage(im, cr[0] * im.naturalWidth, cr[1] * im.naturalHeight, cr[2] * im.naturalWidth, cr[3] * im.naturalHeight, 0, 0, c.width, c.height);
+    else cx.drawImage(im, 0, 0, c.width, c.height);
   }
 
   /* ---------------- Audio (WebAudio, sin archivos) ---------------- */
@@ -1072,7 +1086,8 @@ function mountAdventurousMario(root) {
         if (it.y <= it.emergeY) { it.y = it.emergeY; it.active = true; }
       } else if (it.kind !== "flower") {
         it.vy = Math.min(it.vy + GRAV, MAX_FALL);
-        if (moveX(it)) it.vx *= -1;
+        const spd = it.vx; // moveX deja vx en 0 al chocar: guardarla para poder rebotar
+        if (moveX(it)) it.vx = -spd || 2.2; // hongo/estrella/1UP rebotan y siguen caminando
         moveY(it);
         if (it.kind === "star" && it.grounded) it.vy = -8.5;
         if (it.y > 620) { items.splice(i, 1); continue; }
@@ -1906,7 +1921,9 @@ function mountAdventurousMario(root) {
     const p = player;
     if (!p || p.playerMode === "hidden") return;
     if (p.invuln > 0 && p.playerMode === "normal" && (S.frame >> 2) % 2 === 0) return;
-    const im = p.playerMode === "dead" ? img("dead_" + selChar.id) : p.power >= 1 ? img("big_" + selChar.id) : img("small_" + selChar.id);
+    const part = p.playerMode === "dead" ? "dead" : p.power >= 1 ? "big" : "small";
+    const im = img(part + "_" + selChar.id);
+    const cr = selChar.crop ? selChar.crop[part] : null;
     ctx.save();
     ctx.globalAlpha = p.opacity;
     ctx.translate(Math.round(p.x) + p.w / 2, Math.round(p.y) + p.h);
@@ -1919,7 +1936,8 @@ function mountAdventurousMario(root) {
     }
     if (p.starT > 0) ctx.filter = "hue-rotate(" + ((S.frame * 29) % 360) + "deg) saturate(1.7) brightness(1.15)";
     else if (p.power === 2) ctx.filter = "saturate(0.3) brightness(1.4)";
-    if (im) ctx.drawImage(im, -p.w / 2, -p.h, p.w, p.h);
+    if (im && cr) ctx.drawImage(im, cr[0] * im.naturalWidth, cr[1] * im.naturalHeight, cr[2] * im.naturalWidth, cr[3] * im.naturalHeight, -p.w / 2, -p.h, p.w, p.h);
+    else if (im) ctx.drawImage(im, -p.w / 2, -p.h, p.w, p.h);
     else {
       ctx.fillStyle = selChar.id === "luigi" ? "#2ea44f" : "#e52521"; ctx.fillRect(-p.w / 2, -p.h, p.w, p.h * 0.55);
       ctx.fillStyle = "#2b5fd9"; ctx.fillRect(-p.w / 2, -p.h + p.h * 0.5, p.w, p.h * 0.5);
@@ -2110,6 +2128,7 @@ function mountAdventurousMario(root) {
         starT: player ? player.starT : 0,
         cam: Math.round(camera.x),
         enemies: enemies.length,
+        itemSample: items.slice(0, 3).map((it) => ({ k: it.kind, x: Math.round(it.x), y: Math.round(it.y), vx: Math.round(it.vx * 100) / 100, act: it.active })),
         enemySample: enemies.slice(0, 4).map((e) => ({ k: e.kind, x: Math.round(e.x), y: Math.round(e.y) })),
         plants: enemies.filter((e) => e.kind === "piranha").map((e) => ({ x: Math.round(e.x), y: Math.round(e.y) })),
         items: items.map((i) => i.kind),
@@ -2137,6 +2156,10 @@ function mountAdventurousMario(root) {
       if (kind === "flower") { if (player.power === 0) { player.y -= T; player.h = T * 2; } player.power = 2; updateHUD(); return "fire"; }
       if (kind === "star") { player.starT = 640; return "star"; }
       return "?";
+    };
+    window.__AM.spawnItem = (kind, x, y) => {
+      items.push(makeItem(x, y, kind));
+      return "spawned " + kind + " at " + x + "," + y;
     };
   }
 
