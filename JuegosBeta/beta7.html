@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fireboy and Watergirl: Temple of Elements</title>
+    <title>Fireboy and Watergirl - Templo del Legado</title>
     <style>
         * {
             margin: 0;
@@ -12,8 +12,8 @@
         }
 
         body {
-            font-family: 'Press Start 2P', cursive;
-            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            font-family: 'Arial', sans-serif;
+            background: linear-gradient(135deg, #1a1a2e, #0f0f1e);
             display: flex;
             justify-content: center;
             align-items: center;
@@ -21,108 +21,88 @@
             overflow: hidden;
         }
 
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-
         .game-container {
             position: relative;
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
+            background: #000;
+            border-radius: 15px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+            border: 2px solid #333;
         }
 
         canvas {
-            border: 4px solid #2c3e50;
-            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
-            background: #0d0b08;
-            max-width: 100%;
-            max-height: 100%;
+            border: 3px solid #444;
+            border-radius: 10px;
+            display: block;
+            background: #1a1611;
         }
 
-        .hud {
+        .ui-panel {
             position: absolute;
-            top: 20px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 30px;
+            top: 30px;
+            left: 30px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 20px;
+            border-radius: 10px;
             color: white;
             font-size: 14px;
-            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
+            border: 2px solid #444;
+            backdrop-filter: blur(5px);
             z-index: 10;
-            background: rgba(0, 0, 0, 0.6);
-            padding: 10px 20px;
-            border-radius: 10px;
-            border: 2px solid #34495e;
-        }
-
-        .hud-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .hud-icon {
-            width: 20px;
-            height: 20px;
-            display: inline-block;
         }
 
         .controls {
             position: absolute;
-            bottom: 20px;
+            bottom: 30px;
             left: 50%;
             transform: translateX(-50%);
-            display: flex;
-            gap: 50px;
-            color: white;
-            font-size: 10px;
-            text-align: center;
-            z-index: 10;
-            background: rgba(0, 0, 0, 0.7);
-            padding: 15px;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
             border-radius: 10px;
-            border: 2px solid #34495e;
+            color: white;
+            font-size: 13px;
+            border: 2px solid #444;
+            backdrop-filter: blur(5px);
+            z-index: 10;
+            display: flex;
+            gap: 30px;
         }
 
         .control-group {
             display: flex;
             flex-direction: column;
+            align-items: center;
             gap: 5px;
         }
 
-        .control-title {
-            color: #f39c12;
-            margin-bottom: 5px;
-            font-size: 11px;
+        .control-keys {
+            display: flex;
+            gap: 5px;
+            margin-top: 5px;
         }
 
         .key {
-            display: inline-block;
-            padding: 4px 8px;
-            background: #34495e;
-            border: 2px solid #2c3e50;
-            border-radius: 4px;
-            margin: 0 2px;
-            font-size: 9px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+            background: #333;
+            padding: 5px 10px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            font-weight: bold;
+            min-width: 30px;
+            text-align: center;
             transition: all 0.2s;
         }
 
         .key.active {
-            background: #e74c3c;
-            transform: translateY(1px);
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+            background: #ff6b6b;
+            transform: scale(0.95);
         }
 
-        .fire-keys .key.active {
-            background: #e74c3c;
+        .fire-controls .key.active {
+            background: #ff6b6b;
         }
 
-        .water-keys .key.active {
-            background: #3498db;
+        .water-controls .key.active {
+            background: #4ecdc4;
         }
 
         .message {
@@ -130,115 +110,116 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #f39c12;
-            font-size: 24px;
-            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+            background: rgba(0, 0, 0, 0.9);
+            color: white;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: bold;
             z-index: 100;
-            animation: fadeInOut 1.5s ease-in-out;
-            background: rgba(0, 0, 0, 0.8);
-            padding: 15px 25px;
-            border-radius: 10px;
-            border: 3px solid #f39c12;
+            border: 2px solid #444;
+            animation: fadeInOut 2s ease-in-out;
         }
 
         .level-transition {
             position: absolute;
-            top: 40%;
+            top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            color: #fff;
-            font-size: 32px;
-            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
-            z-index: 100;
-            animation: levelPulse 1.5s ease-in-out;
-            background: linear-gradient(135deg, #e74c3c, #3498db);
+            background: rgba(0, 0, 0, 0.95);
+            color: white;
             padding: 20px 40px;
-            border-radius: 15px;
-            border: 4px solid #f39c12;
+            border-radius: 10px;
+            font-size: 24px;
+            font-weight: bold;
+            z-index: 100;
+            border: 3px solid #444;
+            animation: levelPulse 2s ease-in-out;
         }
 
         @keyframes fadeInOut {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
-            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+            20% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            80% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
         }
 
         @keyframes levelPulse {
             0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
-            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
             100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
         }
 
-        @media (max-width: 768px) {
-            .hud {
-                font-size: 10px;
-                gap: 15px;
-                padding: 8px 15px;
-            }
-            
-            .controls {
-                font-size: 8px;
-                gap: 25px;
-                padding: 10px;
-            }
-            
-            .control-title {
-                font-size: 9px;
-            }
-            
-            .key {
-                padding: 3px 6px;
-                font-size: 7px;
-            }
+        .fire-color { color: #ff6b6b; }
+        .water-color { color: #4ecdc4; }
+
+        .stats {
+            display: flex;
+            gap: 20px;
+            align-items: center;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .hearts {
+            display: flex;
+            gap: 3px;
+        }
+
+        .heart {
+            color: #ff4444;
+            font-size: 16px;
         }
     </style>
 </head>
 <body>
     <div class="game-container">
-        <div class="hud">
-            <div class="hud-item">
-                <span class="hud-icon">🔥</span>
-                <span id="fireLives">❤️❤️❤️</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-icon">💧</span>
-                <span id="waterLives">❤️❤️❤️</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-icon">💎</span>
-                <span id="score">0</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-icon">⏱️</span>
-                <span id="timer">00:00</span>
-            </div>
-            <div class="hud-item">
-                <span class="hud-icon">📍</span>
-                <span>Nivel <span id="currentLevel">1</span></span>
+        <div class="ui-panel">
+            <div class="stats">
+                <div class="stat-item">
+                    <span>Nivel:</span>
+                    <span id="currentLevel" style="font-weight: bold;">1</span>
+                </div>
+                <div class="stat-item">
+                    <span>Puntos:</span>
+                    <span id="score" style="font-weight: bold; color: #ffd700;">0</span>
+                </div>
+                <div class="stat-item">
+                    <span>Vidas:</span>
+                    <div class="hearts" id="hearts">
+                        <span class="heart">❤️</span>
+                        <span class="heart">❤️</span>
+                        <span class="heart">❤️</span>
+                    </div>
+                </div>
+                <div class="stat-item">
+                    <span>⏱️</span>
+                    <span id="timer">00:00</span>
+                </div>
             </div>
         </div>
 
-        <canvas id="gameCanvas"></canvas>
+        <canvas id="gameCanvas" width="900" height="500"></canvas>
 
         <div class="controls">
-            <div class="control-group fire-keys">
-                <div class="control-title">🔥 Fireboy</div>
-                <div>
-                    <span class="key" id="fire-up">W</span> Saltar
-                </div>
-                <div>
-                    <span class="key" id="fire-left">A</span>
-                    <span class="key" id="fire-right">D</span> Mover
+            <div class="control-group fire-controls">
+                <span class="fire-color">🔥 Fireboy</span>
+                <div class="control-keys">
+                    <div class="key" id="fire-left">A</div>
+                    <div class="key" id="fire-up">W</div>
+                    <div class="key" id="fire-right">D</div>
                 </div>
             </div>
-            <div class="control-group water-keys">
-                <div class="control-title">💧 Watergirl</div>
-                <div>
-                    <span class="key" id="water-up">↑</span> Saltar
-                </div>
-                <div>
-                    <span class="key" id="water-left">←</span>
-                    <span class="key" id="water-right">→</span> Mover
+            <div class="control-group water-controls">
+                <span class="water-color">💧 Watergirl</span>
+                <div class="control-keys">
+                    <div class="key" id="water-left">←</div>
+                    <div class="key" id="water-up">↑</div>
+                    <div class="key" id="water-right">→</div>
                 </div>
             </div>
         </div>
@@ -248,310 +229,55 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
 
-        // Responsive canvas setup
-        function resizeCanvas() {
-            const container = document.querySelector('.game-container');
-            const maxWidth = window.innerWidth * 0.95;
-            const maxHeight = window.innerHeight * 0.85;
-            
-            // Maintain aspect ratio
-            const aspectRatio = 900 / 600;
-            let width = maxWidth;
-            let height = width / aspectRatio;
-            
-            if (height > maxHeight) {
-                height = maxHeight;
-                width = height * aspectRatio;
-            }
-            
-            canvas.width = width;
-            canvas.height = height;
-            
-            // Scale game elements
-            if (gameState.scale !== width / 900) {
-                gameState.scale = width / 900;
-                if (gameState.currentLevel > 0) {
-                    loadLevel(gameState.currentLevel);
-                }
-            }
-        }
-
-        window.addEventListener('resize', resizeCanvas);
-        resizeCanvas();
-
         // Game state
         const gameState = {
+            currentLevel: 1,
             score: 0,
+            lives: 3,
             timer: 0,
-            currentLevel: 0,
             isPlaying: true,
             transitioning: false,
-            scale: 1,
             particles: []
         };
 
-        // Player class
-        class Player {
-            constructor(x, y, type, color) {
-                this.x = x * gameState.scale;
-                this.y = y * gameState.scale;
-                this.width = 30 * gameState.scale;
-                this.height = 40 * gameState.scale;
-                this.type = type;
-                this.color = color;
-                this.vx = 0;
-                this.vy = 0;
-                this.speed = 3 * gameState.scale;
-                this.jumpPower = 10 * gameState.scale;
-                this.onGround = false;
-                this.lives = 3;
-                this.facing = 1;
-                this.animationFrame = 0;
-                this.image = new Image();
-                this.imageLoaded = false;
-                
-                // Load character image
-                this.image.src = type === 'fire' 
-                    ? 'https://i.imgur.com/8hQz8zC.png' 
-                    : 'https://i.imgur.com/5Q2R5rF.png';
-                    
-                this.image.onload = () => {
-                    this.imageLoaded = true;
-                };
-            }
+        // Load character images
+        const fireboyImg = new Image();
+        const watergirlImg = new Image();
+        let imagesLoaded = 0;
 
-            update() {
-                // Apply gravity
-                this.vy += 0.4 * gameState.scale;
-                
-                // Update position
-                this.x += this.vx;
-                this.y += this.vy;
-                
-                // Friction
-                this.vx *= 0.85;
-                
-                // Screen boundaries
-                if (this.x < 0) this.x = 0;
-                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
-                
-                // Ground collision
-                if (this.y + this.height > canvas.height - 20) {
-                    this.y = canvas.height - 20 - this.height;
-                    this.vy = 0;
-                    this.onGround = true;
-                }
-                
-                // Platform collision
-                if (currentLevel) {
-                    currentLevel.platforms.forEach(platform => {
-                        const scaledPlatform = {
-                            x: platform.x * gameState.scale,
-                            y: platform.y * gameState.scale,
-                            width: platform.width * gameState.scale,
-                            height: platform.height * gameState.scale
-                        };
-                        
-                        if (this.checkCollision(scaledPlatform)) {
-                            // Top collision
-                            if (this.vy > 0 && this.y < scaledPlatform.y) {
-                                this.y = scaledPlatform.y - this.height;
-                                this.vy = 0;
-                                this.onGround = true;
-                            }
-                            // Bottom collision
-                            else if (this.vy < 0 && this.y > scaledPlatform.y) {
-                                this.y = scaledPlatform.y + scaledPlatform.height;
-                                this.vy = 0;
-                            }
-                            // Side collisions
-                            else if (this.vx > 0) {
-                                this.x = scaledPlatform.x - this.width;
-                                this.vx = 0;
-                            } else if (this.vx < 0) {
-                                this.x = scaledPlatform.x + scaledPlatform.width;
-                                this.vx = 0;
-                            }
-                        }
-                    });
-                    
-                    // Hazard collision
-                    currentLevel.hazards.forEach(hazard => {
-                        const scaledHazard = {
-                            x: hazard.x * gameState.scale,
-                            y: hazard.y * gameState.scale,
-                            width: hazard.width * gameState.scale,
-                            height: hazard.height * gameState.scale
-                        };
-                        
-                        if (this.checkCollision(scaledHazard)) {
-                            if ((hazard.type === 'fire' && this.type === 'water') ||
-                                (hazard.type === 'water' && this.type === 'fire') ||
-                                hazard.type === 'mixed') {
-                                this.takeDamage();
-                            }
-                        }
-                    });
-                    
-                    // Gem collection
-                    currentLevel.gems = currentLevel.gems.filter(gem => {
-                        const scaledGem = {
-                            x: gem.x * gameState.scale,
-                            y: gem.y * gameState.scale,
-                            size: gem.size * gameState.scale
-                        };
-                        
-                        if (this.checkGemCollision(scaledGem)) {
-                            if (gem.type === this.type) {
-                                gameState.score += 100;
-                                document.getElementById('score').textContent = gameState.score;
-                                this.createCollectParticles(scaledGem.x + scaledGem.size/2, scaledGem.y + scaledGem.size/2);
-                                return false;
-                            }
-                        }
-                        return true;
-                    });
-                    
-                    // Door activation
-                    currentLevel.doors.forEach(door => {
-                        const scaledDoor = {
-                            x: door.x * gameState.scale,
-                            y: door.y * gameState.scale,
-                            width: door.width * gameState.scale,
-                            height: door.height * gameState.scale
-                        };
-                        
-                        if (this.checkCollision(scaledDoor) && door.type === this.type) {
-                            door.activated = true;
-                        }
-                    });
-                }
-                
-                // Animation
-                if (Math.abs(this.vx) > 0.5) {
-                    this.animationFrame = (this.animationFrame + 0.2) % 4;
-                } else {
-                    this.animationFrame = 0;
-                }
-            }
+        fireboyImg.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-24_113155005-removebg-preview.png';
+        watergirlImg.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-24_113221934-removebg-preview.png';
 
-            checkCollision(obj) {
-                return this.x < obj.x + obj.width &&
-                       this.x + this.width > obj.x &&
-                       this.y < obj.y + obj.height &&
-                       this.y + this.height > obj.y;
+        fireboyImg.onload = () => {
+            imagesLoaded++;
+            if (imagesLoaded === 2) {
+                startGame();
             }
+        };
 
-            checkGemCollision(gem) {
-                const centerX = this.x + this.width / 2;
-                const centerY = this.y + this.height / 2;
-                const gemCenterX = gem.x + gem.size / 2;
-                const gemCenterY = gem.y + gem.size / 2;
-                const distance = Math.sqrt(Math.pow(centerX - gemCenterX, 2) + Math.pow(centerY - gemCenterY, 2));
-                return distance < (this.width / 2 + gem.size / 2);
+        watergirlImg.onload = () => {
+            imagesLoaded++;
+            if (imagesLoaded === 2) {
+                startGame();
             }
-
-            takeDamage() {
-                this.lives--;
-                this.createDamageParticles();
-                
-                if (this.type === 'fire') {
-                    document.getElementById('fireLives').textContent = '❤️'.repeat(Math.max(0, this.lives));
-                } else {
-                    document.getElementById('waterLives').textContent = '❤️'.repeat(Math.max(0, this.lives));
-                }
-                
-                if (this.lives <= 0) {
-                    gameOver();
-                } else {
-                    // Reset position
-                    if (this.type === 'fire') {
-                        this.x = currentLevel.fireStart.x * gameState.scale;
-                        this.y = currentLevel.fireStart.y * gameState.scale;
-                    } else {
-                        this.x = currentLevel.waterStart.x * gameState.scale;
-                        this.y = currentLevel.waterStart.y * gameState.scale;
-                    }
-                    this.vx = 0;
-                    this.vy = 0;
-                }
-            }
-
-            createCollectParticles(x, y) {
-                for (let i = 0; i < 10; i++) {
-                    gameState.particles.push(new Particle(x, y, this.color));
-                }
-            }
-
-            createDamageParticles() {
-                for (let i = 0; i < 15; i++) {
-                    gameState.particles.push(new Particle(
-                        this.x + this.width / 2,
-                        this.y + this.height / 2,
-                        '#ff0000'
-                    ));
-                }
-            }
-
-            draw() {
-                ctx.save();
-                
-                if (this.imageLoaded) {
-                    // Draw character image
-                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
-                } else {
-                    // Fallback to colored rectangle
-                    ctx.fillStyle = this.color;
-                    ctx.fillRect(this.x, this.y, this.width, this.height);
-                    
-                    // Character details
-                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
-                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
-                    
-                    // Eyes
-                    ctx.fillStyle = '#fff';
-                    ctx.fillRect(this.x + 8, this.y + 12, 4, 4);
-                    ctx.fillRect(this.x + 18, this.y + 12, 4, 4);
-                }
-                
-                ctx.restore();
-            }
-
-            jump() {
-                if (this.onGround) {
-                    this.vy = -this.jumpPower;
-                    this.onGround = false;
-                }
-            }
-
-            moveLeft() {
-                this.vx = -this.speed;
-                this.facing = -1;
-            }
-
-            moveRight() {
-                this.vx = this.speed;
-                this.facing = 1;
-            }
-        }
+        };
 
         // Particle class
         class Particle {
-            constructor(x, y, color) {
+            constructor(x, y, color, velocity) {
                 this.x = x;
                 this.y = y;
-                this.vx = (Math.random() - 0.5) * 4 * gameState.scale;
-                this.vy = (Math.random() - 0.5) * 4 * gameState.scale;
                 this.color = color;
-                this.life = 1;
+                this.velocity = velocity;
+                this.life = 1.0;
                 this.decay = 0.02;
-                this.size = Math.random() * 3 * gameState.scale + 2 * gameState.scale;
+                this.size = Math.random() * 3 + 2;
             }
 
             update() {
-                this.x += this.vx;
-                this.y += this.vy;
-                this.vy += 0.1 * gameState.scale;
+                this.x += this.velocity.x;
+                this.y += this.velocity.y;
+                this.velocity.y += 0.1;
                 this.life -= this.decay;
                 this.size *= 0.98;
             }
@@ -567,337 +293,661 @@
             }
         }
 
-        // Level designs
+        // Player class
+        class Player {
+            constructor(x, y, type, color) {
+                this.x = x;
+                this.y = y;
+                this.width = 30;
+                this.height = 40;
+                this.type = type;
+                this.color = color;
+                this.velocityX = 0;
+                this.velocityY = 0;
+                this.speed = 3;
+                this.jumpPower = 10;
+                this.gravity = 0.4;
+                this.onGround = false;
+                this.invulnerable = false;
+                this.invulnerableTime = 0;
+                this.gemsCollected = 0;
+            }
+
+            moveLeft() {
+                this.velocityX = -this.speed;
+            }
+
+            moveRight() {
+                this.velocityX = this.speed;
+            }
+
+            jump() {
+                if (this.onGround) {
+                    this.velocityY = -this.jumpPower;
+                    this.createJumpParticles();
+                }
+            }
+
+            createJumpParticles() {
+                for (let i = 0; i < 5; i++) {
+                    gameState.particles.push(new Particle(
+                        this.x + this.width/2,
+                        this.y + this.height,
+                        this.type === 'fire' ? '#ff6b6b' : '#4ecdc4',
+                        {
+                            x: (Math.random() - 0.5) * 2,
+                            y: Math.random() * -1
+                        }
+                    ));
+                }
+            }
+
+            update() {
+                // Apply gravity
+                this.velocityY += this.gravity;
+                
+                // Update position
+                this.x += this.velocityX;
+                this.y += this.velocityY;
+                
+                // Friction
+                this.velocityX *= 0.85;
+                
+                // Boundaries
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                
+                // Ground collision
+                if (this.y + this.height > canvas.height - 20) {
+                    this.y = canvas.height - 20 - this.height;
+                    this.velocityY = 0;
+                    this.onGround = true;
+                } else {
+                    this.onGround = false;
+                }
+                
+                // Platform collision
+                this.checkPlatformCollision();
+                
+                // Hazard collision
+                this.checkHazardCollision();
+                
+                // Gem collection
+                this.checkGemCollection();
+                
+                // Door activation
+                this.checkDoorActivation();
+                
+                // Update invulnerability
+                if (this.invulnerable) {
+                    this.invulnerableTime--;
+                    if (this.invulnerableTime <= 0) {
+                        this.invulnerable = false;
+                    }
+                }
+            }
+
+            checkPlatformCollision() {
+                if (!currentLevel) return;
+                
+                currentLevel.platforms.forEach(platform => {
+                    if (this.x < platform.x + platform.width &&
+                        this.x + this.width > platform.x &&
+                        this.y < platform.y + platform.height &&
+                        this.y + this.height > platform.y) {
+                        
+                        // Top collision
+                        if (this.velocityY > 0 && this.y < platform.y) {
+                            this.y = platform.y - this.height;
+                            this.velocityY = 0;
+                            this.onGround = true;
+                        }
+                        // Bottom collision
+                        else if (this.velocityY < 0 && this.y > platform.y) {
+                            this.y = platform.y + platform.height;
+                            this.velocityY = 0;
+                        }
+                        // Side collisions
+                        else if (this.velocityX > 0) {
+                            this.x = platform.x - this.width;
+                            this.velocityX = 0;
+                        } else if (this.velocityX < 0) {
+                            this.x = platform.x + platform.width;
+                            this.velocityX = 0;
+                        }
+                    }
+                });
+            }
+
+            checkHazardCollision() {
+                if (!currentLevel || this.invulnerable) return;
+                
+                currentLevel.hazards.forEach(hazard => {
+                    if (this.x < hazard.x + hazard.width &&
+                        this.x + this.width > hazard.x &&
+                        this.y < hazard.y + hazard.height &&
+                        this.y + this.height > hazard.y) {
+                        
+                        // Check if player can survive hazard
+                        if ((this.type === 'fire' && hazard.type === 'fire') ||
+                            (this.type === 'water' && hazard.type === 'water')) {
+                            // Player dies
+                            this.takeDamage();
+                        } else if (hazard.type === 'mixed') {
+                            // Acid kills both
+                            this.takeDamage();
+                        }
+                    }
+                });
+            }
+
+            takeDamage() {
+                gameState.lives--;
+                this.invulnerable = true;
+                this.invulnerableTime = 120;
+                
+                // Update hearts display
+                const hearts = document.querySelectorAll('.heart');
+                hearts.forEach((heart, index) => {
+                    if (index >= gameState.lives) {
+                        heart.style.opacity = '0.3';
+                    }
+                });
+                
+                // Create damage particles
+                for (let i = 0; i < 10; i++) {
+                    gameState.particles.push(new Particle(
+                        this.x + this.width/2,
+                        this.y + this.height/2,
+                        '#ff0000',
+                        {
+                            x: (Math.random() - 0.5) * 5,
+                            y: (Math.random() - 0.5) * 5
+                        }
+                    ));
+                }
+                
+                if (gameState.lives <= 0) {
+                    gameOver();
+                } else {
+                    // Reset position
+                    if (this.type === 'fire') {
+                        this.x = currentLevel.fireStart.x;
+                        this.y = currentLevel.fireStart.y;
+                    } else {
+                        this.x = currentLevel.waterStart.x;
+                        this.y = currentLevel.waterStart.y;
+                    }
+                    this.velocityX = 0;
+                    this.velocityY = 0;
+                }
+            }
+
+            checkGemCollection() {
+                if (!currentLevel) return;
+                
+                currentLevel.gems = currentLevel.gems.filter(gem => {
+                    const distance = Math.sqrt(
+                        Math.pow(this.x + this.width/2 - (gem.x + gem.size/2), 2) +
+                        Math.pow(this.y + this.height/2 - (gem.y + gem.size/2), 2)
+                    );
+                    
+                    if (distance < this.width/2 + gem.size/2) {
+                        // Check gem type
+                        if ((this.type === 'fire' && gem.type === 'fire') ||
+                            (this.type === 'water' && gem.type === 'water')) {
+                            // Collect gem
+                            gameState.score += 100;
+                            document.getElementById('score').textContent = gameState.score;
+                            this.gemsCollected++;
+                            
+                            // Create collection particles
+                            for (let i = 0; i < 8; i++) {
+                                gameState.particles.push(new Particle(
+                                    gem.x + gem.size/2,
+                                    gem.y + gem.size/2,
+                                    gem.type === 'fire' ? '#ff6b6b' : '#4ecdc4',
+                                    {
+                                        x: (Math.random() - 0.5) * 4,
+                                        y: (Math.random() - 0.5) * 4
+                                    }
+                                ));
+                            }
+                            
+                            return false;
+                        }
+                    }
+                    return true;
+                });
+            }
+
+            checkDoorActivation() {
+                if (!currentLevel) return;
+                
+                currentLevel.doors.forEach(door => {
+                    if (door.type === this.type) {
+                        if (this.x < door.x + door.width &&
+                            this.x + this.width > door.x &&
+                            this.y < door.y + door.height &&
+                            this.y + this.height > door.y) {
+                            door.activated = true;
+                            
+                            // Create activation particles
+                            for (let i = 0; i < 5; i++) {
+                                gameState.particles.push(new Particle(
+                                    door.x + door.width/2,
+                                    door.y + door.height/2,
+                                    this.color,
+                                    {
+                                        x: (Math.random() - 0.5) * 3,
+                                        y: (Math.random() - 0.5) * 3
+                                    }
+                                ));
+                            }
+                        }
+                    }
+                });
+            }
+
+            draw() {
+                ctx.save();
+                
+                // Flash effect when invulnerable
+                if (this.invulnerable && Math.floor(this.invulnerableTime / 5) % 2 === 0) {
+                    ctx.globalAlpha = 0.5;
+                }
+                
+                // Draw character image
+                const img = this.type === 'fire' ? fireboyImg : watergirlImg;
+                if (img.complete) {
+                    ctx.drawImage(img, this.x, this.y, this.width, this.height);
+                } else {
+                    // Fallback to colored rectangle if image not loaded
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                }
+                
+                ctx.restore();
+            }
+        }
+
+        // Level data
         const levels = {
             1: {
-                name: "Entrada a la Caverna",
+                name: "Entrada de la Caverna",
                 platforms: [
-                    {x: 0, y: 480, width: 300, height: 20, type: 'stone'},
-                    {x: 350, y: 480, width: 300, height: 20, type: 'stone'},
-                    {x: 700, y: 480, width: 200, height: 20, type: 'stone'},
-                    {x: 100, y: 400, width: 100, height: 15, type: 'wood'},
-                    {x: 400, y: 400, width: 100, height: 15, type: 'wood'},
-                    {x: 650, y: 400, width: 100, height: 15, type: 'wood'},
-                    {x: 250, y: 320, width: 100, height: 15, type: 'wood'},
-                    {x: 500, y: 320, width: 100, height: 15, type: 'wood'},
-                    {x: 750, y: 320, width: 100, height: 15, type: 'wood'},
-                    {x: 150, y: 240, width: 100, height: 15, type: 'wood'},
-                    {x: 450, y: 240, width: 100, height: 15, type: 'wood'},
-                    {x: 700, y: 240, width: 100, height: 15, type: 'wood'},
-                    {x: 300, y: 160, width: 100, height: 15, type: 'wood'},
-                    {x: 550, y: 160, width: 100, height: 15, type: 'wood'},
-                    {x: 800, y: 160, width: 100, height: 15, type: 'wood'},
-                    {x: 200, y: 80, width: 100, height: 15, type: 'wood'},
-                    {x: 500, y: 80, width: 100, height: 15, type: 'wood'},
-                    {x: 750, y: 80, width: 100, height: 15, type: 'wood'},
+                    // Base
+                    {x: 0, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 200, y: 470, width: 150, height: 30, type: 'stone'},
+                    {x: 400, y: 480, width: 200, height: 20, type: 'stone'},
+                    {x: 650, y: 470, width: 150, height: 30, type: 'stone'},
+                    {x: 850, y: 480, width: 50, height: 20, type: 'stone'},
+                    // First platforms
+                    {x: 50, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 250, y: 350, width: 80, height: 12, type: 'wood'},
+                    {x: 450, y: 300, width: 80, height: 12, type: 'wood'},
+                    {x: 650, y: 350, width: 80, height: 12, type: 'wood'},
+                    {x: 800, y: 400, width: 80, height: 12, type: 'wood'},
+                    // Upper platforms
+                    {x: 100, y: 250, width: 100, height: 12, type: 'wood'},
+                    {x: 300, y: 200, width: 100, height: 12, type: 'wood'},
+                    {x: 500, y: 150, width: 100, height: 12, type: 'wood'},
+                    {x: 700, y: 200, width: 100, height: 12, type: 'wood'},
+                    // Top platforms
+                    {x: 200, y: 100, width: 80, height: 12, type: 'wood'},
+                    {x: 400, y: 50, width: 100, height: 12, type: 'wood'},
+                    {x: 620, y: 100, width: 80, height: 12, type: 'wood'},
+                    // Exit platform
                     {x: 350, y: 0, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
-                    {x: 300, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 650, y: 485, width: 50, height: 15, type: 'water'},
-                    {x: 200, y: 315, width: 50, height: 15, type: 'fire'},
-                    {x: 600, y: 315, width: 50, height: 15, type: 'water'},
-                    {x: 250, y: 235, width: 50, height: 15, type: 'fire'},
-                    {x: 550, y: 235, width: 50, height: 15, type: 'water'},
-                    {x: 400, y: 155, width: 50, height: 15, type: 'fire'},
-                    {x: 650, y: 155, width: 50, height: 15, type: 'water'},
-                    {x: 300, y: 75, width: 50, height: 15, type: 'fire'},
-                    {x: 600, y: 75, width: 50, height: 15, type: 'water'}
+                    // Bottom hazards
+                    {x: 150, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 350, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 600, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 800, y: 485, width: 50, height: 15, type: 'water'},
+                    // Middle hazards
+                    {x: 180, y: 340, width: 20, height: 10, type: 'mixed'},
+                    {x: 380, y: 290, width: 20, height: 10, type: 'mixed'},
+                    {x: 580, y: 340, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
+                    {x: 230, y: 190, width: 15, height: 8, type: 'water'},
+                    {x: 430, y: 140, width: 15, height: 8, type: 'fire'},
+                    {x: 630, y: 190, width: 15, height: 8, type: 'water'}
                 ],
                 gems: [
-                    {x: 150, y: 365, size: 12, type: 'fire'},
-                    {x: 450, y: 365, size: 12, type: 'water'},
-                    {x: 700, y: 365, size: 12, type: 'fire'},
-                    {x: 300, y: 285, size: 12, type: 'water'},
-                    {x: 550, y: 285, size: 12, type: 'fire'},
-                    {x: 200, y: 205, size: 12, type: 'water'},
-                    {x: 500, y: 205, size: 12, type: 'fire'},
-                    {x: 750, y: 205, size: 12, type: 'water'},
-                    {x: 350, y: 125, size: 12, type: 'fire'},
-                    {x: 600, y: 125, size: 12, type: 'water'},
-                    {x: 250, y: 45, size: 12, type: 'fire'},
-                    {x: 550, y: 45, size: 12, type: 'water'},
-                    {x: 400, y: -35, size: 15, type: 'fire'},
-                    {x: 450, y: -35, size: 15, type: 'water'},
-                    {x: 500, y: -35, size: 15, type: 'fire'}
+                    {x: 90, y: 365, size: 12, type: 'fire'},
+                    {x: 290, y: 315, size: 12, type: 'water'},
+                    {x: 490, y: 265, size: 12, type: 'fire'},
+                    {x: 690, y: 315, size: 12, type: 'water'},
+                    {x: 150, y: 215, size: 12, type: 'fire'},
+                    {x: 350, y: 165, size: 12, type: 'water'},
+                    {x: 550, y: 115, size: 12, type: 'fire'},
+                    {x: 750, y: 165, size: 12, type: 'water'},
+                    {x: 240, y: 65, size: 12, type: 'fire'},
+                    {x: 450, y: 15, size: 12, type: 'water'},
+                    {x: 660, y: 65, size: 12, type: 'fire'},
+                    {x: 400, y: -20, size: 15, type: 'fire'},
+                    {x: 450, y: -20, size: 15, type: 'water'},
+                    {x: 500, y: -20, size: 15, type: 'fire'}
                 ],
                 doors: [
-                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
-                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
+                    {x: 420, y: -25, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -25, width: 35, height: 40, type: 'water', activated: false}
                 ],
                 fireStart: {x: 20, y: 440},
                 waterStart: {x: 60, y: 440}
             },
             2: {
-                name: "Puentes Colgantes",
+                name: "Cámara de los Puentes Colgantes",
                 platforms: [
-                    {x: 0, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 200, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 400, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 600, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 750, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 75, y: 380, width: 80, height: 12, type: 'wood'},
-                    {x: 275, y: 380, width: 80, height: 12, type: 'wood'},
-                    {x: 475, y: 380, width: 80, height: 12, type: 'wood'},
-                    {x: 675, y: 380, width: 80, height: 12, type: 'wood'},
-                    {x: 150, y: 280, width: 120, height: 8, type: 'bridge'},
-                    {x: 350, y: 280, width: 120, height: 8, type: 'bridge'},
-                    {x: 550, y: 280, width: 120, height: 8, type: 'bridge'},
-                    {x: 200, y: 180, width: 80, height: 12, type: 'wood'},
-                    {x: 400, y: 180, width: 80, height: 12, type: 'wood'},
-                    {x: 600, y: 180, width: 80, height: 12, type: 'wood'},
-                    {x: 250, y: 80, width: 120, height: 8, type: 'bridge'},
-                    {x: 450, y: 80, width: 120, height: 8, type: 'bridge'},
-                    {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
+                    // Base
+                    {x: 0, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 180, y: 470, width: 140, height: 30, type: 'stone'},
+                    {x: 380, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 580, y: 470, width: 140, height: 30, type: 'stone'},
+                    {x: 780, y: 480, width: 120, height: 20, type: 'stone'},
+                    // Lower platforms
+                    {x: 60, y: 380, width: 100, height: 12, type: 'wood'},
+                    {x: 250, y: 340, width: 100, height: 12, type: 'wood'},
+                    {x: 450, y: 380, width: 100, height: 12, type: 'wood'},
+                    {x: 650, y: 340, width: 100, height: 12, type: 'wood'},
+                    // Hanging bridges
+                    {x: 160, y: 280, width: 120, height: 8, type: 'bridge'},
+                    {x: 360, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 560, y: 280, width: 120, height: 8, type: 'bridge'},
+                    {x: 720, y: 240, width: 120, height: 8, type: 'bridge'},
+                    // Upper platforms
+                    {x: 100, y: 180, width: 80, height: 12, type: 'wood'},
+                    {x: 300, y: 140, width: 80, height: 12, type: 'wood'},
+                    {x: 500, y: 180, width: 80, height: 12, type: 'wood'},
+                    {x: 700, y: 140, width: 80, height: 12, type: 'wood'},
+                    // Top platforms
+                    {x: 200, y: 80, width: 100, height: 12, type: 'wood'},
+                    {x: 400, y: 40, width: 100, height: 12, type: 'wood'},
+                    {x: 600, y: 80, width: 100, height: 12, type: 'wood'},
+                    // Exit platform
+                    {x: 350, y: -10, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
-                    {x: 150, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 350, y: 485, width: 50, height: 15, type: 'water'},
-                    {x: 550, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 700, y: 485, width: 50, height: 15, type: 'water'},
-                    {x: 155, y: 275, width: 30, height: 8, type: 'mixed'},
-                    {x: 355, y: 275, width: 30, height: 8, type: 'mixed'},
-                    {x: 555, y: 275, width: 30, height: 8, type: 'mixed'},
-                    {x: 255, y: 75, width: 30, height: 8, type: 'mixed'},
-                    {x: 455, y: 75, width: 30, height: 8, type: 'mixed'}
+                    // Bottom hazards
+                    {x: 120, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 320, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 520, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 720, y: 485, width: 60, height: 15, type: 'fire'},
+                    // Bridge hazards
+                    {x: 220, y: 270, width: 20, height: 10, type: 'mixed'},
+                    {x: 420, y: 230, width: 20, height: 10, type: 'mixed'},
+                    {x: 620, y: 270, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
+                    {x: 180, y: 170, width: 15, height: 8, type: 'fire'},
+                    {x: 380, y: 130, width: 15, height: 8, type: 'water'},
+                    {x: 580, y: 170, width: 15, height: 8, type: 'fire'},
+                    // Top hazards
+                    {x: 280, y: 70, width: 20, height: 10, type: 'mixed'},
+                    {x: 480, y: 30, width: 20, height: 10, type: 'mixed'},
+                    {x: 680, y: 70, width: 20, height: 10, type: 'mixed'}
                 ],
                 gems: [
-                    {x: 115, y: 345, size: 12, type: 'fire'},
-                    {x: 315, y: 345, size: 12, type: 'water'},
-                    {x: 515, y: 345, size: 12, type: 'fire'},
-                    {x: 715, y: 345, size: 12, type: 'water'},
-                    {x: 210, y: 245, size: 12, type: 'fire'},
-                    {x: 410, y: 245, size: 12, type: 'water'},
-                    {x: 610, y: 245, size: 12, type: 'fire'},
-                    {x: 240, y: 145, size: 12, type: 'water'},
-                    {x: 440, y: 145, size: 12, type: 'fire'},
-                    {x: 640, y: 145, size: 12, type: 'water'},
-                    {x: 310, y: 45, size: 12, type: 'fire'},
-                    {x: 510, y: 45, size: 12, type: 'water'},
-                    {x: 400, y: -55, size: 15, type: 'fire'},
-                    {x: 450, y: -55, size: 15, type: 'water'},
-                    {x: 500, y: -55, size: 15, type: 'fire'}
+                    {x: 110, y: 345, size: 12, type: 'fire'},
+                    {x: 300, y: 305, size: 12, type: 'water'},
+                    {x: 500, y: 345, size: 12, type: 'fire'},
+                    {x: 700, y: 305, size: 12, type: 'water'},
+                    {x: 220, y: 245, size: 12, type: 'fire'},
+                    {x: 420, y: 205, size: 12, type: 'water'},
+                    {x: 620, y: 245, size: 12, type: 'fire'},
+                    {x: 140, y: 145, size: 12, type: 'water'},
+                    {x: 340, y: 105, size: 12, type: 'fire'},
+                    {x: 540, y: 145, size: 12, type: 'water'},
+                    {x: 740, y: 105, size: 12, type: 'fire'},
+                    {x: 250, y: 45, size: 12, type: 'water'},
+                    {x: 450, y: 5, size: 12, type: 'fire'},
+                    {x: 650, y: 45, size: 12, type: 'water'},
+                    {x: 400, y: -30, size: 15, type: 'fire'},
+                    {x: 450, y: -30, size: 15, type: 'water'},
+                    {x: 500, y: -30, size: 15, type: 'fire'}
                 ],
                 doors: [
-                    {x: 420, y: -70, width: 35, height: 40, type: 'fire', activated: false},
-                    {x: 465, y: -70, width: 35, height: 40, type: 'water', activated: false}
+                    {x: 420, y: -35, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -35, width: 35, height: 40, type: 'water', activated: false}
                 ],
                 fireStart: {x: 15, y: 440},
                 waterStart: {x: 55, y: 440}
             },
             3: {
-                name: "Laberinto de Cristal",
+                name: "Salón de los Guardianes",
                 platforms: [
+                    // Base
                     {x: 0, y: 480, width: 100, height: 20, type: 'stone'},
-                    {x: 150, y: 480, width: 100, height: 20, type: 'stone'},
-                    {x: 300, y: 480, width: 100, height: 20, type: 'stone'},
-                    {x: 450, y: 480, width: 100, height: 20, type: 'stone'},
-                    {x: 600, y: 480, width: 100, height: 20, type: 'stone'},
-                    {x: 750, y: 480, width: 150, height: 20, type: 'stone'},
-                    {x: 50, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 200, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 350, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 500, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 650, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 800, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 125, y: 320, width: 80, height: 12, type: 'wood'},
-                    {x: 275, y: 320, width: 80, height: 12, type: 'wood'},
-                    {x: 425, y: 320, width: 80, height: 12, type: 'wood'},
-                    {x: 575, y: 320, width: 80, height: 12, type: 'wood'},
-                    {x: 725, y: 320, width: 80, height: 12, type: 'wood'},
-                    {x: 175, y: 240, width: 100, height: 8, type: 'bridge'},
-                    {x: 375, y: 240, width: 100, height: 8, type: 'bridge'},
-                    {x: 575, y: 240, width: 100, height: 8, type: 'bridge'},
-                    {x: 250, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 450, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 650, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 325, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 525, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 350, y: 0, width: 200, height: 15, type: 'wood'}
+                    {x: 160, y: 470, width: 120, height: 30, type: 'stone'},
+                    {x: 340, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 540, y: 470, width: 120, height: 30, type: 'stone'},
+                    {x: 740, y: 480, width: 160, height: 20, type: 'stone'},
+                    // Lower platforms
+                    {x: 50, y: 390, width: 90, height: 12, type: 'wood'},
+                    {x: 220, y: 350, width: 90, height: 12, type: 'wood'},
+                    {x: 390, y: 390, width: 90, height: 12, type: 'wood'},
+                    {x: 570, y: 350, width: 90, height: 12, type: 'wood'},
+                    {x: 770, y: 390, width: 90, height: 12, type: 'wood'},
+                    // Middle platforms
+                    {x: 120, y: 280, width: 100, height: 12, type: 'wood'},
+                    {x: 320, y: 240, width: 100, height: 12, type: 'wood'},
+                    {x: 520, y: 280, width: 100, height: 12, type: 'wood'},
+                    {x: 720, y: 240, width: 100, height: 12, type: 'wood'},
+                    // Upper platforms
+                    {x: 80, y: 170, width: 80, height: 12, type: 'wood'},
+                    {x: 280, y: 130, width: 80, height: 12, type: 'wood'},
+                    {x: 480, y: 170, width: 80, height: 12, type: 'wood'},
+                    {x: 680, y: 130, width: 80, height: 12, type: 'wood'},
+                    {x: 800, y: 170, width: 80, height: 12, type: 'wood'},
+                    // Top platforms
+                    {x: 180, y: 70, width: 90, height: 12, type: 'wood'},
+                    {x: 380, y: 30, width: 90, height: 12, type: 'wood'},
+                    {x: 580, y: 70, width: 90, height: 12, type: 'wood'},
+                    // Exit platform
+                    {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
-                    {x: 100, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 250, y: 485, width: 50, height: 15, type: 'water'},
-                    {x: 400, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 550, y: 485, width: 50, height: 15, type: 'water'},
-                    {x: 700, y: 485, width: 50, height: 15, type: 'fire'},
-                    {x: 130, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 280, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 430, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 580, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 730, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 180, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 380, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 580, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 330, y: 75, width: 20, height: 8, type: 'mixed'},
-                    {x: 530, y: 75, width: 20, height: 8, type: 'mixed'}
+                    // Bottom hazards
+                    {x: 100, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 280, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 460, y: 485, width: 80, height: 15, type: 'fire'},
+                    {x: 660, y: 485, width: 80, height: 15, type: 'water'},
+                    // Guardian hazards
+                    {x: 170, y: 340, width: 25, height: 10, type: 'mixed'},
+                    {x: 420, y: 380, width: 25, height: 10, type: 'mixed'},
+                    {x: 620, y: 340, width: 25, height: 10, type: 'mixed'},
+                    // Middle hazards
+                    {x: 220, y: 270, width: 20, height: 10, type: 'mixed'},
+                    {x: 420, y: 230, width: 20, height: 10, type: 'mixed'},
+                    {x: 620, y: 270, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
+                    {x: 160, y: 160, width: 15, height: 8, type: 'water'},
+                    {x: 360, y: 120, width: 15, height: 8, type: 'fire'},
+                    {x: 560, y: 160, width: 15, height: 8, type: 'water'},
+                    {x: 760, y: 120, width: 15, height: 8, type: 'fire'},
+                    // Top hazards
+                    {x: 270, y: 60, width: 20, height: 10, type: 'mixed'},
+                    {x: 470, y: 20, width: 20, height: 10, type: 'mixed'},
+                    {x: 670, y: 60, width: 20, height: 10, type: 'mixed'}
                 ],
                 gems: [
-                    {x: 90, y: 365, size: 12, type: 'fire'},
-                    {x: 240, y: 365, size: 12, type: 'water'},
-                    {x: 390, y: 365, size: 12, type: 'fire'},
-                    {x: 540, y: 365, size: 12, type: 'water'},
-                    {x: 690, y: 365, size: 12, type: 'fire'},
-                    {x: 840, y: 365, size: 12, type: 'water'},
-                    {x: 165, y: 285, size: 12, type: 'fire'},
-                    {x: 315, y: 285, size: 12, type: 'water'},
-                    {x: 465, y: 285, size: 12, type: 'fire'},
-                    {x: 615, y: 285, size: 12, type: 'water'},
-                    {x: 765, y: 285, size: 12, type: 'fire'},
-                    {x: 225, y: 205, size: 12, type: 'water'},
-                    {x: 425, y: 205, size: 12, type: 'fire'},
-                    {x: 625, y: 205, size: 12, type: 'water'},
-                    {x: 290, y: 125, size: 12, type: 'fire'},
-                    {x: 490, y: 125, size: 12, type: 'water'},
-                    {x: 690, y: 125, size: 12, type: 'fire'},
-                    {x: 375, y: 45, size: 12, type: 'water'},
-                    {x: 575, y: 45, size: 12, type: 'fire'},
-                    {x: 400, y: -35, size: 15, type: 'fire'},
-                    {x: 450, y: -35, size: 15, type: 'water'},
-                    {x: 500, y: -35, size: 15, type: 'fire'}
+                    {x: 95, y: 355, size: 12, type: 'fire'},
+                    {x: 265, y: 315, size: 12, type: 'water'},
+                    {x: 435, y: 355, size: 12, type: 'fire'},
+                    {x: 615, y: 315, size: 12, type: 'water'},
+                    {x: 805, y: 355, size: 12, type: 'fire'},
+                    {x: 170, y: 245, size: 12, type: 'water'},
+                    {x: 370, y: 205, size: 12, type: 'fire'},
+                    {x: 570, y: 245, size: 12, type: 'water'},
+                    {x: 770, y: 205, size: 12, type: 'fire'},
+                    {x: 120, y: 135, size: 12, type: 'water'},
+                    {x: 320, y: 95, size: 12, type: 'fire'},
+                    {x: 520, y: 135, size: 12, type: 'water'},
+                    {x: 720, y: 95, size: 12, type: 'fire'},
+                    {x: 840, y: 135, size: 12, type: 'water'},
+                    {x: 225, y: 35, size: 12, type: 'fire'},
+                    {x: 425, y: -5, size: 12, type: 'water'},
+                    {x: 625, y: 35, size: 12, type: 'fire'},
+                    {x: 400, y: -40, size: 15, type: 'fire'},
+                    {x: 450, y: -40, size: 15, type: 'water'},
+                    {x: 500, y: -40, size: 15, type: 'fire'}
                 ],
                 doors: [
-                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
-                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
+                    {x: 420, y: -45, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -45, width: 35, height: 40, type: 'water', activated: false}
                 ],
                 fireStart: {x: 10, y: 440},
                 waterStart: {x: 50, y: 440}
             },
             4: {
-                name: "Cámara de los Elementos",
+                name: "Cámara de los Espejos",
                 platforms: [
-                    {x: 0, y: 480, width: 120, height: 20, type: 'stone'},
-                    {x: 180, y: 480, width: 120, height: 20, type: 'stone'},
-                    {x: 360, y: 480, width: 180, height: 20, type: 'stone'},
-                    {x: 600, y: 480, width: 120, height: 20, type: 'stone'},
-                    {x: 780, y: 480, width: 120, height: 20, type: 'stone'},
-                    {x: 60, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 240, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 420, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 660, y: 400, width: 80, height: 12, type: 'wood'},
-                    {x: 840, y: 400, width: 60, height: 12, type: 'wood'},
-                    {x: 150, y: 320, width: 90, height: 12, type: 'wood'},
-                    {x: 360, y: 320, width: 90, height: 12, type: 'wood'},
-                    {x: 570, y: 320, width: 90, height: 12, type: 'wood'},
-                    {x: 750, y: 320, width: 90, height: 12, type: 'wood'},
-                    {x: 240, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 480, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 690, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 120, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 320, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 520, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 720, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 200, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 400, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 600, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 800, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 300, y: 0, width: 100, height: 12, type: 'wood'},
-                    {x: 500, y: 0, width: 100, height: 12, type: 'wood'},
-                    {x: 350, y: -60, width: 200, height: 15, type: 'wood'}
+                    // Base
+                    {x: 0, y: 480, width: 130, height: 20, type: 'stone'},
+                    {x: 190, y: 470, width: 130, height: 30, type: 'stone'},
+                    {x: 380, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 580, y: 470, width: 130, height: 30, type: 'stone'},
+                    {x: 770, y: 480, width: 130, height: 20, type: 'stone'},
+                    // Lower platforms
+                    {x: 65, y: 385, width: 85, height: 12, type: 'wood'},
+                    {x: 255, y: 345, width: 85, height: 12, type: 'wood'},
+                    {x: 450, y: 385, width: 85, height: 12, type: 'wood'},
+                    {x: 645, y: 345, width: 85, height: 12, type: 'wood'},
+                    {x: 835, y: 385, width: 65, height: 12, type: 'wood'},
+                    // Middle platforms
+                    {x: 130, y: 285, width: 95, height: 12, type: 'wood'},
+                    {x: 330, y: 245, width: 95, height: 12, type: 'wood'},
+                    {x: 530, y: 285, width: 95, height: 12, type: 'wood'},
+                    {x: 730, y: 245, width: 95, height: 12, type: 'wood'},
+                    // Bridges
+                    {x: 225, y: 185, width: 110, height: 8, type: 'bridge'},
+                    {x: 425, y: 145, width: 110, height: 8, type: 'bridge'},
+                    {x: 625, y: 185, width: 110, height: 8, type: 'bridge'},
+                    // Upper platforms
+                    {x: 90, y: 125, width: 75, height: 12, type: 'wood'},
+                    {x: 290, y: 85, width: 75, height: 12, type: 'wood'},
+                    {x: 490, y: 125, width: 75, height: 12, type: 'wood'},
+                    {x: 690, y: 85, width: 75, height: 12, type: 'wood'},
+                    {x: 810, y: 125, width: 75, height: 12, type: 'wood'},
+                    // Top platforms
+                    {x: 180, y: 45, width: 80, height: 12, type: 'wood'},
+                    {x: 380, y: 5, width: 80, height: 12, type: 'wood'},
+                    {x: 580, y: 45, width: 80, height: 12, type: 'wood'},
+                    // Exit platform
+                    {x: 350, y: -25, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
-                    {x: 120, y: 485, width: 60, height: 15, type: 'fire'},
-                    {x: 300, y: 485, width: 60, height: 15, type: 'water'},
-                    {x: 540, y: 485, width: 60, height: 15, type: 'fire'},
-                    {x: 720, y: 485, width: 60, height: 15, type: 'water'},
-                    {x: 160, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 370, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 580, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 760, y: 315, width: 20, height: 10, type: 'mixed'},
-                    {x: 250, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 490, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 700, y: 235, width: 20, height: 8, type: 'mixed'},
-                    {x: 210, y: 75, width: 20, height: 8, type: 'mixed'},
-                    {x: 410, y: 75, width: 20, height: 8, type: 'mixed'},
-                    {x: 610, y: 75, width: 20, height: 8, type: 'mixed'},
-                    {x: 810, y: 75, width: 20, height: 8, type: 'mixed'}
+                    // Bottom hazards
+                    {x: 130, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 320, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 520, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 710, y: 485, width: 60, height: 15, type: 'fire'},
+                    // Lower hazards
+                    {x: 200, y: 335, width: 20, height: 10, type: 'mixed'},
+                    {x: 400, y: 375, width: 20, height: 10, type: 'mixed'},
+                    {x: 600, y: 335, width: 20, height: 10, type: 'mixed'},
+                    // Bridge hazards
+                    {x: 280, y: 175, width: 20, height: 10, type: 'mixed'},
+                    {x: 480, y: 135, width: 20, height: 10, type: 'mixed'},
+                    {x: 680, y: 175, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
+                    {x: 165, y: 115, width: 15, height: 8, type: 'fire'},
+                    {x: 365, y: 75, width: 15, height: 8, type: 'water'},
+                    {x: 565, y: 115, width: 15, height: 8, type: 'fire'},
+                    {x: 765, y: 75, width: 15, height: 8, type: 'water'},
+                    // Top hazards
+                    {x: 260, y: 35, width: 20, height: 10, type: 'mixed'},
+                    {x: 460, y: -5, width: 20, height: 10, type: 'mixed'},
+                    {x: 660, y: 35, width: 20, height: 10, type: 'mixed'}
                 ],
                 gems: [
-                    {x: 100, y: 365, size: 12, type: 'fire'},
-                    {x: 280, y: 365, size: 12, type: 'water'},
-                    {x: 460, y: 365, size: 12, type: 'fire'},
-                    {x: 700, y: 365, size: 12, type: 'water'},
-                    {x: 870, y: 365, size: 12, type: 'fire'},
-                    {x: 195, y: 285, size: 12, type: 'water'},
-                    {x: 405, y: 285, size: 12, type: 'fire'},
-                    {x: 615, y: 285, size: 12, type: 'water'},
-                    {x: 795, y: 285, size: 12, type: 'fire'},
-                    {x: 300, y: 205, size: 12, type: 'water'},
-                    {x: 540, y: 205, size: 12, type: 'fire'},
-                    {x: 750, y: 205, size: 12, type: 'water'},
-                    {x: 160, y: 125, size: 12, type: 'fire'},
-                    {x: 360, y: 125, size: 12, type: 'water'},
-                    {x: 560, y: 125, size: 12, type: 'fire'},
-                    {x: 760, y: 125, size: 12, type: 'water'},
-                    {x: 250, y: 45, size: 12, type: 'water'},
-                    {x: 450, y: 45, size: 12, type: 'fire'},
-                    {x: 650, y: 45, size: 12, type: 'water'},
-                    {x: 850, y: 45, size: 12, type: 'fire'},
-                    {x: 350, y: -35, size: 12, type: 'fire'},
-                    {x: 550, y: -35, size: 12, type: 'water'},
-                    {x: 400, y: -95, size: 15, type: 'fire'},
-                    {x: 450, y: -95, size: 15, type: 'water'},
-                    {x: 500, y: -95, size: 15, type: 'fire'}
+                    {x: 107, y: 350, size: 12, type: 'fire'},
+                    {x: 297, y: 310, size: 12, type: 'water'},
+                    {x: 492, y: 350, size: 12, type: 'fire'},
+                    {x: 687, y: 310, size: 12, type: 'water'},
+                    {x: 867, y: 350, size: 12, type: 'fire'},
+                    {x: 177, y: 250, size: 12, type: 'water'},
+                    {x: 377, y: 210, size: 12, type: 'fire'},
+                    {x: 577, y: 250, size: 12, type: 'water'},
+                    {x: 777, y: 210, size: 12, type: 'fire'},
+                    {x: 127, y: 90, size: 12, type: 'water'},
+                    {x: 327, y: 50, size: 12, type: 'fire'},
+                    {x: 527, y: 90, size: 12, type: 'water'},
+                    {x: 727, y: 50, size: 12, type: 'fire'},
+                    {x: 847, y: 90, size: 12, type: 'water'},
+                    {x: 220, y: 10, size: 12, type: 'fire'},
+                    {x: 420, y: -30, size: 12, type: 'water'},
+                    {x: 620, y: 10, size: 12, type: 'fire'},
+                    {x: 400, y: -50, size: 15, type: 'fire'},
+                    {x: 450, y: -50, size: 15, type: 'water'},
+                    {x: 500, y: -50, size: 15, type: 'fire'}
                 ],
                 doors: [
-                    {x: 420, y: -110, width: 35, height: 40, type: 'fire', activated: false},
-                    {x: 465, y: -110, width: 35, height: 40, type: 'water', activated: false}
+                    {x: 420, y: -55, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -55, width: 35, height: 40, type: 'water', activated: false}
                 ],
-                fireStart: {x: 15, y: 440},
-                waterStart: {x: 55, y: 440}
+                fireStart: {x: 12, y: 440},
+                waterStart: {x: 52, y: 440}
             },
             5: {
-                name: "Santuario del Fuego y Agua",
+                name: "Santuario del Tesoro",
                 platforms: [
+                    // Base
                     {x: 0, y: 480, width: 140, height: 20, type: 'stone'},
-                    {x: 200, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 200, y: 470, width: 140, height: 30, type: 'stone'},
                     {x: 400, y: 480, width: 140, height: 20, type: 'stone'},
-                    {x: 600, y: 480, width: 140, height: 20, type: 'stone'},
-                    {x: 760, y: 480, width: 140, height: 20, type: 'stone'},
-                    {x: 70, y: 400, width: 90, height: 12, type: 'wood'},
-                    {x: 270, y: 400, width: 90, height: 12, type: 'wood'},
-                    {x: 470, y: 400, width: 90, height: 12, type: 'wood'},
-                    {x: 670, y: 400, width: 90, height: 12, type: 'wood'},
-                    {x: 870, y: 400, width: 30, height: 12, type: 'wood'},
-                    {x: 170, y: 320, width: 100, height: 12, type: 'wood'},
-                    {x: 370, y: 320, width: 100, height: 12, type: 'wood'},
-                    {x: 570, y: 320, width: 100, height: 12, type: 'wood'},
-                    {x: 770, y: 320, width: 100, height: 12, type: 'wood'},
-                    {x: 220, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 420, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 620, y: 240, width: 120, height: 8, type: 'bridge'},
-                    {x: 820, y: 240, width: 80, height: 8, type: 'bridge'},
-                    {x: 120, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 320, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 520, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 720, y: 160, width: 80, height: 12, type: 'wood'},
-                    {x: 170, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 370, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 570, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 770, y: 80, width: 100, height: 8, type: 'bridge'},
-                    {x: 220, y: 0, width: 80, height: 12, type: 'wood'},
-                    {x: 420, y: 0, width: 80, height: 12, type: 'wood'},
-                    {x: 620, y: 0, width: 80, height: 12, type: 'wood'},
-                    {x: 820, y: 0, width: 80, height: 12, type: 'wood'},
-                    {x: 320, y: -60, width: 80, height: 12, type: 'wood'},
-                    {x: 520, y: -60, width: 80, height: 12, type: 'wood'},
-                    {x: 350, y: -100, width: 200, height: 15, type: 'wood'}
+                    {x: 600, y: 470, width: 140, height: 30, type: 'stone'},
+                    {x: 800, y: 480, width: 100, height: 20, type: 'stone'},
+                    // Lower platforms
+                    {x: 70, y: 380, width: 90, height: 12, type: 'wood'},
+                    {x: 240, y: 340, width: 90, height: 12, type: 'wood'},
+                    {x: 440, y: 380, width: 90, height: 12, type: 'wood'},
+                    {x: 640, y: 340, width: 90, height: 12, type: 'wood'},
+                    {x: 830, y: 380, width: 70, height: 12, type: 'wood'},
+                    // Middle platforms
+                    {x: 140, y: 300, width: 100, height: 12, type: 'wood'},
+                    {x: 340, y: 260, width: 100, height: 12, type: 'wood'},
+                    {x: 540, y: 300, width: 100, height: 12, type: 'wood'},
+                    {x: 740, y: 260, width: 100, height: 12, type: 'wood'},
+                    // Bridges
+                    {x: 240, y: 220, width: 100, height: 8, type: 'bridge'},
+                    {x: 440, y: 180, width: 100, height: 8, type: 'bridge'},
+                    {x: 640, y: 220, width: 100, height: 8, type: 'bridge'},
+                    // Upper platforms
+                    {x: 100, y: 140, width: 80, height: 12, type: 'wood'},
+                    {x: 300, y: 100, width: 80, height: 12, type: 'wood'},
+                    {x: 500, y: 140, width: 80, height: 12, type: 'wood'},
+                    {x: 700, y: 100, width: 80, height: 12, type: 'wood'},
+                    {x: 850, y: 140, width: 50, height: 12, type: 'wood'},
+                    // Top platforms
+                    {x: 160, y: 60, width: 80, height: 12, type: 'wood'},
+                    {x: 360, y: 20, width: 80, height: 12, type: 'wood'},
+                    {x: 560, y: 60, width: 80, height: 12, type: 'wood'},
+                    {x: 760, y: 40, width: 80, height: 12, type: 'wood'},
+                    // Exit platform
+                    {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
+                    // Bottom hazards
                     {x: 140, y: 485, width: 60, height: 15, type: 'fire'},
                     {x: 340, y: 485, width: 60, height: 15, type: 'water'},
                     {x: 540, y: 485, width: 60, height: 15, type: 'fire'},
                     {x: 740, y: 485, width: 60, height: 15, type: 'water'},
+                    // Lower hazards
                     {x: 220, y: 330, width: 20, height: 10, type: 'mixed'},
                     {x: 420, y: 370, width: 20, height: 10, type: 'mixed'},
                     {x: 620, y: 330, width: 20, height: 10, type: 'mixed'},
+                    // Bridge hazards
                     {x: 290, y: 210, width: 20, height: 10, type: 'mixed'},
                     {x: 490, y: 170, width: 20, height: 10, type: 'mixed'},
                     {x: 690, y: 210, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
                     {x: 180, y: 130, width: 15, height: 8, type: 'water'},
                     {x: 380, y: 90, width: 15, height: 8, type: 'fire'},
                     {x: 580, y: 130, width: 15, height: 8, type: 'water'},
                     {x: 780, y: 90, width: 15, height: 8, type: 'fire'},
+                    // Top hazards
                     {x: 240, y: 50, width: 20, height: 10, type: 'mixed'},
                     {x: 440, y: 10, width: 20, height: 10, type: 'mixed'},
                     {x: 640, y: 50, width: 20, height: 10, type: 'mixed'},
@@ -927,8 +977,8 @@
                     {x: 500, y: -45, size: 15, type: 'fire'}
                 ],
                 doors: [
-                    {x: 420, y: -150, width: 35, height: 40, type: 'fire', activated: false},
-                    {x: 465, y: -150, width: 35, height: 40, type: 'water', activated: false}
+                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
                 ],
                 fireStart: {x: 15, y: 440},
                 waterStart: {x: 55, y: 440}
@@ -936,49 +986,61 @@
             6: {
                 name: "Cámara Final del Legado",
                 platforms: [
+                    // Base
                     {x: 0, y: 480, width: 120, height: 20, type: 'stone'},
                     {x: 170, y: 470, width: 130, height: 30, type: 'stone'},
                     {x: 360, y: 480, width: 180, height: 20, type: 'stone'},
                     {x: 590, y: 470, width: 130, height: 30, type: 'stone'},
                     {x: 780, y: 480, width: 120, height: 20, type: 'stone'},
+                    // Lower platforms
                     {x: 60, y: 400, width: 80, height: 12, type: 'wood'},
                     {x: 220, y: 360, width: 80, height: 12, type: 'wood'},
                     {x: 410, y: 400, width: 80, height: 12, type: 'wood'},
                     {x: 620, y: 360, width: 80, height: 12, type: 'wood'},
                     {x: 820, y: 400, width: 80, height: 12, type: 'wood'},
+                    // Middle platforms
                     {x: 140, y: 320, width: 90, height: 12, type: 'wood'},
                     {x: 330, y: 280, width: 90, height: 12, type: 'wood'},
                     {x: 530, y: 320, width: 90, height: 12, type: 'wood'},
                     {x: 720, y: 280, width: 90, height: 12, type: 'wood'},
+                    // Bridges
                     {x: 230, y: 240, width: 100, height: 8, type: 'bridge'},
                     {x: 430, y: 200, width: 100, height: 8, type: 'bridge'},
                     {x: 630, y: 240, width: 100, height: 8, type: 'bridge'},
+                    // Upper platforms
                     {x: 100, y: 160, width: 80, height: 12, type: 'wood'},
                     {x: 300, y: 120, width: 80, height: 12, type: 'wood'},
                     {x: 500, y: 160, width: 80, height: 12, type: 'wood'},
                     {x: 700, y: 120, width: 80, height: 12, type: 'wood'},
                     {x: 850, y: 160, width: 50, height: 12, type: 'wood'},
+                    // Top platforms
                     {x: 180, y: 80, width: 80, height: 12, type: 'wood'},
                     {x: 380, y: 40, width: 80, height: 12, type: 'wood'},
                     {x: 580, y: 80, width: 80, height: 12, type: 'wood'},
                     {x: 780, y: 60, width: 80, height: 12, type: 'wood'},
+                    // Exit platform
                     {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
                 ],
                 hazards: [
+                    // Bottom hazards
                     {x: 120, y: 485, width: 50, height: 15, type: 'fire'},
                     {x: 300, y: 485, width: 60, height: 15, type: 'water'},
                     {x: 540, y: 485, width: 50, height: 15, type: 'fire'},
                     {x: 720, y: 485, width: 60, height: 15, type: 'water'},
+                    // Lower hazards
                     {x: 200, y: 350, width: 20, height: 10, type: 'mixed'},
                     {x: 450, y: 390, width: 20, height: 10, type: 'mixed'},
                     {x: 700, y: 350, width: 20, height: 10, type: 'mixed'},
+                    // Bridge hazards
                     {x: 280, y: 230, width: 20, height: 10, type: 'mixed'},
                     {x: 480, y: 190, width: 20, height: 10, type: 'mixed'},
                     {x: 680, y: 230, width: 20, height: 10, type: 'mixed'},
+                    // Upper hazards
                     {x: 180, y: 150, width: 15, height: 8, type: 'water'},
                     {x: 380, y: 110, width: 15, height: 8, type: 'fire'},
                     {x: 580, y: 150, width: 15, height: 8, type: 'water'},
                     {x: 780, y: 110, width: 15, height: 8, type: 'fire'},
+                    // Top hazards
                     {x: 260, y: 70, width: 20, height: 10, type: 'mixed'},
                     {x: 460, y: 30, width: 20, height: 10, type: 'mixed'},
                     {x: 660, y: 70, width: 20, height: 10, type: 'mixed'},
@@ -1089,7 +1151,7 @@
         }
 
         function drawCaveBackground() {
-            // Static cave background - no moving elements
+            // Dark cave background
             const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/2);
             gradient.addColorStop(0, '#2c2416');
             gradient.addColorStop(0.5, '#1a1611');
@@ -1097,7 +1159,7 @@
             ctx.fillStyle = gradient;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            // Static cave texture
+            // Cave texture
             ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
             for (let i = 0; i < 30; i++) {
                 const x = Math.random() * canvas.width;
@@ -1108,7 +1170,7 @@
                 ctx.fill();
             }
 
-            // Static stalactites
+            // Draw stalactites
             ctx.fillStyle = '#3e2723';
             for (let i = 0; i < 12; i++) {
                 const x = (i + 1) * (canvas.width / 13);
@@ -1121,7 +1183,7 @@
                 ctx.fill();
             }
 
-            // Static vines (no animation)
+            // Draw vines
             ctx.strokeStyle = '#2e7d32';
             ctx.lineWidth = 3;
             for (let i = 0; i < 8; i++) {
@@ -1130,7 +1192,7 @@
                 ctx.moveTo(x, 0);
                 for (let j = 0; j < 10; j++) {
                     const y = j * 50;
-                    const offset = Math.sin(j * 0.5) * 10; // Removed time-based animation
+                    const offset = Math.sin(j * 0.5 + Date.now() * 0.001) * 10;
                     ctx.lineTo(x + offset, y);
                 }
                 ctx.stroke();
@@ -1138,37 +1200,30 @@
         }
 
         function drawPlatform(platform) {
-            const scaledPlatform = {
-                x: platform.x * gameState.scale,
-                y: platform.y * gameState.scale,
-                width: platform.width * gameState.scale,
-                height: platform.height * gameState.scale
-            };
-
             if (platform.type === 'wood') {
                 // Wooden platform with grain
-                const gradient = ctx.createLinearGradient(scaledPlatform.x, scaledPlatform.y, scaledPlatform.x, scaledPlatform.y + scaledPlatform.height);
+                const gradient = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platform.height);
                 gradient.addColorStop(0, '#8d6e63');
                 gradient.addColorStop(0.5, '#6d4c41');
                 gradient.addColorStop(1, '#5d4037');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                 
                 // Wood grain
                 ctx.strokeStyle = '#4e342e';
                 ctx.lineWidth = 1;
-                for (let i = 0; i < scaledPlatform.width; i += 8 * gameState.scale) {
+                for (let i = 0; i < platform.width; i += 8) {
                     ctx.beginPath();
-                    ctx.moveTo(scaledPlatform.x + i, scaledPlatform.y);
-                    ctx.lineTo(scaledPlatform.x + i + 3 * gameState.scale, scaledPlatform.y + scaledPlatform.height);
+                    ctx.moveTo(platform.x + i, platform.y);
+                    ctx.lineTo(platform.x + i + 3, platform.y + platform.height);
                     ctx.stroke();
                 }
                 
                 // Moss patches
                 ctx.fillStyle = '#4caf50';
-                for (let i = 0; i < scaledPlatform.width; i += 20 * gameState.scale) {
+                for (let i = 0; i < platform.width; i += 20) {
                     if (Math.random() < 0.3) {
-                        ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y, 5 * gameState.scale, 3 * gameState.scale);
+                        ctx.fillRect(platform.x + i, platform.y, 5, 3);
                     }
                 }
             } else if (platform.type === 'bridge') {
@@ -1177,41 +1232,41 @@
                 ctx.lineWidth = 2;
                 
                 // Bridge planks
-                for (let i = 0; i < scaledPlatform.width; i += 15 * gameState.scale) {
+                for (let i = 0; i < platform.width; i += 15) {
                     ctx.fillStyle = '#8d6e63';
-                    ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y, 12 * gameState.scale, scaledPlatform.height);
+                    ctx.fillRect(platform.x + i, platform.y, 12, platform.height);
                 }
                 
                 // Ropes
                 ctx.beginPath();
-                ctx.moveTo(scaledPlatform.x, scaledPlatform.y - 5 * gameState.scale);
-                ctx.lineTo(scaledPlatform.x + scaledPlatform.width, scaledPlatform.y - 5 * gameState.scale);
-                ctx.moveTo(scaledPlatform.x, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
-                ctx.lineTo(scaledPlatform.x + scaledPlatform.width, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
+                ctx.moveTo(platform.x, platform.y - 5);
+                ctx.lineTo(platform.x + platform.width, platform.y - 5);
+                ctx.moveTo(platform.x, platform.y + platform.height + 5);
+                ctx.lineTo(platform.x + platform.width, platform.y + platform.height + 5);
                 ctx.stroke();
                 
                 // Vertical ropes
-                for (let i = 0; i <= scaledPlatform.width; i += 30 * gameState.scale) {
+                for (let i = 0; i <= platform.width; i += 30) {
                     ctx.beginPath();
-                    ctx.moveTo(scaledPlatform.x + i, scaledPlatform.y - 5 * gameState.scale);
-                    ctx.lineTo(scaledPlatform.x + i, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
+                    ctx.moveTo(platform.x + i, platform.y - 5);
+                    ctx.lineTo(platform.x + i, platform.y + platform.height + 5);
                     ctx.stroke();
                 }
             } else {
                 // Stone platform
-                const gradient = ctx.createLinearGradient(scaledPlatform.x, scaledPlatform.y, scaledPlatform.x, scaledPlatform.y + scaledPlatform.height);
+                const gradient = ctx.createLinearGradient(platform.x, platform.y, platform.x, platform.y + platform.height);
                 gradient.addColorStop(0, '#616161');
                 gradient.addColorStop(0.5, '#424242');
                 gradient.addColorStop(1, '#212121');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
+                ctx.fillRect(platform.x, platform.y, platform.width, platform.height);
                 
                 // Stone texture
                 ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
-                for (let i = 0; i < scaledPlatform.width; i += 25 * gameState.scale) {
-                    for (let j = 0; j < scaledPlatform.height; j += 25 * gameState.scale) {
+                for (let i = 0; i < platform.width; i += 25) {
+                    for (let j = 0; j < platform.height; j += 25) {
                         if (Math.random() < 0.4) {
-                            ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y + j, 12 * gameState.scale, 12 * gameState.scale);
+                            ctx.fillRect(platform.x + i, platform.y + j, 12, 12);
                         }
                     }
                 }
@@ -1220,110 +1275,97 @@
             // Platform border
             ctx.strokeStyle = '#000';
             ctx.lineWidth = 1;
-            ctx.strokeRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
+            ctx.strokeRect(platform.x, platform.y, platform.width, platform.height);
         }
 
         function drawHazard(hazard) {
-            const scaledHazard = {
-                x: hazard.x * gameState.scale,
-                y: hazard.y * gameState.scale,
-                width: hazard.width * gameState.scale,
-                height: hazard.height * gameState.scale
-            };
-
             if (hazard.type === 'mixed') {
                 // Acid pool
-                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x + scaledHazard.width, scaledHazard.y);
+                const gradient = ctx.createLinearGradient(hazard.x, hazard.y, hazard.x + hazard.width, hazard.y);
                 gradient.addColorStop(0, '#4caf50');
                 gradient.addColorStop(0.5, '#388e3c');
                 gradient.addColorStop(1, '#2e7d32');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
                 
-                // Static bubbles (no animation)
+                // Bubbles
                 ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
-                for (let i = 0; i < scaledHazard.width; i += 12 * gameState.scale) {
-                    const offset = Math.sin(i * 0.3) * 2;
-                    const bubbleY = scaledHazard.y + offset + Math.sin(i) * 2;
+                for (let i = 0; i < hazard.width; i += 12) {
+                    const offset = Math.sin((Date.now() * 0.003 + i * 0.3)) * 2;
+                    const bubbleY = hazard.y + offset + Math.sin(Date.now() * 0.004 + i) * 2;
                     ctx.beginPath();
-                    ctx.arc(scaledHazard.x + i + 6 * gameState.scale, bubbleY, 2 * gameState.scale, 0, Math.PI * 2);
+                    ctx.arc(hazard.x + i + 6, bubbleY, 2, 0, Math.PI * 2);
                     ctx.fill();
                 }
             } else if (hazard.type === 'fire') {
                 // Lava pool
-                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x, scaledHazard.y + scaledHazard.height);
+                const gradient = ctx.createLinearGradient(hazard.x, hazard.y, hazard.x, hazard.y + hazard.height);
                 gradient.addColorStop(0, '#ff5722');
                 gradient.addColorStop(0.5, '#e64a19');
                 gradient.addColorStop(1, '#d84315');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
                 
-                // Static lava bubbles (no animation)
+                // Lava bubbles
                 ctx.fillStyle = 'rgba(255, 152, 0, 0.6)';
-                for (let i = 0; i < scaledHazard.width; i += 10 * gameState.scale) {
-                    const offset = Math.sin(i * 0.4) * 3;
-                    const bubbleY = scaledHazard.y + offset + Math.sin(i) * 2;
+                for (let i = 0; i < hazard.width; i += 10) {
+                    const offset = Math.sin((Date.now() * 0.004 + i * 0.4)) * 3;
+                    const bubbleY = hazard.y + offset + Math.sin(Date.now() * 0.005 + i) * 2;
                     ctx.beginPath();
-                    ctx.arc(scaledHazard.x + i + 5 * gameState.scale, bubbleY, 3 * gameState.scale, 0, Math.PI * 2);
+                    ctx.arc(hazard.x + i + 5, bubbleY, 3, 0, Math.PI * 2);
                     ctx.fill();
                 }
             } else {
                 // Water pool
-                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x, scaledHazard.y + scaledHazard.height);
+                const gradient = ctx.createLinearGradient(hazard.x, hazard.y, hazard.x, hazard.y + hazard.height);
                 gradient.addColorStop(0, '#03a9f4');
                 gradient.addColorStop(0.5, '#0288d1');
                 gradient.addColorStop(1, '#0277bd');
                 ctx.fillStyle = gradient;
-                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                ctx.fillRect(hazard.x, hazard.y, hazard.width, hazard.height);
                 
-                // Static water ripples (no animation)
+                // Water ripples
                 ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
                 ctx.lineWidth = 1;
-                for (let i = 0; i < scaledHazard.width; i += 15 * gameState.scale) {
-                    const offset = Math.sin(i * 0.2) * 2;
+                for (let i = 0; i < hazard.width; i += 15) {
+                    const offset = Math.sin((Date.now() * 0.002 + i * 0.2)) * 2;
                     ctx.beginPath();
-                    ctx.arc(scaledHazard.x + i + 7 * gameState.scale, scaledHazard.y + scaledHazard.height/2 + offset, 4 * gameState.scale, 0, Math.PI * 2);
+                    ctx.arc(hazard.x + i + 7, hazard.y + hazard.height/2 + offset, 4, 0, Math.PI * 2);
                     ctx.stroke();
                 }
             }
         }
 
         function drawGem(gem) {
-            const scaledGem = {
-                x: gem.x * gameState.scale,
-                y: gem.y * gameState.scale,
-                size: gem.size * gameState.scale
-            };
-
             ctx.save();
-            ctx.translate(scaledGem.x + scaledGem.size/2, scaledGem.y + scaledGem.size/2);
-            ctx.rotate(Date.now() * 0.002); // Keep gem rotation
+            ctx.translate(gem.x + gem.size/2, gem.y + gem.size/2);
+            ctx.rotate(Date.now() * 0.002);
             
             // Gem glow
-            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledGem.size * 1.5);
+            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, gem.size * 1.5);
             glowGradient.addColorStop(0, gem.type === 'fire' ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)');
             glowGradient.addColorStop(0.5, gem.type === 'fire' ? 'rgba(255, 107, 107, 0.4)' : 'rgba(78, 205, 196, 0.4)');
             glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
             ctx.fillStyle = glowGradient;
-            ctx.fillRect(-scaledGem.size * 1.5, -scaledGem.size * 1.5, scaledGem.size * 3, scaledGem.size * 3);
+            ctx.fillRect(-gem.size * 1.5, -gem.size * 1.5, gem.size * 3, gem.size * 3);
             
             // Diamond shape
             ctx.fillStyle = gem.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
             ctx.beginPath();
-            ctx.moveTo(0, -scaledGem.size);
-            ctx.lineTo(scaledGem.size, 0);
-            ctx.lineTo(0, scaledGem.size);
-            ctx.lineTo(-scaledGem.size, 0);
+            ctx.moveTo(0, -gem.size);
+            ctx.lineTo(gem.size, 0);
+            ctx.lineTo(0, gem.size);
+            ctx.lineTo(-gem.size, 0);
             ctx.closePath();
             ctx.fill();
             
             // Inner shine
             ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
             ctx.beginPath();
-            ctx.moveTo(0, -scaledGem.size * 0.6);
-            ctx.lineTo(scaledGem.size * 0.6, 0);
-            ctx.lineTo(0, scaledGem.size * 0.6);
-            ctx.lineTo(-scaledGem.size * 0.6, 0);
+            ctx.moveTo(0, -gem.size * 0.6);
+            ctx.lineTo(gem.size * 0.6, 0);
+            ctx.lineTo(0, gem.size * 0.6);
+            ctx.lineTo(-gem.size * 0.6, 0);
             ctx.closePath();
             ctx.fill();
             
@@ -1331,49 +1373,42 @@
         }
 
         function drawDoor(door) {
-            const scaledDoor = {
-                x: door.x * gameState.scale,
-                y: door.y * gameState.scale,
-                width: door.width * gameState.scale,
-                height: door.height * gameState.scale
-            };
-
             // Door frame
             ctx.fillStyle = door.activated ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.8)';
-            ctx.fillRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
+            ctx.fillRect(door.x, door.y, door.width, door.height);
             
             // mystical portal effect
             if (door.activated) {
                 const portalGradient = ctx.createRadialGradient(
-                    scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2, 0,
-                    scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2, scaledDoor.width
+                    door.x + door.width/2, door.y + door.height/2, 0,
+                    door.x + door.width/2, door.y + door.height/2, door.width
                 );
                 portalGradient.addColorStop(0, door.type === 'fire' ? 'rgba(255, 107, 107, 0.9)' : 'rgba(78, 205, 196, 0.9)');
                 portalGradient.addColorStop(0.5, door.type === 'fire' ? 'rgba(255, 107, 107, 0.5)' : 'rgba(78, 205, 196, 0.5)');
                 portalGradient.addColorStop(1, door.type === 'fire' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(78, 205, 196, 0.1)');
                 ctx.fillStyle = portalGradient;
-                ctx.fillRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
+                ctx.fillRect(door.x, door.y, door.width, door.height);
             }
             
             // Door frame
             ctx.strokeStyle = door.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
             ctx.lineWidth = 3;
-            ctx.strokeRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
+            ctx.strokeRect(door.x, door.y, door.width, door.height);
             
             // Inner frame
             ctx.strokeStyle = door.type === 'fire' ? '#ff9999' : '#7dd8d2';
             ctx.lineWidth = 1;
-            ctx.strokeRect(scaledDoor.x + 3, scaledDoor.y + 3, scaledDoor.width - 6, scaledDoor.height - 6);
+            ctx.strokeRect(door.x + 3, door.y + 3, door.width - 6, door.height - 6);
             
             // Chest symbol
             ctx.fillStyle = door.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
-            ctx.font = `bold ${20 * gameState.scale}px Arial`;
+            ctx.font = 'bold 20px Arial';
             ctx.textAlign = 'center';
-            ctx.fillText('📦', scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2 + 5 * gameState.scale);
+            ctx.fillText('📦', door.x + door.width/2, door.y + door.height/2 + 5);
         }
 
         function drawLevel() {
-            // Draw static cave background
+            // Draw cave background
             drawCaveBackground();
 
             if (!currentLevel) return;
@@ -1492,9 +1527,6 @@
                 }
             }, 1000);
         }
-
-        // Start the game
-        startGame();
     </script>
 </body>
 </html>
