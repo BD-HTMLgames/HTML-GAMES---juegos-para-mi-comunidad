@@ -1,1750 +1,1210 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
-<title>Fireboy &amp; Watergirl — Legado Eterno (Deluxe)</title>
-<style>
-:root{
-  --gold:#e8c15a; --gold-dim:rgba(232,193,90,.35);
-  --fire:#ff6b3d; --water:#45d5e0;
-  --panel:rgba(14,11,20,.78); --ink:#f3e9d2;
-}
-*{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent}
-html,body{height:100%}
-body{
-  font-family:'Trebuchet MS','Segoe UI',Arial,sans-serif;
-  background:radial-gradient(1200px 700px at 50% 30%, #171226 0%, #0b0913 55%, #060509 100%);
-  display:flex;justify-content:center;align-items:center;min-height:100vh;overflow:hidden;color:var(--ink);
-}
-.hidden{display:none !important}
-.stage{
-  position:relative;border-radius:18px;padding:10px;
-  background:linear-gradient(180deg,#151022,#0c0a14);
-  box-shadow:0 0 0 1px rgba(232,193,90,.18),0 0 70px rgba(96,60,180,.14),0 30px 70px rgba(0,0,0,.85);
-  width:min(97vw,calc(94vh * 1.7778));
-}
-canvas{display:block;width:100%;aspect-ratio:16/9;border-radius:10px;background:#0d0b10}
-/* ---------- HUD ---------- */
-#hud{position:absolute;top:20px;left:22px;right:22px;display:flex;justify-content:space-between;align-items:stretch;gap:8px;pointer-events:none;z-index:5;font-size:13px}
-.hpanel{background:var(--panel);border:1px solid var(--gold-dim);border-radius:11px;padding:7px 13px;backdrop-filter:blur(6px);display:flex;align-items:center;gap:12px;box-shadow:0 4px 14px rgba(0,0,0,.45)}
-#hudName{font-weight:700;letter-spacing:.4px;color:#ffe9b0;white-space:nowrap}
-.chip{display:inline-flex;align-items:center;gap:5px;font-weight:700}
-.dot{width:9px;height:9px;transform:rotate(45deg);border-radius:2px;display:inline-block}
-.dot.f{background:var(--fire);box-shadow:0 0 7px var(--fire)}
-.dot.w{background:var(--water);box-shadow:0 0 7px var(--water)}
-#hudTime{font-variant-numeric:tabular-nums;font-weight:700;color:#dcd2ff}
-#hudHearts{letter-spacing:2px;font-size:15px;color:#ff5a5a;text-shadow:0 0 8px rgba(255,60,60,.6)}
-#hudHearts .off{color:#4a3a3a;text-shadow:none}
-#hudScore{font-weight:700;color:#ffd76b;min-width:52px;text-align:right}
-.ibtn{pointer-events:auto;cursor:pointer;background:rgba(232,193,90,.1);border:1px solid var(--gold-dim);color:var(--ink);
-  border-radius:9px;width:32px;height:30px;font-size:14px;font-weight:700;display:flex;align-items:center;justify-content:center;transition:all .15s}
-.ibtn:hover{background:rgba(232,193,90,.25);transform:translateY(-1px)}
-/* ---------- Hint bar ---------- */
-#hintbar{position:absolute;left:50%;bottom:11%;transform:translateX(-50%);max-width:80%;text-align:center;
-  background:var(--panel);border:1px solid var(--gold-dim);color:#ffe9b0;padding:8px 18px;border-radius:20px;
-  font-size:13.5px;opacity:0;transition:opacity .5s;pointer-events:none;z-index:6;backdrop-filter:blur(6px)}
-#hintbar.show{opacity:1}
-/* ---------- Screens ---------- */
-.screen{position:absolute;inset:10px;border-radius:10px;z-index:20;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;
-  background:radial-gradient(900px 500px at 50% 20%, rgba(30,22,48,.88), rgba(8,6,12,.94));backdrop-filter:blur(9px);overflow:auto;padding:18px}
-.title{font-size:clamp(26px,5vw,50px);font-weight:900;letter-spacing:2px;text-align:center;line-height:1.1;
-  background:linear-gradient(92deg,#ff7a45 5%,#ffd66b 38%,#58e6f2 62%,#3fa9ff 95%);
-  -webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 4px 18px rgba(255,150,60,.25))}
-.subtitle{color:#bfae87;font-size:14px;letter-spacing:3px;text-transform:uppercase}
-.btn{padding:11px 26px;border-radius:13px;border:1px solid var(--gold-dim);cursor:pointer;font-family:inherit;
-  background:linear-gradient(180deg,rgba(64,50,28,.92),rgba(32,25,14,.92));color:#f5e7c8;font-weight:700;font-size:15px;letter-spacing:.5px;
-  transition:transform .15s,box-shadow .15s,background .15s}
-.btn:hover{transform:translateY(-2px) scale(1.02);box-shadow:0 8px 22px rgba(232,193,90,.22);background:linear-gradient(180deg,rgba(84,66,36,.95),rgba(44,34,18,.95))}
-.btn.primary{background:linear-gradient(180deg,#a06a1e,#5e3c0e);border-color:var(--gold);font-size:17px;padding:13px 34px}
-.btn.small{padding:8px 16px;font-size:13px}
-.btnrow{display:flex;gap:12px;flex-wrap:wrap;justify-content:center}
-.menucol{display:flex;flex-direction:column;gap:11px;align-items:center;margin-top:6px}
-.foot{color:#6d6280;font-size:11.5px;margin-top:10px;text-align:center;line-height:1.5}
-/* level select */
-.lvlgrid{display:grid;grid-template-columns:repeat(5,minmax(86px,104px));gap:11px;margin:4px 0}
-.lvl{background:var(--panel);border:1px solid var(--gold-dim);border-radius:13px;padding:10px 6px 9px;text-align:center;cursor:pointer;transition:all .15s;position:relative}
-.lvl:hover{transform:translateY(-3px);border-color:var(--gold);box-shadow:0 8px 20px rgba(232,193,90,.18)}
-.lvl .n{font-size:21px;font-weight:900;color:#ffe9b0}
-.lvl .t{font-size:9.5px;color:#a9987a;line-height:1.25;height:24px;display:flex;align-items:center;justify-content:center;padding:0 2px}
-.lvl .s{color:var(--gold);font-size:12px;letter-spacing:2px;margin-top:3px}
-.lvl.locked{opacity:.38;cursor:not-allowed;filter:grayscale(.6)}
-.lvl.locked:hover{transform:none;box-shadow:none;border-color:var(--gold-dim)}
-/* stars big */
-.bigstars{display:flex;gap:10px;font-size:42px;line-height:1;margin:2px 0 6px}
-.bigstar{color:#3d3448;transform:scale(.6);opacity:.5;transition:none}
-.bigstar.pop{color:var(--gold);text-shadow:0 0 18px rgba(232,193,90,.75);animation:starPop .45s cubic-bezier(.2,1.6,.4,1) forwards}
-@keyframes starPop{0%{transform:scale(.2) rotate(-60deg);opacity:0}100%{transform:scale(1) rotate(0);opacity:1}}
-.statbox{background:var(--panel);border:1px solid var(--gold-dim);border-radius:13px;padding:12px 26px;min-width:250px}
-.statrow{display:flex;justify-content:space-between;gap:34px;padding:4px 0;font-size:14.5px}
-.statrow b{color:#ffd76b}
-.statrow span:first-child{color:#bfae87}
-h2.sc{font-size:26px;letter-spacing:1px;color:#ffe9b0}
-/* how to play */
-.howgrid{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;max-width:760px}
-.howcard{background:var(--panel);border:1px solid var(--gold-dim);border-radius:14px;padding:13px 18px;min-width:220px;flex:1;max-width:300px}
-.howcard h3{font-size:15px;margin-bottom:7px}
-.howcard.fire h3{color:var(--fire)} .howcard.water h3{color:var(--water)} .howcard.misc h3{color:var(--gold)}
-.howcard ul{list-style:none;font-size:12.8px;line-height:1.75;color:#d8ccb2}
-.howcard kbd{background:#2a2333;border:1px solid #4a3f5c;border-bottom-width:2px;border-radius:5px;padding:1px 6px;font-family:inherit;font-size:11.5px;color:#ffe9b0}
-.mech{font-size:12.8px;color:#cbbf9f;line-height:1.65;text-align:center;max-width:640px}
-.mech b{color:#ffe9b0}
-/* ---------- Touch pads ---------- */
-.pad{position:absolute;bottom:2.2%;display:none;gap:8px;z-index:8}
-body.touch .pad{display:flex}
-#padF{left:1.6%} #padW{right:1.6%}
-.pbtn{width:52px;height:52px;border-radius:50%;border:1.5px solid rgba(255,255,255,.28);color:#fff;
-  background:rgba(20,16,28,.55);backdrop-filter:blur(4px);font-size:19px;font-weight:900;display:flex;align-items:center;justify-content:center;user-select:none;touch-action:none}
-#padF .pbtn{border-color:rgba(255,107,61,.55)} #padW .pbtn{border-color:rgba(69,213,224,.55)}
-.pbtn:active{transform:scale(.92)}
-#btnSwap{position:absolute;bottom:2.2%;left:50%;transform:translateX(-50%);z-index:9;width:58px;height:40px;border-radius:12px;
-  background:rgba(20,16,28,.6);border:1.5px solid var(--gold-dim);color:var(--gold);font-weight:900;font-size:17px;display:none;align-items:center;justify-content:center}
-body.touch.solo #btnSwap{display:flex}
-.soloBadge{position:absolute;top:64px;left:50%;transform:translateX(-50%);z-index:6;background:var(--panel);border:1px solid var(--gold-dim);
-  padding:4px 14px;border-radius:14px;font-size:12px;color:#ffe9b0;display:none}
-body.solo .soloBadge{display:block}
-@media (max-width:760px){ #hud{font-size:11px} .hpanel{padding:5px 9px;gap:7px} #hudName{max-width:110px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap} .lvlgrid{grid-template-columns:repeat(5,minmax(64px,80px));gap:7px} }
-</style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perfect Puzzle</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+            display: flex;
+        }
+
+        /* ===== GAME CONTAINER ===== */
+        .game-wrapper {
+            display: flex;
+            width: 100%;
+            height: 100vh;
+            padding: 15px;
+            gap: 15px;
+        }
+
+        /* ===== LEFT PANEL (CONFIG) ===== */
+        .left-panel {
+            width: 250px;
+            background: white;
+            border-radius: 15px;
+            padding: 25px 20px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            overflow-y: auto;
+            flex-shrink: 0;
+        }
+
+        .panel-title {
+            font-size: 1.2rem;
+            font-weight: bold;
+            color: #4f46e5;
+            text-align: center;
+            margin-bottom: 5px;
+        }
+
+        .panel-subtitle {
+            font-size: 0.75rem;
+            color: #6b7280;
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 0.7rem;
+            font-weight: 700;
+            color: #6b7280;
+            margin-bottom: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        /* Image Preview */
+        .image-preview {
+            width: 100%;
+            height: 140px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 8px;
+            border: 2px dashed #c4b5fd;
+        }
+
+        .image-preview.has-image {
+            border: 2px solid #a78bfa;
+        }
+
+        .image-preview img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .image-placeholder {
+            text-align: center;
+            color: #9ca3af;
+        }
+
+        .image-placeholder .icon {
+            font-size: 32px;
+            margin-bottom: 5px;
+        }
+
+        .image-placeholder .text {
+            font-size: 0.7rem;
+        }
+
+        .btn-select {
+            width: 100%;
+            padding: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-bottom: 15px;
+        }
+
+        .btn-select:hover {
+            opacity: 0.9;
+        }
+
+        /* Difficulty */
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .diff-btn {
+            padding: 10px;
+            border: 2px solid #e5e7eb;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            color: #4b5563;
+        }
+
+        .diff-btn:hover {
+            border-color: #a78bfa;
+        }
+
+        .diff-btn.active {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            border-color: transparent;
+        }
+
+        /* Controls */
+        .controls {
+            margin-top: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .ctrl-btn {
+            padding: 10px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            font-size: 0.8rem;
+            transition: all 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+
+        .ctrl-btn.start {
+            background: linear-gradient(135deg, #10b981, #059669);
+            color: white;
+        }
+
+        .ctrl-btn.start:hover {
+            opacity: 0.9;
+        }
+
+        .ctrl-btn.secondary {
+            background: #f3f4f6;
+            color: #6b7280;
+        }
+
+        .ctrl-btn.secondary:hover {
+            background: #e5e7eb;
+        }
+
+        /* ===== CENTER AREA (BOARD) ===== */
+        .center-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-width: 0;
+        }
+
+        .stats-bar {
+            background: white;
+            border-radius: 12px;
+            padding: 12px 20px;
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-size: 0.6rem;
+            color: #6b7280;
+            margin-bottom: 2px;
+        }
+
+        .stat-value {
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .board-container {
+            flex: 1;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            background: white;
+            border-radius: 12px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .puzzle-board {
+            display: grid;
+            gap: 2px;
+            background: #cbd5e1;
+            padding: 2px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+
+        .puzzle-slot {
+            background: #f1f5f9;
+            border: 2px dashed #cbd5e1;
+            border-radius: 4px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .puzzle-slot.hover {
+            background: #ede9fe;
+            border-color: #8b5cf6;
+        }
+
+        .puzzle-slot.correct {
+            background: #d1fae5;
+            border-color: #10b981;
+        }
+
+        .puzzle-slot .placed-piece {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            background-size: cover;
+            background-position: center;
+        }
+
+        /* ===== RIGHT PANEL (PIECES) ===== */
+        .right-panel {
+            width: 200px;
+            background: white;
+            border-radius: 15px;
+            padding: 20px 15px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+            flex-shrink: 0;
+        }
+
+        .tray-title {
+            font-size: 0.9rem;
+            font-weight: bold;
+            color: #374151;
+            text-align: center;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .tray-count {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+            padding: 3px 10px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+        }
+
+        .pieces-list {
+            flex: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            overflow-y: auto;
+            padding: 5px;
+            background: #f8fafc;
+            border-radius: 10px;
+            border: 1px solid #e5e7eb;
+        }
+
+        /* ===== PIECES (CLAVE: SIEMPRE VISIBLES) ===== */
+        .piece {
+            cursor: grab;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            transition: all 0.3s;
+            position: relative;
+            background-size: cover !important;
+            background-position: center !important;
+            border: 2px solid white;
+            /* Tamaño fijo para garantizar visibilidad */
+            width: 80px;
+            height: 80px;
+            display: block !important;
+        }
+
+        .piece:hover {
+            transform: scale(1.08);
+            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+            z-index: 10;
+            border-color: #a78bfa;
+        }
+
+        .piece:active {
+            cursor: grabbing;
+            transform: scale(1.1);
+        }
+
+        .piece.dragging {
+            opacity: 0.5;
+            transform: scale(0.9);
+            z-index: 1000;
+        }
+
+        /* Pieces inside board slots */
+        .placed-piece {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            border-radius: 2px;
+            background-size: cover;
+            background-position: center;
+            cursor: default;
+        }
+
+        /* ===== VICTORY MODAL ===== */
+        .victory-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .victory-overlay.active {
+            display: flex;
+            animation: fadeIn 0.3s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .victory-card {
+            background: white;
+            padding: 50px;
+            border-radius: 25px;
+            text-align: center;
+            max-width: 450px;
+            animation: popIn 0.5s;
+        }
+
+        @keyframes popIn {
+            0% { transform: scale(0); }
+            50% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+
+        .victory-card .icon {
+            font-size: 4rem;
+            margin-bottom: 15px;
+        }
+
+        .victory-card h2 {
+            font-size: 2rem;
+            color: #10b981;
+            margin-bottom: 20px;
+        }
+
+        .victory-card .stats {
+            background: #f9fafb;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+
+        .victory-card .stat-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 8px 0;
+        }
+
+        .victory-card .stat-row span:first-child {
+            color: #6b7280;
+        }
+
+        .victory-card .stat-row span:last-child {
+            font-weight: bold;
+            color: #1f2937;
+        }
+
+        .victory-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .victory-btns button {
+            flex: 1;
+            padding: 12px;
+            border: none;
+            border-radius: 10px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.3s;
+        }
+
+        .victory-btns .again {
+            background: linear-gradient(135deg, #667eea, #764ba2);
+            color: white;
+        }
+
+        .victory-btns .image-btn {
+            background: #f3f4f6;
+            color: #4b5563;
+        }
+
+        .victory-btns button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+        }
+
+        /* Confetti */
+        .confetti {
+            position: fixed;
+            width: 8px;
+            height: 8px;
+            top: -10px;
+            animation: fall 3s linear;
+            z-index: 6000;
+        }
+
+        @keyframes fall {
+            to {
+                transform: translateY(110vh) rotate(720deg);
+                opacity: 0;
+            }
+        }
+
+        /* ===== IMAGE MODAL ===== */
+        .img-modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.8);
+            z-index: 4000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .img-modal.active {
+            display: flex;
+        }
+
+        .img-modal-content {
+            background: white;
+            padding: 25px;
+            border-radius: 20px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 85vh;
+            overflow-y: auto;
+        }
+
+        .img-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .img-modal-header h3 {
+            color: #374151;
+        }
+
+        .img-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+
+        .img-option {
+            border-radius: 10px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: 3px solid transparent;
+            aspect-ratio: 1;
+        }
+
+        .img-option:hover {
+            transform: scale(1.05);
+            border-color: #a78bfa;
+        }
+
+        .img-option img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Preview */
+        .preview-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.9);
+            z-index: 5000;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+        }
+
+        .preview-overlay.active {
+            display: flex;
+        }
+
+        .preview-overlay img {
+            max-width: 80%;
+            max-height: 80%;
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.5);
+        }
+
+        /* Responsive */
+        @media (max-width: 900px) {
+            .game-wrapper {
+                flex-direction: column;
+            }
+
+            .left-panel, .right-panel {
+                width: 100%;
+            }
+
+            .left-panel {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .right-panel {
+                max-height: 180px;
+            }
+
+            .pieces-list {
+                flex-direction: row;
+                flex-wrap: wrap;
+            }
+
+            .piece {
+                width: 50px;
+                height: 50px;
+            }
+
+            .img-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
 </head>
 <body>
-<div class="stage" id="stage">
-  <canvas id="c" width="960" height="540"></canvas>
+    <div class="game-wrapper">
+        <!-- LEFT PANEL -->
+        <div class="left-panel">
+            <h2 class="panel-title">🧩 Perfect Puzzle</h2>
+            <p class="panel-subtitle">El rompecabezas definitivo</p>
 
-  <!-- HUD -->
-  <div id="hud" class="hidden">
-    <div class="hpanel">
-      <span id="hudName">Nivel 1</span>
+            <div class="section-title">IMAGEN</div>
+            <div class="image-preview" id="previewBox">
+                <div class="image-placeholder">
+                    <div class="icon">🖼️</div>
+                    <div class="text">Click para elegir</div>
+                </div>
+            </div>
+            <button class="btn-select" onclick="openImageModal()">📁 Elegir Imagen</button>
+
+            <div class="section-title" style="margin-top:20px;">DIFICULTAD</div>
+            <div class="difficulty-grid">
+                <button class="diff-btn" onclick="setDiff(3)">3×3</button>
+                <button class="diff-btn active" onclick="setDiff(4)">4×4</button>
+                <button class="diff-btn" onclick="setDiff(5)">5×5</button>
+                <button class="diff-btn" onclick="setDiff(6)">6×6</button>
+            </div>
+
+            <div class="controls">
+                <button class="ctrl-btn start" id="startBtn" onclick="startGame()">🎮 Comenzar</button>
+                <button class="ctrl-btn secondary" onclick="resetGame()">🔄 Reiniciar</button>
+            </div>
+        </div>
+
+        <!-- CENTER AREA -->
+        <div class="center-area">
+            <div class="stats-bar">
+                <div class="stat">
+                    <span class="stat-label">⏱️ TIEMPO</span>
+                    <span class="stat-value" id="timerVal">00:00</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">👆 MOVIMIENTOS</span>
+                    <span class="stat-value" id="movesVal">0</span>
+                </div>
+                <div class="stat">
+                    <span class="stat-label">⭐ PUNTOS</span>
+                    <span class="stat-value" id="scoreVal">0</span>
+                </div>
+            </div>
+            <div class="board-container">
+                <div class="puzzle-board" id="puzzleBoard"></div>
+            </div>
+        </div>
+
+        <!-- RIGHT PANEL -->
+        <div class="right-panel">
+            <div class="tray-title">🧩 Piezas</div>
+            <div class="pieces-list" id="piecesList"></div>
+        </div>
     </div>
-    <div class="hpanel">
-      <span class="chip"><span class="dot f"></span><span id="hudGF">0/0</span></span>
-      <span class="chip"><span class="dot w"></span><span id="hudGW">0/0</span></span>
-      <span id="hudTime">00:00</span>
+
+    <!-- Victory Modal -->
+    <div class="victory-overlay" id="victoryOverlay">
+        <div class="victory-card">
+            <div class="icon">🏆</div>
+            <h2>¡Felicidades!</h2>
+            <p style="color:#6b7280;">Has completado el rompecabezas</p>
+            <div class="stats">
+                <div class="stat-row">
+                    <span>Tiempo</span><span id="finalTime">00:00</span>
+                </div>
+                <div class="stat-row">
+                    <span>Movimientos</span><span id="finalMoves">0</span>
+                </div>
+                <div class="stat-row">
+                    <span>Puntuación</span><span id="finalScore">0</span>
+                </div>
+            </div>
+            <div class="victory-btns">
+                <button class="again" onclick="replay()">🔄 Reintentar</button>
+                <button class="image-btn" onclick="changeImage()">🖼️ Otra</button>
+            </div>
+        </div>
     </div>
-    <div class="hpanel">
-      <span id="hudHearts">&#9829;&#9829;&#9829;</span>
-      <span id="hudScore">0</span>
-      <button class="ibtn" id="btnPause" title="Pausa (P)">&#10074;&#10074;</button>
-      <button class="ibtn" id="btnMute" title="Sonido (M)">&#9834;</button>
+
+    <!-- Image Modal -->
+    <div class="img-modal" id="imgModal">
+        <div class="img-modal-content">
+            <div class="img-modal-header">
+                <h3>Selecciona una imagen</h3>
+                <button onclick="closeImageModal()" style="font-size:24px;background:none;border:none;cursor:pointer;">✕</button>
+            </div>
+            <div class="img-grid" id="imgGrid"></div>
+        </div>
     </div>
-  </div>
 
-  <div id="hintbar"></div>
-  <div class="soloBadge">Modo 1 jugador &middot; <b>TAB</b> cambia de personaje</div>
-
-  <!-- MENU -->
-  <div class="screen" id="scrMenu">
-    <div class="subtitle">El templo ha despertado</div>
-    <div class="title">FIREBOY &amp; WATERGIRL<br>LEGADO ETERNO</div>
-    <div class="menucol">
-      <button class="btn primary" id="mPlay">&#9654;&nbsp; Jugar</button>
-      <button class="btn" id="mSelect">Niveles</button>
-      <button class="btn" id="mHow">Cómo jugar</button>
-      <button class="btn small" id="mMode">Modo: 2 Jugadores (cooperativo)</button>
+    <!-- Preview -->
+    <div class="preview-overlay" id="previewOverlay" onclick="closePreview()">
+        <img id="previewImg" alt="Vista previa">
     </div>
-    <div class="foot">10 cámaras · mecanismos antiguos · estrellas y récords guardados<br>
-    Fireboy: <b>A</b> <b>W</b> <b>D</b> &nbsp;·&nbsp; Watergirl: <b>&#8592;</b> <b>&#8593;</b> <b>&#8594;</b> &nbsp;·&nbsp; <b>P</b> pausa · <b>R</b> reiniciar · <b>M</b> sonido</div>
-  </div>
 
-  <!-- SELECT -->
-  <div class="screen hidden" id="scrSelect">
-    <h2 class="sc">Cámaras del Templo</h2>
-    <div class="lvlgrid" id="lvlGrid"></div>
-    <button class="btn small" id="selBack">&#8592;&nbsp; Volver</button>
-  </div>
+    <script>
+        // Variables
+        let chosenImage = null;
+        let gridSize = 4;
+        let gameTimer = null;
+        let moves = 0;
+        let score = 0;
+        let correctCount = 0;
+        let totalPieces = 0;
+        let startTime = null;
 
-  <!-- HOW -->
-  <div class="screen hidden" id="scrHow">
-    <h2 class="sc">Cómo jugar</h2>
-    <div class="howgrid">
-      <div class="howcard fire">
-        <h3>Fireboy</h3>
-        <ul>
-          <li>Moverse: <kbd>A</kbd> <kbd>D</kbd></li>
-          <li>Saltar: <kbd>W</kbd></li>
-          <li>Inmune al <b>fuego</b>, recolecta gemas rojas</li>
-          <li>El agua y el ácido verde son letales para él</li>
-        </ul>
-      </div>
-      <div class="howcard water">
-        <h3>Watergirl</h3>
-        <ul>
-          <li>Moverse: <kbd>&#8592;</kbd> <kbd>&#8594;</kbd></li>
-          <li>Saltar: <kbd>&#8593;</kbd></li>
-          <li>Inmune al <b>agua</b>, recolecta gemas azules</li>
-          <li>El fuego y el ácido verde son letales para ella</li>
-        </ul>
-      </div>
-      <div class="howcard misc">
-        <h3>El Templo</h3>
-        <ul>
-          <li>Llevad <b>ambos</b> a sus puertas a la vez</li>
-          <li><b>Botones</b> y <b>palancas</b> mueven plataformas</li>
-          <li><b>Cajas</b>: empujalas para trepar o pisar botones</li>
-          <li>Ascensores de peso: suben mientras alguien va encima</li>
-          <li>3 corazones por cámara. Las estrellas dependen de gemas y tiempo</li>
-        </ul>
-      </div>
-    </div>
-    <p class="mech"><b>Truco de leyenda:</b> mantiene pulsado el salto menos tiempo para saltos cortos y precisos. Un jugador puede pisar un botón para abrirle el paso al otro... y luego el otro devuelve el favor.</p>
-    <p class="mech">Modo 1 jugador: <kbd>TAB</kbd> cambia entre personajes. <kbd>R</kbd> reinicia, <kbd>P</kbd> pausa, <kbd>M</kbd> silencia.</p>
-    <button class="btn small" id="howBack">&#8592;&nbsp; Volver</button>
-  </div>
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            loadImageGrid();
+        });
 
-  <!-- PAUSE -->
-  <div class="screen hidden" id="scrPause">
-    <h2 class="sc">Pausa</h2>
-    <div class="btnrow">
-      <button class="btn primary" id="pResume">&#9654;&nbsp; Continuar</button>
-      <button class="btn" id="pRetry">Reiniciar nivel</button>
-      <button class="btn" id="pMenu">Menú</button>
-    </div>
-  </div>
+        // Load images into modal grid
+        function loadImageGrid() {
+            const grid = document.getElementById('imgGrid');
+            grid.innerHTML = '';
+            const seed = Math.random().toString(36).substring(7);
 
-  <!-- COMPLETE -->
-  <div class="screen hidden" id="scrComplete">
-    <div class="subtitle" id="cmSub">Cámara superada</div>
-    <h2 class="sc" id="cmTitle">¡NIVEL COMPLETADO!</h2>
-    <div class="bigstars"><span class="bigstar" id="st1">&#9733;</span><span class="bigstar" id="st2">&#9733;</span><span class="bigstar" id="st3">&#9733;</span></div>
-    <div class="statbox">
-      <div class="statrow"><span>Tiempo</span><b id="cmTime">00:00</b></div>
-      <div class="statrow"><span>Gemas</span><b id="cmGems">0/0</b></div>
-      <div class="statrow"><span>Bonus</span><b id="cmBonus">+0</b></div>
-      <div class="statrow"><span>Puntuación total</span><b id="cmScore">0</b></div>
-    </div>
-    <div class="btnrow">
-      <button class="btn primary" id="cNext">Siguiente &#9654;</button>
-      <button class="btn" id="cRetry">Repetir</button>
-      <button class="btn" id="cMenu">Menú</button>
-    </div>
-  </div>
-
-  <!-- GAME OVER -->
-  <div class="screen hidden" id="scrOver">
-    <h2 class="sc" style="color:#ff8a7a">EL TEMPLO OS HA VENCIDO</h2>
-    <div class="subtitle" id="ovSub">Sin corazones... pero las leyendas nunca se rinden</div>
-    <div class="btnrow">
-      <button class="btn primary" id="oRetry">Reintentar</button>
-      <button class="btn" id="oMenu">Menú</button>
-    </div>
-  </div>
-
-  <!-- VICTORY -->
-  <div class="screen hidden" id="scrVictory">
-    <div class="subtitle">El Corazón del Templo ha sido conquistado</div>
-    <h2 class="sc" style="color:#ffe9b0">¡LEYENDARIOS!</h2>
-    <div class="statbox">
-      <div class="statrow"><span>Puntuación final</span><b id="vtScore">0</b></div>
-      <div class="statrow"><span>Estrellas totales</span><b id="vtStars">0/30</b></div>
-    </div>
-    <div class="btnrow">
-      <button class="btn primary" id="vAgain">Jugar de nuevo</button>
-      <button class="btn" id="vMenu">Menú</button>
-    </div>
-  </div>
-
-  <!-- Touch pads -->
-  <div class="pad" id="padF">
-    <div class="pbtn" data-p="0" data-a="left">&#9664;</div>
-    <div class="pbtn" data-p="0" data-a="right">&#9654;</div>
-    <div class="pbtn" data-p="0" data-a="jump">&#9650;</div>
-  </div>
-  <div class="pad" id="padW">
-    <div class="pbtn" data-p="1" data-a="left">&#9664;</div>
-    <div class="pbtn" data-p="1" data-a="right">&#9654;</div>
-    <div class="pbtn" data-p="1" data-a="jump">&#9650;</div>
-  </div>
-  <button id="btnSwap">&#8644;</button>
-</div>
-<script>
-'use strict';
-/* ============================================================
-   FIREBOY & WATERGIRL — LEGADO ETERNO (Deluxe)
-   Motor v2: físicas AABB, mecánicas cooperativas, arte procedural.
-   ============================================================ */
-
-// ============================ UTILS ============================
-const TAU = Math.PI * 2;
-const W = 960, H = 540;
-const clamp = (v, a, b) => v < a ? a : (v > b ? b : v);
-const lerp = (a, b, t) => a + (b - a) * t;
-const rnd = (a = 1, b) => b === undefined ? Math.random() * a : a + Math.random() * (b - a);
-const aabb = (a, b) => a.x < b.x + b.w && a.x + a.w > b.x && a.y < b.y + b.h && a.y + a.h > b.y;
-function mulberry32(s){ return function(){ s |= 0; s = s + 0x6D2B79F5 | 0; let t = Math.imul(s ^ s >>> 15, 1 | s); t = t + Math.imul(t ^ t >>> 7, 61 | t) ^ t; return ((t ^ t >>> 14) >>> 0) / 4294967296; }; }
-const fmtTime = s => { s = Math.max(0, Math.floor(s)); return String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0'); };
-
-// ============================ AUDIO ============================
-const AudioSys = {
-  ctx:null, master:null, musicG:null, muted:false, musicTimer:null, bassNodes:null,
-  init(){
-    if (this.ctx) return;
-    try{
-      this.ctx = new (window.AudioContext || window.webkitAudioContext)();
-      this.master = this.ctx.createGain(); this.master.gain.value = this.muted ? 0 : 0.9;
-      this.master.connect(this.ctx.destination);
-      this.musicG = this.ctx.createGain(); this.musicG.gain.value = 0.55; this.musicG.connect(this.master);
-    }catch(e){}
-  },
-  resume(){ if (this.ctx && this.ctx.state === 'suspended') this.ctx.resume(); },
-  setMuted(m){ this.muted = m; if (this.master) this.master.gain.value = m ? 0 : 0.9; },
-  tone(f0, f1, dur, type = 'sine', vol = 0.2, delay = 0){
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime + delay;
-    const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-    o.type = type; o.frequency.setValueAtTime(Math.max(1, f0), t);
-    if (f1 && f1 !== f0) o.frequency.exponentialRampToValueAtTime(Math.max(1, f1), t + dur);
-    g.gain.setValueAtTime(vol, t); g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
-    o.connect(g); g.connect(this.master); o.start(t); o.stop(t + dur + 0.03);
-  },
-  noise(dur = 0.1, vol = 0.15, freq = 800, delay = 0){
-    if (!this.ctx) return;
-    const t = this.ctx.currentTime + delay;
-    const n = Math.max(1, Math.floor(this.ctx.sampleRate * dur));
-    const buf = this.ctx.createBuffer(1, n, this.ctx.sampleRate);
-    const d = buf.getChannelData(0);
-    for (let i = 0; i < n; i++) d[i] = (Math.random() * 2 - 1) * (1 - i / n);
-    const src = this.ctx.createBufferSource(); src.buffer = buf;
-    const f = this.ctx.createBiquadFilter(); f.type = 'lowpass'; f.frequency.value = freq;
-    const g = this.ctx.createGain(); g.gain.value = vol;
-    src.connect(f); f.connect(g); g.connect(this.master); src.start(t);
-  },
-  jump(){ this.tone(300, 640, 0.13, 'square', 0.09); },
-  land(){ this.noise(0.06, 0.09, 480); },
-  gem(p){ this.tone(p ? 760 : 620, p ? 1000 : 840, 0.09, 'sine', 0.13); this.tone(p ? 1000 : 840, p ? 1350 : 1120, 0.13, 'sine', 0.11, 0.07); },
-  death(){ this.tone(380, 70, 0.42, 'sawtooth', 0.18); this.noise(0.3, 0.16, 900); },
-  button(on){ this.tone(on ? 230 : 170, on ? 340 : 120, 0.08, 'square', 0.11); },
-  lever(){ this.tone(150, 90, 0.09, 'square', 0.14); this.noise(0.06, 0.09, 1500, 0.02); },
-  door(){ [523, 659, 784].forEach((f, i) => this.tone(f, f, 0.13, 'triangle', 0.1, i * 0.07)); },
-  win(){ [523, 659, 784, 1046].forEach((f, i) => this.tone(f, f, 0.17, 'triangle', 0.12, i * 0.09)); this.noise(0.3, 0.05, 3200, 0.35); },
-  star(i){ this.tone(880 + i * 240, 880 + i * 240, 0.16, 'sine', 0.15); },
-  over(){ [330, 262, 196].forEach((f, i) => this.tone(f, f * 0.88, 0.28, 'sawtooth', 0.09, i * 0.19)); },
-  ui(){ this.tone(520, 720, 0.06, 'sine', 0.07); },
-  swap(){ this.tone(420, 840, 0.09, 'triangle', 0.1); },
-  startMusic(){
-    if (!this.ctx || this.musicTimer) return;
-    this.bass();
-    const scale = [220, 261.63, 293.66, 329.63, 392, 440, 523.25];
-    let step = 0;
-    this.musicTimer = setInterval(() => {
-      if (!this.ctx || this.muted) return;
-      step++;
-      const t = this.ctx.currentTime;
-      if (step % 8 === 0 || Math.random() < 0.55){
-        const n = scale[Math.floor(Math.random() * scale.length)] * (Math.random() < 0.18 ? 2 : 1);
-        const o = this.ctx.createOscillator(), g = this.ctx.createGain();
-        o.type = 'triangle'; o.frequency.value = n;
-        g.gain.setValueAtTime(0.045, t); g.gain.exponentialRampToValueAtTime(0.0001, t + 0.55);
-        o.connect(g); g.connect(this.musicG); o.start(t); o.stop(t + 0.6);
-      }
-    }, 300);
-  },
-  bass(){
-    if (!this.ctx || this.bassNodes) return;
-    const o1 = this.ctx.createOscillator(), o2 = this.ctx.createOscillator(),
-          f = this.ctx.createBiquadFilter(), g = this.ctx.createGain();
-    o1.type = 'sawtooth'; o1.frequency.value = 55;
-    o2.type = 'sawtooth'; o2.frequency.value = 55.6;
-    f.type = 'lowpass'; f.frequency.value = 150; g.gain.value = 0.028;
-    o1.connect(f); o2.connect(f); f.connect(g); g.connect(this.musicG);
-    o1.start(); o2.start(); this.bassNodes = [o1, o2, g];
-  }
-};
-
-// ============================ INPUT ============================
-const Input = {
-  keys:{}, edges:[{}, {}], active:0,
-  touch:[{left:false, right:false, jump:false}, {left:false, right:false, jump:false}],
-  init(){
-    const KM = { KeyW:[0,'jump'], KeyA:[0,'left'], KeyD:[0,'right'],
-                 ArrowUp:[1,'jump'], ArrowLeft:[1,'left'], ArrowRight:[1,'right'] };
-    addEventListener('keydown', e => {
-      if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Space','Tab'].includes(e.code)) e.preventDefault();
-      if (!e.repeat){
-        AudioSys.init(); AudioSys.resume();
-        if ((e.code === 'Tab' || e.code === 'KeyQ') && Game.mode === 'solo' && Game.state === 'playing'){
-          Input.active = 1 - Input.active; AudioSys.swap();
+            for (let i = 0; i < 9; i++) {
+                const opt = document.createElement('div');
+                opt.className = 'img-option';
+                opt.onclick = () => pickImage(seed, i);
+                
+                const img = document.createElement('img');
+                img.src = `https://picsum.photos/seed/${seed}${i}/300/300.jpg`;
+                img.alt = 'Imagen ' + (i+1);
+                
+                opt.appendChild(img);
+                grid.appendChild(opt);
+            }
         }
-        if (e.code === 'KeyR' && (Game.state === 'playing' || Game.state === 'paused')) Game.restartLevel();
-        if (e.code === 'KeyP' || e.code === 'Escape'){
-          if (Game.state === 'playing') Game.pause();
-          else if (Game.state === 'paused') Game.resume();
+
+        // Open/Close image modal
+        function openImageModal() {
+            document.getElementById('imgModal').classList.add('active');
+            loadImageGrid();
         }
-        if (e.code === 'KeyM') Game.toggleMute();
-        if (KM[e.code]){ const [p, a] = KM[e.code]; this.edges[p][a] = true; }
-        if (e.code === 'Space') this.edges[Game.mode === 'solo' ? 1 : 0].jump = true;
-      }
-      this.keys[e.code] = true;
-    });
-    addEventListener('keyup', e => { this.keys[e.code] = false; });
-    addEventListener('blur', () => { this.keys = {}; });
-  },
-  down(p, a){
-    const k = this.keys, t = this.touch;
-    const fireK = a === 'left' ? k.KeyA : a === 'right' ? k.KeyD : (k.KeyW || k.Space);
-    const watK  = a === 'left' ? k.ArrowLeft : a === 'right' ? k.ArrowRight : k.ArrowUp;
-    const fireT = t[0][a], watT = t[1][a];
-    if (Game.mode === 'solo'){
-      if (p !== Input.active) return false;
-      return !!(fireK || watK || fireT || watT);
-    }
-    return p === 0 ? !!(fireK || fireT) : !!(watK || watT);
-  },
-  edge(p, a){
-    if (Game.mode === 'solo'){
-      if (p !== Input.active) return false;
-      return !!(this.edges[0][a] || this.edges[1][a]);
-    }
-    return !!this.edges[p][a];
-  },
-  clearEdges(){ this.edges[0] = {}; this.edges[1] = {}; }
-};
 
-// ============================ PARTÍCULAS ============================
-class Prt{
-  constructor(x, y, vx, vy, life, size, color, opt = {}){
-    this.x = x; this.y = y; this.vx = vx; this.vy = vy;
-    this.life = life; this.max = life; this.size = size; this.color = color;
-    this.g = opt.g !== undefined ? opt.g : 0.12;
-    this.drag = opt.drag !== undefined ? opt.drag : 0.99;
-    this.glow = !!opt.glow; this.shrink = opt.shrink !== undefined ? opt.shrink : 0.985;
-  }
-  update(){ this.x += this.vx; this.y += this.vy; this.vy += this.g; this.vx *= this.drag; this.vy *= this.drag; this.life -= 0.016; this.size *= this.shrink; }
-  draw(c){
-    const a = clamp(this.life / this.max, 0, 1);
-    c.save(); c.globalAlpha = a;
-    if (this.glow) c.globalCompositeOperation = 'lighter';
-    c.fillStyle = this.color;
-    c.beginPath(); c.arc(this.x, this.y, Math.max(0.4, this.size), 0, TAU); c.fill();
-    c.restore();
-  }
-}
-const Particles = {
-  list:[],
-  add(x, y, vx, vy, life, size, color, opt){ if (this.list.length > 340) return; this.list.push(new Prt(x, y, vx, vy, life, size, color, opt)); },
-  burst(x, y, n, colors, spd = 4, opt = {}){
-    for (let i = 0; i < n; i++){
-      const a = rnd(TAU), s = rnd(0.4, 1) * spd;
-      this.add(x, y, Math.cos(a) * s, Math.sin(a) * s - spd * 0.3, rnd(0.5, 1), rnd(1.5, 3.4), colors[Math.floor(rnd(colors.length))], opt);
-    }
-  },
-  update(){ for (let i = this.list.length - 1; i >= 0; i--){ const p = this.list[i]; p.update(); if (p.life <= 0 || p.size < 0.4) this.list.splice(i, 1); } },
-  draw(c){ for (const p of this.list) p.draw(c); },
-  clear(){ this.list.length = 0; }
-};
-
-// ============================ CÁMARA ============================
-const Cam = {
-  shake:0, x:0, y:0,
-  add(s){ this.shake = Math.max(this.shake, s); },
-  update(){ this.shake *= 0.88; if (this.shake < 0.3) this.shake = 0; this.x = rnd(-1, 1) * this.shake; this.y = rnd(-1, 1) * this.shake; }
-};
-
-// ============================ GUARDADO ============================
-const SaveSys = {
-  key:'fw_legado_eterno_v1',
-  data:{ unlocked:1, best:{}, mode:'coop', muted:false },
-  load(){ try{ const d = JSON.parse(localStorage.getItem(this.key)); if (d) Object.assign(this.data, d); }catch(e){} },
-  write(){ try{ localStorage.setItem(this.key, JSON.stringify(this.data)); }catch(e){} },
-  result(n, stars, score, time){
-    const b = this.data.best[n];
-    const nb = b ? { stars:Math.max(b.stars, stars), score:Math.max(b.score, score), time:Math.min(b.time, time) }
-                 : { stars, score, time };
-    this.data.best[n] = nb;
-    this.data.unlocked = Math.max(this.data.unlocked, Math.min(10, n + 1));
-    this.write();
-  },
-  totalStars(){ let t = 0; for (let i = 1; i <= 10; i++){ const b = this.data.best[i]; if (b) t += b.stars; } return t; }
-};
-// ============================ ENTIDADES DEL MUNDO ============================
-
-// Pozos elementales: fuego / agua / ácido. Regla clásica: cada uno es inmune a su elemento.
-class Pool{
-  constructor(d){ Object.assign(this, d); this.t = rnd(6); }
-  deadlyFor(pt){ return this.type === 'acid' || this.type !== pt; }
-  update(){
-    if (Math.random() < 0.12){
-      const x = this.x + rnd(this.w);
-      const col = this.type === 'fire' ? '#ffb347' : this.type === 'water' ? '#9be8ff' : '#b6ff6e';
-      const up = this.type === 'fire' ? rnd(-1.3, -0.5) : rnd(-0.7, -0.2);
-      Particles.add(x, this.y + 2, rnd(-0.2, 0.2), up, rnd(0.5, 1), rnd(1, 2.4), col,
-        { g: this.type === 'fire' ? -0.012 : 0.02, glow:true });
-    }
-  }
-  draw(c, t){
-    const grad = c.createLinearGradient(0, this.y, 0, this.y + this.h);
-    if (this.type === 'fire'){ grad.addColorStop(0, '#ffb054'); grad.addColorStop(0.5, '#ff6b2b'); grad.addColorStop(1, '#b32d12'); }
-    else if (this.type === 'water'){ grad.addColorStop(0, '#7fe3ff'); grad.addColorStop(0.5, '#2ea7e0'); grad.addColorStop(1, '#125a96'); }
-    else { grad.addColorStop(0, '#b9ff5e'); grad.addColorStop(0.5, '#5fbf24'); grad.addColorStop(1, '#2c6b12'); }
-    c.save();
-    c.shadowColor = this.type === 'fire' ? 'rgba(255,120,40,.8)' : this.type === 'water' ? 'rgba(60,190,255,.8)' : 'rgba(140,255,70,.8)';
-    c.shadowBlur = 14;
-    c.fillStyle = grad;
-    c.beginPath();
-    c.moveTo(this.x, this.y + 4);
-    for (let x = 0; x <= this.w; x += 8)
-      c.lineTo(this.x + x, this.y + 3 + Math.sin(t * 4 + x * 0.3 + this.t) * 2.4);
-    c.lineTo(this.x + this.w, this.y + this.h);
-    c.lineTo(this.x, this.y + this.h);
-    c.closePath(); c.fill();
-    c.restore();
-    // brillo superficial
-    c.strokeStyle = 'rgba(255,255,255,.35)'; c.lineWidth = 1.4;
-    c.beginPath();
-    for (let x = 0; x <= this.w; x += 8){
-      const y = this.y + 3 + Math.sin(t * 4 + x * 0.3 + this.t) * 2.4;
-      if (x === 0) c.moveTo(this.x + x, y); else c.lineTo(this.x + x, y);
-    }
-    c.stroke();
-  }
-}
-
-// Gemas elementales
-class Gem{
-  constructor(d){ Object.assign(this, d); this.taken = false; this.phase = rnd(6); }
-  draw(c, t){
-    if (this.taken) return;
-    const bob = Math.sin(t * 3 + this.phase) * 2.5;
-    const x = this.x, y = this.y + bob;
-    const main = this.type === 'fire' ? '#ff5a5a' : '#4dd0e1';
-    const lite = this.type === 'fire' ? '#ffc2c2' : '#c9f6fb';
-    const dark = this.type === 'fire' ? '#a81f1f' : '#12718a';
-    c.save();
-    c.translate(x, y);
-    c.rotate(Math.sin(t * 1.6 + this.phase) * 0.18);
-    c.shadowColor = main; c.shadowBlur = 12;
-    c.fillStyle = main;
-    c.beginPath(); c.moveTo(0, -9); c.lineTo(6.5, 0); c.lineTo(0, 9); c.lineTo(-6.5, 0); c.closePath(); c.fill();
-    c.shadowBlur = 0;
-    c.fillStyle = lite;
-    c.beginPath(); c.moveTo(0, -5.2); c.lineTo(3.8, 0); c.lineTo(0, 5.2); c.lineTo(-3.8, 0); c.closePath(); c.fill();
-    c.fillStyle = dark; c.fillRect(-1, -1.6, 2, 3.2);
-    c.restore();
-  }
-}
-
-// Puertas elementales
-class Door{
-  constructor(d){ Object.assign(this, d); this.on = false; this.w = 44; this.h = 62; }
-  draw(c, t){
-    const col = this.type === 'fire' ? '#ff6b3d' : '#45d5e0';
-    const glow = this.on ? (0.55 + Math.sin(t * 6) * 0.25) : 0;
-    c.save();
-    // marco
-    c.fillStyle = '#1c140d';
-    c.beginPath();
-    c.moveTo(this.x, this.y + this.h);
-    c.lineTo(this.x, this.y + 16);
-    c.arc(this.x + this.w / 2, this.y + 16, this.w / 2, Math.PI, 0);
-    c.lineTo(this.x + this.w, this.y + this.h);
-    c.closePath(); c.fill();
-    c.strokeStyle = '#6b5432'; c.lineWidth = 3.5; c.stroke();
-    // portal interior
-    if (glow > 0){
-      const g = c.createRadialGradient(this.x + this.w / 2, this.y + this.h * 0.55, 2, this.x + this.w / 2, this.y + this.h * 0.55, this.w * 0.9);
-      g.addColorStop(0, col); g.addColorStop(1, 'rgba(0,0,0,0)');
-      c.globalAlpha = glow;
-      c.fillStyle = g;
-      c.beginPath();
-      c.moveTo(this.x + 3, this.y + this.h);
-      c.lineTo(this.x + 3, this.y + 16);
-      c.arc(this.x + this.w / 2, this.y + 16, this.w / 2 - 3, Math.PI, 0);
-      c.lineTo(this.x + this.w - 3, this.y + this.h);
-      c.closePath(); c.fill();
-      c.globalAlpha = 1;
-    }
-    // emblema
-    const ex = this.x + this.w / 2, ey = this.y + this.h * 0.52;
-    c.shadowColor = col; c.shadowBlur = this.on ? 16 : 6;
-    c.fillStyle = col;
-    if (this.type === 'fire'){
-      c.beginPath();
-      c.moveTo(ex, ey - 11);
-      c.quadraticCurveTo(ex + 8, ey - 2, ex + 5, ey + 6);
-      c.quadraticCurveTo(ex, ey + 10, ex - 5, ey + 6);
-      c.quadraticCurveTo(ex - 8, ey - 2, ex, ey - 11);
-      c.fill();
-      c.fillStyle = '#ffe1a0';
-      c.beginPath(); c.arc(ex, ey + 3, 3, 0, TAU); c.fill();
-    } else {
-      c.beginPath();
-      c.moveTo(ex, ey - 11);
-      c.quadraticCurveTo(ex + 8, ey + 2, ex + 5.5, ey + 6);
-      c.arc(ex, ey + 6, 5.5, 0, Math.PI);
-      c.quadraticCurveTo(ex - 8, ey + 2, ex, ey - 11);
-      c.fill();
-      c.fillStyle = '#e8fdff';
-      c.beginPath(); c.arc(ex - 1.5, ey + 4, 1.8, 0, TAU); c.fill();
-    }
-    c.restore();
-  }
-}
-
-// Botón de presión: activa enlaces mientras algo lo pisa
-class ButtonPad{
-  constructor(d){ Object.assign(this, d); this.w = 54; this.h = 12; this.pressed = false; this.anim = 0; }
-  get sensor(){ return { x:this.x - 2, y:this.y - 12, w:this.w + 4, h:16 }; }
-  update(){ this.anim = lerp(this.anim, this.pressed ? 1 : 0, 0.3); }
-  draw(c, t){
-    c.save();
-    c.fillStyle = '#2b241d';
-    c.fillRect(this.x - 4, this.y + 8, this.w + 8, 5);
-    const col = this.pressed ? '#ffd76b' : '#8a7a58';
-    c.shadowColor = this.pressed ? '#ffd76b' : 'rgba(0,0,0,0)';
-    c.shadowBlur = this.pressed ? 12 : 0;
-    c.fillStyle = col;
-    c.fillRect(this.x, this.y + 3 + this.anim * 5, this.w, 6 - this.anim * 2);
-    c.shadowBlur = 0;
-    c.fillStyle = '#4a4034';
-    c.fillRect(this.x + 4, this.y + 9 + this.anim * 3, this.w - 8, 3);
-    c.restore();
-  }
-}
-
-// Palanca: se activa al tocarla; su estado persiste hasta el próximo toque
-class LeverPad{
-  constructor(d){ Object.assign(this, d); this.state = false; this.cool = 0; this.ang = -0.6; this.prevTouch = false; }
-  get zone(){ return { x:this.x - 8, y:this.y - 44, w:46, h:54 }; }
-  update(){ this.ang = lerp(this.ang, this.state ? 0.6 : -0.6, 0.25); if (this.cool > 0) this.cool--; }
-  draw(c, t){
-    c.save();
-    c.fillStyle = '#2b241d';
-    c.fillRect(this.x + 6, this.y + 2, 18, 8);
-    const px = this.x + 15, py = this.y + 4;
-    c.strokeStyle = '#8a7a58'; c.lineWidth = 5; c.lineCap = 'round';
-    c.beginPath(); c.moveTo(px, py);
-    c.lineTo(px + Math.sin(this.ang) * 26, py - Math.cos(this.ang) * 26);
-    c.stroke();
-    c.shadowColor = this.state ? '#ffd76b' : 'rgba(0,0,0,0)';
-    c.shadowBlur = this.state ? 14 : 0;
-    c.fillStyle = this.state ? '#ffd76b' : '#c9463d';
-    c.beginPath(); c.arc(px + Math.sin(this.ang) * 26, py - Math.cos(this.ang) * 26, 6.5, 0, TAU); c.fill();
-    c.restore();
-  }
-}
-
-// Plataformas móviles: patrol (patrulla automática), linked (por enlace), gate (portón)
-class Mover{
-  constructor(d){
-    Object.assign(this, d);
-    this.x1 = d.x; this.y1 = d.y;
-    this.lastDx = 0; this.lastDy = 0;
-    this.weightActive = false; this.t = rnd(6);
-    if (this.kind === 'patrol'){ this.ang = rnd(6); this.period = this.period || 240; }
-  }
-  getActive(){
-    if (this.kind === 'patrol') return false;
-    if (this.weight) return this.weightActive;
-    return this.links.some(id => Game.linkOn[id]);
-  }
-  update(){
-    let tx, ty;
-    if (this.kind === 'patrol'){
-      this.ang += TAU / this.period;
-      const k = 0.5 - 0.5 * Math.cos(this.ang);
-      tx = this.x1 + this.dx * k; ty = this.y1 + this.dy * k;
-    } else {
-      const act = this.getActive();
-      tx = act ? this.x2 : this.x1; ty = act ? this.y2 : this.y1;
-    }
-    const spd = this.kind === 'patrol' ? 2.1 : (this.spd || 2.2);
-    let dx = tx - this.x, dy = ty - this.y;
-    const dist = Math.hypot(dx, dy);
-    if (dist > 0.05){
-      const m = Math.min(spd, dist);
-      dx = dx / dist * m; dy = dy / dist * m;
-      this.x += dx; this.y += dy;
-      this.lastDx = dx; this.lastDy = dy;
-    } else { this.lastDx = 0; this.lastDy = 0; }
-  }
-  draw(c, t){
-    if (this.kind === 'gate'){
-      c.save();
-      c.fillStyle = '#3a332b';
-      c.fillRect(this.x - 3, this.y - 6, this.w + 6, 8);
-      c.fillStyle = '#6e655a';
-      c.shadowColor = 'rgba(0,0,0,.6)'; c.shadowBlur = 6;
-      const bars = Math.max(2, Math.floor(this.w / 8));
-      for (let i = 0; i < bars; i++)
-        c.fillRect(this.x + 2 + i * (this.w - 5) / bars, this.y, 3.4, this.h);
-      c.fillRect(this.x, this.y + 6, this.w, 3.4);
-      c.fillRect(this.x, this.y + this.h - 12, this.w, 3.4);
-      for (let i = 0; i < bars; i++){
-        const bx = this.x + 3.7 + i * (this.w - 5) / bars;
-        c.beginPath(); c.moveTo(bx - 3, this.y + this.h - 8); c.lineTo(bx + 3, this.y + this.h - 8); c.lineTo(bx, this.y + this.h - 1);
-        c.closePath(); c.fill();
-      }
-      c.restore();
-      return;
-    }
-    c.save();
-    const g = c.createLinearGradient(0, this.y, 0, this.y + this.h);
-    g.addColorStop(0, '#7c6f5e'); g.addColorStop(0.35, '#57493a'); g.addColorStop(1, '#332a20');
-    c.fillStyle = g;
-    c.beginPath(); c.roundRect(this.x, this.y, this.w, this.h, 4); c.fill();
-    c.fillStyle = 'rgba(255,230,160,.25)';
-    c.fillRect(this.x + 3, this.y + 2, this.w - 6, 2);
-    // remaches
-    c.fillStyle = '#c9b98f';
-    for (let i = 8; i < this.w - 4; i += 16) { c.beginPath(); c.arc(this.x + i, this.y + this.h / 2, 1.6, 0, TAU); c.fill(); }
-    // chevrones de dirección
-    if (this.kind === 'patrol' && (Math.abs(this.dx) > 1 || Math.abs(this.dy) > 1)){
-      const a = 0.35 + Math.sin(t * 6) * 0.25;
-      c.strokeStyle = `rgba(255,215,107,${a})`; c.lineWidth = 2;
-      const cx = this.x + this.w / 2, cy = this.y + this.h / 2;
-      c.beginPath();
-      if (this.dx !== 0){ c.moveTo(cx - 5 * Math.sign(this.dx), cy - 4); c.lineTo(cx + 2 * Math.sign(this.dx), cy); c.lineTo(cx - 5 * Math.sign(this.dx), cy + 4); }
-      else { c.moveTo(cx - 4, cy - 5 * Math.sign(this.dy)); c.lineTo(cx, cy + 2 * Math.sign(this.dy)); c.lineTo(cx + 4, cy - 5 * Math.sign(this.dy)); }
-      c.stroke();
-    }
-    c.restore();
-  }
-}
-
-// Caja empujable (mágica: inmune a los pozos; si cae en uno, vuelve a su sitio)
-class Box{
-  constructor(x, y){
-    this.w = 36; this.h = 36; this.x = x; this.y = y;
-    this.spawn = { x, y }; this.dead = false; this.respawnT = 0;
-    this.groundMover = null; this.seed = rnd(1000);
-  }
-  get rect(){ return { x:this.x, y:this.y, w:this.w, h:this.h }; }
-  pushBy(dx, solids = [], boxes = []){
-    const nx = this.x + dx;
-    const test = { x:nx, y:this.y, w:this.w, h:this.h };
-    for (const s of solids) if (aabb(test, s)) return false;
-    for (const b of boxes) if (b !== this && !b.dead && aabb(test, b)) return false;
-    if (nx < 0 || nx + this.w > W) return false;
-    this.x = nx;
-    return true;
-  }
-  update(solids, boxes){
-    if (this.dead){
-      this.respawnT--;
-      if (this.respawnT <= 0){
-        this.dead = false; this.x = this.spawn.x; this.y = this.spawn.y;
-        Particles.burst(this.x + 18, this.y + 18, 8, ['#c9a05a', '#8a6a3a'], 2);
-      }
-      return;
-    }
-    // pozos: la caja se hunde y reaparece
-    for (const p of Game.level.pools){
-      if (aabb(this, p)){
-        this.dead = true; this.respawnT = 80;
-        Particles.burst(this.x + 18, this.y + 18, 14, ['#c9a05a', '#8a6a3a', '#ffe9b0'], 3);
-        AudioSys.noise(0.2, 0.1, 500);
-        return;
-      }
-    }
-    if (this.y > H + 80){ this.dead = true; this.respawnT = 80; return; }
-    // transporte por plataforma móvil
-    if (this.groundMover){ this.x += this.groundMover.lastDx; this.y += this.groundMover.lastDy; }
-    this.vy = Math.min(13, (this.vy || 0) + 0.55);
-    // eje X
-    this.x += this.vx || 0;
-    this.vx = (this.vx || 0) * 0.8;
-    for (const s of solids){
-      if (!aabb(this, s)) continue;
-      const ol = (this.x + this.w) - s.x, or = (s.x + s.w) - this.x;
-      if (ol < or) this.x -= ol; else this.x += or;
-    }
-    for (const b of boxes){
-      if (b === this || b.dead || !aabb(this, b)) continue;
-      const ol = (this.x + this.w) - b.x, or = (b.x + b.w) - this.x;
-      if (ol < or) this.x -= ol; else this.x += or;
-    }
-    if (this.x < 0) this.x = 0;
-    if (this.x + this.w > W) this.x = W - this.w;
-    // eje Y
-    const prevBottom = this.y + this.h;
-    this.y += this.vy;
-    let grounded = false; this.groundMover = null;
-    for (const s of solids){
-      if (!aabb(this, s)) continue;
-      if (this.vy >= 0 && prevBottom <= s.y + 10){
-        this.y = s.y - this.h; this.vy = 0; grounded = true;
-        if (s.lastDx !== undefined) this.groundMover = s;
-      } else if (this.vy < 0 && prevBottom - this.h >= s.y + s.h - 9){
-        this.y = s.y + s.h; this.vy = 0;
-      } else {
-        const ot = (this.y + this.h) - s.y, ob = (s.y + s.h) - this.y;
-        if (ot < ob){ this.y = s.y - this.h; if (this.vy > 0){ this.vy = 0; grounded = true; if (s.lastDx !== undefined) this.groundMover = s; } }
-        else { this.y = s.y + s.h; if (this.vy < 0) this.vy = 0; }
-      }
-    }
-    for (const b of boxes){
-      if (b === this || b.dead || !aabb(this, b)) continue;
-      if (this.vy >= 0 && prevBottom <= b.y + 10){ this.y = b.y - this.h; this.vy = 0; grounded = true; }
-      else if (this.vy < 0){ this.y = b.y + b.h; this.vy = 0; }
-    }
-  }
-  draw(c, t){
-    if (this.dead) return;
-    c.save();
-    const g = c.createLinearGradient(this.x, this.y, this.x, this.y + this.h);
-    g.addColorStop(0, '#a97f42'); g.addColorStop(0.5, '#8a6433'); g.addColorStop(1, '#5e421f');
-    c.fillStyle = g;
-    c.beginPath(); c.roundRect(this.x, this.y, this.w, this.h, 4); c.fill();
-    c.strokeStyle = '#3f2c12'; c.lineWidth = 2;
-    c.beginPath(); c.roundRect(this.x + 1, this.y + 1, this.w - 2, this.h - 2, 4); c.stroke();
-    c.strokeStyle = 'rgba(63,44,18,.8)'; c.lineWidth = 2.4;
-    c.beginPath();
-    c.moveTo(this.x + 3, this.y + 3); c.lineTo(this.x + this.w - 3, this.y + this.h - 3);
-    c.moveTo(this.x + this.w - 3, this.y + 3); c.lineTo(this.x + 3, this.y + this.h - 3);
-    c.stroke();
-    c.fillStyle = '#d9b46a';
-    [[5,5],[this.w-7,5],[5,this.h-7],[this.w-7,this.h-7]].forEach(([ox, oy]) => {
-      c.beginPath(); c.arc(this.x + ox, this.y + oy, 1.8, 0, TAU); c.fill();
-    });
-    c.restore();
-  }
-}
-// ============================ JUGADORES ============================
-class Player{
-  constructor(idx){
-    this.idx = idx;
-    this.type = idx === 0 ? 'fire' : 'water';
-    this.w = 28; this.h = 38;
-    this.x = 0; this.y = 0; this.vx = 0; this.vy = 0;
-    this.onGround = false; this.coyote = 0; this.jbuf = 0;
-    this.inv = 0; this.face = 1;
-    this.squash = 0; this.stretch = 0; this.runC = 0;
-    this.groundMover = null; this.blink = 60;
-    this.dead = false; this.deadT = 0; this.inDoor = false;
-    this.spawn = { x:0, y:0 };
-  }
-  reset(x, y){
-    this.x = x; this.y = y; this.vx = 0; this.vy = 0;
-    this.inv = 100; this.dead = false; this.deadT = 0;
-    this.groundMover = null; this.squash = 0; this.stretch = 0; this.onGround = false;
-  }
-  update(solids, boxes, dt){
-    if (this.dead){
-      this.deadT--;
-      if (this.deadT <= 0){
-        if (Game.hearts > 0){ this.reset(this.spawn.x, this.spawn.y); Particles.burst(this.x + 14, this.y + 19, 10, this.type === 'fire' ? ['#ffb347','#ff6b3d'] : ['#9be8ff','#45d5e0'], 3, {glow:true}); }
-        else Game.gameOver();
-      }
-      return;
-    }
-    // transporte por plataforma móvil
-    if (this.groundMover){ this.x += this.groundMover.lastDx; this.y += this.groundMover.lastDy; }
-
-    // ---- movimiento horizontal
-    const L = Input.down(this.idx, 'left'), R = Input.down(this.idx, 'right');
-    const dir = (R ? 1 : 0) - (L ? 1 : 0);
-    const acc = this.onGround ? 0.38 : 0.2;
-    if (dir !== 0){ this.vx += dir * acc; this.face = dir; }
-    else this.vx *= this.onGround ? 0.76 : 0.94;
-    this.vx = clamp(this.vx, -3.3, 3.3);
-    if (dir === 0 && Math.abs(this.vx) < 0.05) this.vx = 0;
-
-    // ---- salto (buffer + coyote + altura variable)
-    if (Input.edge(this.idx, 'jump')) this.jbuf = 7;
-    if (this.jbuf > 0) this.jbuf--;
-    if (this.onGround) this.coyote = 7; else if (this.coyote > 0) this.coyote--;
-    if (this.jbuf > 0 && this.coyote > 0){
-      this.vy = -11.8; this.jbuf = 0; this.coyote = 0; this.stretch = 0.32;
-      AudioSys.jump();
-      for (let i = 0; i < 6; i++)
-        Particles.add(this.x + this.w / 2 + rnd(-9, 9), this.y + this.h, rnd(-1, 1), rnd(0.2, 1.1), 0.4, 2,
-          this.type === 'fire' ? '#ffb347' : '#9be8ff', { g:0.05, glow:true });
-    }
-    if (!Input.down(this.idx, 'jump') && this.vy < -4.5) this.vy = -4.5;
-    this.vy = Math.min(13, this.vy + 0.55);
-
-    // ---- eje X
-    this.x += this.vx;
-    for (const s of solids){
-      if (s.oneWay || !aabb(this, s)) continue;
-      if (this.vx > 0) this.x = s.x - this.w;
-      else if (this.vx < 0) this.x = s.x + s.w;
-      else {
-        const ol = (this.x + this.w) - s.x, or = (s.x + s.w) - this.x;
-        this.x -= ol < or ? ol : -or;
-      }
-      this.vx = 0;
-    }
-    // cajas en eje X (empujar)
-    for (const b of boxes){
-      if (b.dead || !aabb(this, b)) continue;
-      const ol = (this.x + this.w) - b.x, or = (b.x + b.w) - this.x;
-      let resolved = false;
-      if (this.onGround && this.vx > 0.4 && ol > 0 && ol < 14){
-        if (b.pushBy(Math.min(ol, 2.2), solids, boxes)){ this.x = b.x - this.w; resolved = true; }
-      } else if (this.onGround && this.vx < -0.4 && or > 0 && or < 14){
-        if (b.pushBy(-Math.min(or, 2.2), solids, boxes)){ this.x = b.x + b.w; resolved = true; }
-      }
-      if (!resolved){
-        if (ol < or) this.x = b.x - this.w; else this.x = b.x + b.w;
-        this.vx = 0;
-      }
-    }
-    if (this.x < 0){ this.x = 0; this.vx = 0; }
-    if (this.x + this.w > W){ this.x = W - this.w; this.vx = 0; }
-
-    // ---- eje Y
-    const prevBottom = this.y + this.h, prevTop = this.y;
-    const fallV = this.vy;
-    this.y += this.vy;
-    const wasGround = this.onGround;
-    this.onGround = false; this.groundMover = null;
-    for (const s of solids){
-      if (!aabb(this, s)) continue;
-      if (s.oneWay){
-        if (this.vy >= 0 && prevBottom <= s.y + 9){
-          this.y = s.y - this.h; this.vy = 0; this.onGround = true;
-          if (s.lastDx !== undefined) this.groundMover = s;
+        function closeImageModal() {
+            document.getElementById('imgModal').classList.remove('active');
         }
-        continue;
-      }
-      if (this.vy > 0 && prevBottom <= s.y + 10){
-        this.y = s.y - this.h; this.vy = 0; this.onGround = true;
-        if (s.lastDx !== undefined) this.groundMover = s;
-      } else if (this.vy < 0 && prevTop >= s.y + s.h - 9){
-        this.y = s.y + s.h; this.vy = 0.4;
-      } else {
-        const ot = (this.y + this.h) - s.y, ob = (s.y + s.h) - this.y;
-        if (ot < ob){ this.y = s.y - this.h; if (this.vy > 0){ this.vy = 0; this.onGround = true; if (s.lastDx !== undefined) this.groundMover = s; } }
-        else { this.y = s.y + s.h; if (this.vy < 0) this.vy = 0; }
-      }
-    }
-    // cajas en eje Y (subirse encima)
-    for (const b of boxes){
-      if (b.dead || !aabb(this, b)) continue;
-      if (this.vy >= 0 && prevBottom <= b.y + 11){ this.y = b.y - this.h; this.vy = 0; this.onGround = true; }
-      else if (this.vy < 0 && prevTop >= b.y + b.h - 9){ this.y = b.y + b.h; this.vy = 0; }
-    }
-    if (this.onGround && !wasGround){
-      this.squash = Math.min(0.9, Math.abs(fallV) / 13);
-      if (Math.abs(fallV) > 5){
-        AudioSys.land();
-        for (let i = 0; i < 5; i++)
-          Particles.add(this.x + this.w / 2 + rnd(-10, 10), this.y + this.h, rnd(-1.4, 1.4), rnd(-0.8, 0), 0.35, 1.8, '#9a8a6a', { g:0.1 });
-      }
-    }
 
-    // ---- invulnerabilidad y peligros
-    if (this.inv > 0) this.inv--;
-    else {
-      for (const p of Game.level.pools){
-        if (aabb(this, p) && p.deadlyFor(this.type)){ this.die(); break; }
-      }
-    }
-    if (this.y > H + 80) this.die(true);
+        // Pick an image
+        function pickImage(seed, index) {
+            const img = new Image();
+            img.onload = () => {
+                chosenImage = img;
+                // Show in preview
+                const box = document.getElementById('previewBox');
+                box.classList.add('has-image');
+                box.innerHTML = `<img src="${img.src}" alt="Seleccionada">`;
+                closeImageModal();
+                showNotification('Imagen seleccionada', 'success');
+            };
+            img.src = `https://picsum.photos/seed/${seed}${index}/600/600.jpg`;
+        }
 
-    // ---- gemas
-    for (const g of Game.level.gems){
-      if (g.taken || g.type !== this.type) continue;
-      const dx = (this.x + this.w / 2) - g.x, dy = (this.y + this.h / 2) - g.y;
-      if (dx * dx + dy * dy < 24 * 24){
-        g.taken = true;
-        Game.gems[this.idx]++;
-        Game.score += 100;
-        AudioSys.gem(this.idx);
-        Particles.burst(g.x, g.y, 10, this.type === 'fire' ? ['#ff8a7a','#ffd0a0','#ff5a5a'] : ['#9be8ff','#d0fbff','#45d5e0'], 3.2, { glow:true });
-      }
-    }
+        // Set difficulty
+        function setDiff(size) {
+            gridSize = size;
+            document.querySelectorAll('.diff-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
 
-    // ---- puertas
-    this.inDoor = false;
-    for (const d of Game.level.doors){
-      if (d.type !== this.type) continue;
-      const inner = { x:d.x + 7, y:d.y + 8, w:d.w - 14, h:d.h - 8 };
-      if (aabb(this, inner)) this.inDoor = true;
-    }
+        // ===== START GAME =====
+        function startGame() {
+            if (!chosenImage) {
+                showNotification('Selecciona una imagen primero', 'warning');
+                return;
+            }
 
-    // ---- animación
-    this.squash *= 0.86; this.stretch *= 0.86;
-    this.runC += Math.abs(this.vx) * 0.09;
-    this.blink--;
-    if (this.blink < -130) this.blink = 9;
+            resetGameData();
+            buildBoard();
+            buildPieces();
+            enableDragDrop();
+            startTimer();
+        }
 
-    // partículas ambientales del personaje
-    if (this.type === 'fire' && Math.random() < 0.3)
-      Particles.add(this.x + this.w / 2 + rnd(-6, 6), this.y + rnd(2, 14), rnd(-0.3, 0.3), rnd(-1.4, -0.6), rnd(0.3, 0.7), rnd(1, 2.2), '#ffb347', { g:-0.02, glow:true });
-    if (this.type === 'water' && Math.random() < 0.12)
-      Particles.add(this.x + this.w / 2 + rnd(-8, 8), this.y + this.h - 2, rnd(-0.2, 0.2), rnd(0.3, 0.9), rnd(0.3, 0.6), 1.6, '#9be8ff', { g:0.1, glow:true });
-  }
-  die(force){
-    if (this.dead) return;
-    if (!force && this.inv > 0) return;
-    this.dead = true; this.deadT = 42;
-    Game.hearts--;
-    Cam.add(9);
-    AudioSys.death();
-    Particles.burst(this.x + this.w / 2, this.y + this.h / 2, 22,
-      this.type === 'fire' ? ['#ff6b3d','#ffb347','#ffe08a'] : ['#45d5e0','#9be8ff','#d0fbff'], 5.5, { glow:true });
-  }
+        function resetGameData() {
+            moves = 0;
+            score = 0;
+            correctCount = 0;
+        }
 
-  // ---------- dibujo procedural ----------
-  draw(c, t){
-    if (this.dead) return;
-    if (this.inv > 0 && Math.floor(this.inv / 4) % 2 === 0) c.globalAlpha = 0.35;
-    const cx = this.x + this.w / 2, by = this.y + this.h;
-    const sy = 1 + this.stretch - this.squash * 0.3;
-    const sx = 1 / sy;
-    c.save();
-    c.translate(cx, by);
-    c.rotate(clamp(this.vx * 0.02, -0.12, 0.12));
-    c.scale(sx, sy);
-    c.translate(-cx, -by);
-    if (this.type === 'fire') this.drawFire(c, t); else this.drawWater(c, t);
-    c.restore();
-    c.globalAlpha = 1;
-    this.drawFace(c, t);
-  }
-  drawFire(c, t){
-    const cx = this.x + this.w / 2, y0 = this.y, bw = 15;
-    const flick = Math.sin(t * 11 + this.idx) * 2.2;
-    const g = c.createLinearGradient(0, y0, 0, y0 + this.h);
-    g.addColorStop(0, '#ffe08a'); g.addColorStop(0.35, '#ff9b3d'); g.addColorStop(1, '#e8452c');
-    c.fillStyle = g;
-    c.shadowColor = 'rgba(255,120,40,.75)'; c.shadowBlur = 16;
-    c.beginPath();
-    c.moveTo(cx - bw, y0 + this.h - 3);
-    c.quadraticCurveTo(cx - bw - 2, y0 + 16, cx - 6 + flick * 0.4, y0 + 8);
-    c.quadraticCurveTo(cx - 2 + flick, y0 + 2, cx + flick * 1.4, y0 - 1 + Math.abs(flick) * 0.4);
-    c.quadraticCurveTo(cx + 3 + flick * 0.5, y0 + 3, cx + 7 + flick * 0.3, y0 + 9);
-    c.quadraticCurveTo(cx + bw + 2, y0 + 17, cx + bw, y0 + this.h - 3);
-    c.quadraticCurveTo(cx, y0 + this.h + 4, cx - bw, y0 + this.h - 3);
-    c.closePath(); c.fill();
-    c.shadowBlur = 0;
-    // núcleo brillante
-    const g2 = c.createRadialGradient(cx, y0 + this.h - 12, 1, cx, y0 + this.h - 12, 12);
-    g2.addColorStop(0, 'rgba(255,244,180,.95)'); g2.addColorStop(1, 'rgba(255,200,80,0)');
-    c.fillStyle = g2;
-    c.beginPath(); c.arc(cx, y0 + this.h - 12, 12, 0, TAU); c.fill();
-    // pieceítos flotantes
-    if (Math.sin(t * 7 + this.idx * 2) > 0.4){
-      c.fillStyle = 'rgba(255,200,90,.9)';
-      c.beginPath(); c.arc(cx + flick * 2, y0 - 4, 1.6, 0, TAU); c.fill();
-    }
-  }
-  drawWater(c, t){
-    const cx = this.x + this.w / 2, y0 = this.y;
-    const wob = Math.sin(t * 9 + this.idx) * 1.4;
-    const g = c.createLinearGradient(0, y0, 0, y0 + this.h);
-    g.addColorStop(0, '#e0fbff'); g.addColorStop(0.4, '#6fdcef'); g.addColorStop(1, '#1f8fb5');
-    c.fillStyle = g;
-    c.shadowColor = 'rgba(70,210,255,.7)'; c.shadowBlur = 15;
-    c.beginPath();
-    c.moveTo(cx + wob * 0.4, y0 - 1);
-    c.quadraticCurveTo(cx + 13.5 + wob, y0 + 18, cx + 13, y0 + 26);
-    c.arc(cx, y0 + 26, 13, 0, Math.PI);
-    c.quadraticCurveTo(cx - 13.5 + wob, y0 + 18, cx + wob * 0.4, y0 - 1);
-    c.closePath(); c.fill();
-    c.shadowBlur = 0;
-    c.fillStyle = 'rgba(255,255,255,.35)';
-    c.beginPath(); c.ellipse(cx - 5, y0 + 15, 4, 7, -0.4, 0, TAU); c.fill();
-  }
-  drawFace(c, t){
-    const cx = this.x + this.w / 2;
-    const eyY = this.y + (this.type === 'fire' ? 16 : 17);
-    const lookX = clamp(this.vx * 0.6, -2.6, 2.6);
-    const lookY = this.vy < -1 ? -1.6 : (this.onGround ? 0 : 1.2);
-    const blink = this.blink < 0 ? Math.abs(Math.sin(this.blink * 0.7)) * 0.5 + 0.1 : 1;
-    for (const s of [-1, 1]){
-      const ex = cx + s * 6 + lookX * 0.3;
-      c.fillStyle = '#fff';
-      c.beginPath(); c.ellipse(ex, eyY, 4.4, 5.2 * blink, 0, 0, TAU); c.fill();
-      c.fillStyle = '#241a12';
-      c.beginPath(); c.arc(ex + lookX, eyY + lookY * blink, 2.1, 0, TAU); c.fill();
-      c.fillStyle = 'rgba(255,255,255,.9)';
-      c.beginPath(); c.arc(ex + lookX - 0.8, eyY + lookY * blink - 0.9, 0.7, 0, TAU); c.fill();
-      if (this.type === 'water'){
-        c.strokeStyle = '#0f6d8c'; c.lineWidth = 1.2;
-        c.beginPath(); c.moveTo(ex - 3.5, eyY - 5); c.lineTo(ex - 5, eyY - 7.5);
-        c.moveTo(ex + 3.5, eyY - 5); c.lineTo(ex + 5, eyY - 7.5); c.stroke();
-      }
-    }
-  }
-}
-// ============================ NIVELES ============================
-const ST = (x, y, w, h) => ({ x, y, w, h, type:'stone' });
-const WD = (x, y, w, h) => ({ x, y, w, h, type:'wood' });
-const BR = (x, y, w, h) => ({ x, y, w, h, type:'bridge', oneWay:true });
-const PL = (x, y, w, type, h = 14) => new Pool({ x, y, w, h, type });
-const GMl = (x, y, type) => new Gem({ x, y, type });
-const DRl = (x, y, type) => new Door({ x, y, type });
-const BT  = (x, y, links) => new ButtonPad({ x, y, links });
-const LV  = (x, y, links) => new LeverPad({ x, y, links });
-const MP  = (x, y, w, h, dx, dy, period) => new Mover({ kind:'patrol', x, y, w, h, dx, dy, period });
-const ML  = (x, y, w, h, x2, y2, links, opt = {}) => new Mover(Object.assign({ kind:'linked', x, y, w, h, x2, y2, links }, opt));
-const MG  = (x, y, w, h, travel, links) => new Mover({ kind:'gate', x, y, w, h, x2:x, y2:y - travel, links, spd:3.4 });
+        // ===== BUILD BOARD =====
+        function buildBoard() {
+            const board = document.getElementById('puzzleBoard');
+            board.innerHTML = '';
+            
+            const boardSize = calculateBoardSize();
+            const pieceSize = Math.floor(boardSize / gridSize);
 
-function buildLevel(n){
-  const L = { n, platforms:[], pools:[], gems:[], doors:[], buttons:[], levers:[], movers:[], boxes:[],
-              spawns:{ fire:{ x:20, y:462 }, water:{ x:60, y:462 } }, torches:[], theme:'entry', name:'', hint:'', par:60 };
-  switch(n){
+            board.style.width = boardSize + 'px';
+            board.style.height = boardSize + 'px';
+            board.style.gridTemplateColumns = `repeat(${gridSize}, ${pieceSize}px)`;
+            board.style.gridTemplateRows = `repeat(${gridSize}, ${pieceSize}px)`;
 
-  case 1:
-    L.name = 'El Umbral del Templo'; L.par = 40; L.theme = 'entry';
-    L.hint = 'Fireboy: A/D + W · Watergirl: \u2190/\u2192 + \u2191. ¡Recoged las gemas y llegad ambos a vuestras puertas!';
-    L.platforms = [ ST(0,500,960,40), ST(120,430,120,14), ST(300,360,120,14), ST(500,300,120,14), ST(690,240,150,16), ST(840,340,100,14) ];
-    L.gems = [ GMl(60,464,'fire'), GMl(170,396,'water'), GMl(350,326,'fire'), GMl(550,266,'water'),
-               GMl(730,206,'fire'), GMl(800,206,'water'), GMl(885,306,'fire'), GMl(90,340,'water') ];
-    L.doors = [ DRl(710,178,'fire'), DRl(770,178,'water') ];
-    L.torches = [{x:60,y:250},{x:900,y:250},{x:480,y:110}];
-    break;
+            for (let i = 0; i < gridSize * gridSize; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'puzzle-slot';
+                slot.dataset.index = i;
+                slot.style.width = pieceSize + 'px';
+                slot.style.height = pieceSize + 'px';
+                board.appendChild(slot);
+            }
+        }
 
-  case 2:
-    L.name = 'Pozos Gemelos'; L.par = 55; L.theme = 'pools';
-    L.hint = 'Cada uno atraviesa sin daño su propio elemento... ¡pero el elemento rival es mortal!';
-    L.platforms = [ ST(0,500,960,40), ST(140,410,110,14), ST(330,350,110,14), ST(530,350,110,14), ST(700,410,110,14), ST(380,250,200,16) ];
-    L.pools = [ PL(120,486,90,'water'), PL(280,486,90,'fire'), PL(560,486,90,'water'), PL(720,486,90,'fire') ];
-    L.gems = [ GMl(190,376,'fire'), GMl(380,316,'water'), GMl(575,316,'fire'), GMl(745,376,'water'),
-               GMl(430,216,'fire'), GMl(520,216,'water'), GMl(325,452,'fire'), GMl(605,452,'water'),
-               GMl(60,462,'water'), GMl(905,462,'fire') ];
-    L.doors = [ DRl(420,188,'fire'), DRl(480,188,'water') ];
-    L.torches = [{x:50,y:240},{x:910,y:240},{x:300,y:120},{x:660,y:120}];
-    break;
+        function calculateBoardSize() {
+            const boardContainer = document.querySelector('.board-container');
+            const maxSize = Math.min(
+                boardContainer.clientWidth - 30,
+                boardContainer.clientHeight - 30,
+                500
+            );
+            return Math.floor(maxSize / gridSize) * gridSize;
+        }
 
-  case 3:
-    L.name = 'El Foso Ácido'; L.par = 70; L.theme = 'acid';
-    L.hint = 'El ácido verde es letal para ambos. Los puentes de cuerda solo aguantan si caes desde arriba.';
-    L.platforms = [ ST(0,500,300,40), ST(440,500,260,40), ST(810,500,150,40),
-      BR(300,470,140,8), BR(700,470,110,8),
-      ST(80,400,110,14), ST(240,330,110,14), ST(430,270,110,14), ST(560,210,90,14), ST(620,330,110,14), ST(800,390,110,14),
-      ST(450,160,180,16) ];
-    L.pools = [ PL(300,516,140,'acid',24), PL(700,516,110,'acid',24) ];
-    L.gems = [ GMl(130,366,'fire'), GMl(285,296,'water'), GMl(475,236,'fire'), GMl(600,176,'water'),
-               GMl(480,126,'fire'), GMl(560,126,'water'), GMl(665,296,'fire'), GMl(845,356,'water'),
-               GMl(370,436,'water'), GMl(755,436,'fire'), GMl(60,462,'fire'), GMl(920,462,'water') ];
-    L.doors = [ DRl(490,98,'fire'), DRl(545,98,'water') ];
-    L.torches = [{x:40,y:230},{x:920,y:230},{x:520,y:60}];
-    break;
+        // ===== BUILD PIECES =====
+        function buildPieces() {
+            const container = document.getElementById('piecesList');
+            container.innerHTML = '';
 
-  case 4:
-    L.name = 'El Ascensor de Piedra'; L.par = 85; L.theme = 'machine';
-    L.hint = 'Un jugador pisa el botón para elevar al otro. Después... ¡el otro devuelve el favor!';
-    L.platforms = [ ST(0,500,960,40), ST(460,190,110,14), ST(300,240,110,14), ST(140,210,170,16) ];
-    L.movers = [ ML(620,430,120,14, 620,150, ['e1'], {spd:2.6}), ML(450,460,100,12, 450,270, ['e2'], {spd:2.4}) ];
-    L.buttons = [ BT(330,488,['e1']), BT(330,228,['e2']) ];
-    L.pools = [ PL(780,486,80,'fire'), PL(120,486,80,'water') ];
-    L.gems = [ GMl(60,462,'water'), GMl(905,462,'fire'), GMl(670,330,'fire'), GMl(670,230,'water'),
-               GMl(510,156,'fire'), GMl(355,206,'water'), GMl(180,176,'fire'), GMl(260,176,'water'),
-               GMl(495,392,'fire'), GMl(495,306,'water') ];
-    L.doors = [ DRl(160,148,'fire'), DRl(220,148,'water') ];
-    L.torches = [{x:40,y:220},{x:920,y:220},{x:250,y:100},{x:700,y:100}];
-    break;
+            // Draw the full image on a canvas
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            const boardSize = calculateBoardSize();
+            canvas.width = boardSize;
+            canvas.height = boardSize;
+            ctx.drawImage(chosenImage, 0, 0, boardSize, boardSize);
 
-  case 5:
-    L.name = 'Las Palancas del Guardián'; L.par = 85; L.theme = 'guardian';
-    L.hint = 'Las palancas se activan al tocarlas y quedan fijas hasta el próximo toque. ¡Extendiendo los puentes!';
-    L.platforms = [ ST(0,500,240,40), ST(540,500,180,40), ST(840,500,120,40),
-      ST(760,420,90,14), ST(600,350,100,14), ST(440,300,100,14), ST(300,260,100,14), ST(200,190,170,16) ];
-    L.movers = [ ML(240,580,300,12, 240,500, ['b1'], {spd:3.4}), ML(720,580,120,12, 720,500, ['b2'], {spd:3.4}) ];
-    L.levers = [ LV(140,492,['b1']), LV(600,492,['b2']) ];
-    L.pools = [ PL(240,514,300,'acid',26), PL(720,514,120,'acid',26), PL(545,486,40,'fire'), PL(645,486,40,'water') ];
-    L.gems = [ GMl(30,462,'water'), GMl(210,462,'fire'), GMl(380,462,'fire'), GMl(655,460,'water'),
-               GMl(800,384,'water'), GMl(645,314,'fire'), GMl(485,264,'water'), GMl(345,224,'fire'),
-               GMl(240,156,'fire'), GMl(310,156,'water'), GMl(905,462,'water') ];
-    L.doors = [ DRl(220,128,'fire'), DRl(280,128,'water') ];
-    L.torches = [{x:60,y:230},{x:900,y:230},{x:480,y:100},{x:660,y:220}];
-    break;
+            const pieceSize = Math.floor(boardSize / gridSize);
+            const trayPieceSize = Math.min(80, Math.floor((window.innerWidth * 0.2) / 2));
 
-  case 6:
-    L.name = 'El Aro de las Cajas'; L.par = 90; L.theme = 'crates';
-    L.hint = 'Empuja las cajas para pisar botones o alcanzar lugares altos. Las cajas son inmunes al ácido.';
-    L.platforms = [ ST(0,500,380,40), ST(580,500,380,40), ST(60,380,110,14), ST(200,310,110,14), ST(600,350,200,16) ];
-    L.pools = [ PL(380,518,200,'acid',22), PL(60,486,60,'water'), PL(140,486,70,'fire'), PL(880,486,70,'fire') ];
-    L.movers = [ ML(380,430,200,12, 380,500, ['d1'], {spd:3.2}) ];
-    L.buttons = [ BT(320,488,['d1']) ];
-    L.boxes = [ new Box(240,464), new Box(830,464) ];
-    L.gems = [ GMl(90,452,'water'), GMl(175,452,'fire'), GMl(110,346,'water'), GMl(250,276,'fire'),
-               GMl(660,316,'fire'), GMl(720,316,'water'), GMl(615,300,'fire'), GMl(905,452,'fire'),
-               GMl(300,452,'water'), GMl(845,300,'water') ];
-    L.doors = [ DRl(640,288,'fire'), DRl(700,288,'water') ];
-    L.torches = [{x:40,y:220},{x:920,y:220},{x:480,y:120}];
-    break;
+            for (let row = 0; row < gridSize; row++) {
+                for (let col = 0; col < gridSize; col++) {
+                    const index = row * gridSize + col;
 
-  case 7:
-    L.name = 'Doble Mecanismo'; L.par = 105; L.theme = 'mechanism';
-    L.hint = 'Los ascensores de peso suben mientras alguien va encima. ¡Subid de uno en uno!';
-    L.platforms = [ ST(0,500,380,40), ST(580,500,380,40), ST(240,400,110,14), ST(820,200,120,14), ST(640,160,150,16), ST(100,300,110,14) ];
-    L.pools = [ PL(380,518,200,'acid',22), PL(600,486,70,'water'), PL(880,486,70,'fire') ];
-    L.movers = [ ML(380,430,200,12, 380,500, ['d1'], {spd:3.2}),
-                 MP(360,350,80,12, 160,0, 300),
-                 ML(700,460,100,12, 700,240, [], {weight:true, spd:2.6}),
-                 ML(250,580,130,10, 250,330, ['g1'], {spd:3}) ];
-    L.levers = [ LV(640,492,['g1']) ];
-    L.buttons = [ BT(300,488,['d1']) ];
-    L.boxes = [ new Box(180,464) ];
-    L.gems = [ GMl(40,462,'fire'), GMl(200,462,'water'), GMl(290,366,'water'), GMl(450,316,'fire'),
-               GMl(635,452,'water'), GMl(905,452,'fire'), GMl(745,420,'fire'), GMl(745,300,'water'),
-               GMl(860,166,'fire'), GMl(690,126,'water'), GMl(760,126,'fire'), GMl(130,266,'fire'),
-               GMl(165,266,'water'), GMl(310,296,'water') ];
-    L.doors = [ DRl(660,98,'fire'), DRl(715,98,'water') ];
-    L.torches = [{x:40,y:210},{x:920,y:210},{x:250,y:90},{x:660,y:60}];
-    break;
+                    const pieceCanvas = document.createElement('canvas');
+                    const pieceCtx = pieceCanvas.getContext('2d');
+                    pieceCanvas.width = pieceSize;
+                    pieceCanvas.height = pieceSize;
 
-  case 8:
-    L.name = 'La Escalera del Abismo'; L.par = 110; L.theme = 'abyss';
-    L.hint = 'Escala sin tocar el ácido. La paciencia con las plataformas móviles es virtud de leyenda.';
-    L.platforms = [ ST(0,500,960,40),
-      ST(60,420,100,12), ST(230,360,100,12), ST(420,300,110,12), ST(620,350,100,12), ST(790,280,100,12),
-      ST(620,210,110,12), ST(520,180,80,12), ST(350,140,110,12), ST(150,90,180,16) ];
-    L.pools = [ PL(300,486,100,'acid'), PL(560,486,100,'acid'), PL(820,486,100,'acid'),
-                PL(250,348,60,'fire',12), PL(640,338,55,'water',12) ];
-    L.movers = [ MP(300,430,80,12, 120,0, 300) ];
-    L.gems = [ GMl(150,458,'fire'), GMl(470,458,'water'), GMl(740,458,'fire'), GMl(935,458,'water'),
-               GMl(105,386,'water'), GMl(275,326,'fire'), GMl(470,266,'water'), GMl(665,316,'fire'),
-               GMl(835,246,'water'), GMl(665,176,'fire'), GMl(555,146,'water'), GMl(395,106,'fire'),
-               GMl(280,56,'water'), GMl(360,56,'fire'), GMl(350,396,'fire') ];
-    L.doors = [ DRl(170,28,'fire'), DRl(225,28,'water') ];
-    L.torches = [{x:40,y:200},{x:920,y:200},{x:480,y:60},{x:200,y:40}];
-    break;
+                    pieceCtx.drawImage(
+                        canvas,
+                        col * pieceSize, row * pieceSize,
+                        pieceSize, pieceSize,
+                        0, 0,
+                        pieceSize, pieceSize
+                    );
 
-  case 9:
-    L.name = 'Cruce de Corrientes'; L.par = 115; L.theme = 'currents';
-    L.hint = 'Una caja sobre un botón libera a ambos. ¡Cooperad como una sola fuerza!';
-    L.platforms = [ ST(0,500,300,40), ST(420,500,240,40), ST(760,500,200,40), ST(460,400,100,12), ST(740,200,160,16) ];
-    L.pools = [ PL(300,516,120,'acid',24), PL(660,516,100,'acid',24), PL(100,486,60,'fire'), PL(780,486,60,'fire'), PL(890,486,60,'water') ];
-    L.movers = [ ML(300,580,120,12, 300,500, ['d1'], {spd:3.2}),
-                 ML(660,580,100,12, 660,500, ['d2'], {spd:3.2}),
-                 ML(560,560,120,12, 560,310, ['m2'], {spd:2.8}),
-                 ML(860,460,90,12, 860,240, [], {weight:true, spd:2.6}) ];
-    L.buttons = [ BT(240,488,['d1']), BT(505,488,['d2']) ];
-    L.levers = [ LV(80,492,['m2']) ];
-    L.boxes = [ new Box(180,464), new Box(560,464) ];
-    L.gems = [ GMl(60,452,'fire'), GMl(170,452,'water'), GMl(360,458,'fire'), GMl(470,366,'water'),
-               GMl(600,276,'fire'), GMl(640,276,'water'), GMl(810,452,'fire'), GMl(920,452,'water'),
-               GMl(900,420,'fire'), GMl(900,300,'water'), GMl(780,166,'fire'), GMl(850,166,'water'),
-               GMl(700,458,'fire') ];
-    L.doors = [ DRl(760,138,'fire'), DRl(815,138,'water') ];
-    L.torches = [{x:40,y:210},{x:920,y:210},{x:480,y:80},{x:820,y:100}];
-    break;
+                    const piece = document.createElement('div');
+                    piece.className = 'piece';
+                    piece.draggable = true;
+                    piece.dataset.correctIndex = index;
+                    piece.style.backgroundImage = `url(${pieceCanvas.toDataURL()})`;
+                    piece.style.width = trayPieceSize + 'px';
+                    piece.style.height = trayPieceSize + 'px';
 
-  case 10:
-    L.name = 'El Corazón del Templo'; L.par = 150; L.theme = 'heart';
-    L.hint = 'Todo lo aprendido en una sola cámara. Solo los legendarios conquistarán el Corazón del Templo.';
-    L.platforms = [ ST(0,500,160,40), ST(270,500,120,40), ST(650,500,310,40),
-      ST(60,440,70,12), ST(330,450,70,12), ST(280,380,100,14), ST(660,160,170,16) ];
-    L.pools = [ PL(160,518,110,'acid',24), PL(390,516,260,'acid',24) ];
-    L.movers = [ ML(160,580,110,12, 160,500, ['d1'], {spd:3.2}),
-                 MP(400,400,90,12, 130,0, 320),
-                 MP(520,310,90,12, 130,0, 300),
-                 ML(170,580,100,10, 170,400, ['g2'], {spd:3}),
-                 ML(840,460,90,12, 840,200, [], {weight:true, spd:2.6}) ];
-    L.movers.push(MG(700,340,24,160, 160, ['g1']));
-    L.levers = [ LV(345,442,['g1']), LV(280,492,['g2']) ];
-    L.buttons = [ BT(100,488,['d1']) ];
-    L.boxes = [ new Box(55,464) ];
-    L.gems = [ GMl(30,462,'water'), GMl(310,346,'fire'), GMl(350,346,'water'), GMl(215,366,'fire'),
-               GMl(360,416,'water'), GMl(455,366,'water'), GMl(565,276,'fire'), GMl(670,458,'fire'),
-               GMl(890,420,'fire'), GMl(935,452,'water'), GMl(700,126,'fire'), GMl(770,126,'water'),
-               GMl(90,406,'water'), GMl(355,458,'fire') ];
-    L.doors = [ DRl(680,98,'fire'), DRl(735,98,'water') ];
-    L.torches = [{x:40,y:200},{x:920,y:200},{x:300,y:70},{x:640,y:60},{x:480,y:140}];
-    break;
-  }
-  L.gemTotals = [ L.gems.filter(g => g.type === 'fire').length, L.gems.filter(g => g.type === 'water').length ];
-  return L;
-}
-// ============================ JUEGO ============================
-const Game = {
-  state:'boot', mode:'coop', level:null, levelNum:1,
-  score:0, levelStartScore:0, hearts:3, timer:0, gems:[0,0], completeT:0, linkOn:{}, players:null,
+                    container.appendChild(piece);
+                }
+            }
 
-  startLevel(n){
-    this.levelNum = n;
-    this.level = buildLevel(n);
-    this.hearts = 3; this.timer = 0; this.gems = [0,0]; this.completeT = 0;
-    this.levelStartScore = this.score;
-    this.players = [new Player(0), new Player(1)];
-    this.players[0].reset(this.level.spawns.fire.x, this.level.spawns.fire.y);
-    this.players[1].reset(this.level.spawns.water.x, this.level.spawns.water.y);
-    this.players[0].spawn = { ...this.level.spawns.fire };
-    this.players[1].spawn = { ...this.level.spawns.water };
-    Particles.clear(); Cam.shake = 0;
-    this.state = 'playing';
-    UI.show(null); UI.hud(true); UI.hint(this.level.hint);
-    UI.bodyClasses();
-    AudioSys.startMusic();
-  },
-  restartLevel(){ this.score = this.levelStartScore; this.startLevel(this.levelNum); },
-  pause(){ if (this.state !== 'playing') return; this.state = 'paused'; UI.show('scrPause'); },
-  resume(){ if (this.state !== 'paused') return; this.state = 'playing'; UI.show(null); },
-  toMenu(){ this.state = 'menu'; this.level = null; UI.hud(false); UI.show('scrMenu'); UI.bodyClasses(); },
-  toggleMute(){
-    this.muted = !this.muted;
-    AudioSys.setMuted(this.muted);
-    SaveSys.data.muted = this.muted; SaveSys.write();
-    UI.syncMute();
-  },
-  setMode(m){
-    this.mode = m; SaveSys.data.mode = m; SaveSys.write();
-    UI.bodyClasses(); UI.syncMode();
-  },
-  onDeath(){},
+            // Shuffle after building
+            shuffleTray();
+        }
 
-  update(dt){
-    Cam.update();
-    if (this.state === 'menu' || this.state === 'select' || this.state === 'how' || this.state === 'complete' || this.state === 'over' || this.state === 'victory' || this.state === 'paused'){
-      if (this.state !== 'paused' && Math.random() < 0.25)
-        Particles.add(rnd(W), H - rnd(0, 40), rnd(-0.2, 0.2), rnd(-1.2, -0.4), rnd(1, 2), rnd(1, 2.4), Math.random() < 0.5 ? '#ffb347' : '#58e6f2', { g:-0.01, glow:true });
-      Particles.update();
-      return;
-    }
-    if (this.state !== 'playing') return;
-    const Lvl = this.level;
-    this.timer += dt / 60;
+        function shuffleTray() {
+            const container = document.getElementById('piecesList');
+            const pieces = Array.from(container.children);
+            pieces.sort(() => Math.random() - 0.5);
+            container.innerHTML = '';
+            pieces.forEach(p => container.appendChild(p));
+        }
 
-    // ---- enlaces: botones
-    const linkOn = {};
-    for (const b of Lvl.buttons){
-      b.pressed = false;
-      const sens = b.sensor;
-      for (const pl of this.players) if (!pl.dead && aabb(pl, sens)) b.pressed = true;
-      for (const bx of Lvl.boxes) if (!bx.dead && aabb(bx, sens)) b.pressed = true;
-      if (b.pressed) for (const id of b.links) linkOn[id] = true;
-    }
-    // ---- palancas (disparo por flanco: un toque, un cambio)
-    for (const lv of Lvl.levers){
-      if (lv.cool > 0) lv.cool--;
-      const z = lv.zone;
-      let touch = false;
-      for (const pl of this.players){ if (!pl.dead && aabb(pl, z)){ touch = true; break; } }
-      if (touch && !lv.prevTouch && lv.cool <= 0){
-        lv.state = !lv.state; lv.cool = 25; AudioSys.lever();
-      }
-      lv.prevTouch = touch;
-      if (lv.state) for (const id of lv.links) linkOn[id] = true;
-    }
-    this.linkOn = linkOn;
+        // ===== DRAG AND DROP =====
+        function enableDragDrop() {
+            // Pieces
+            document.querySelectorAll('.piece').forEach(piece => {
+                piece.addEventListener('dragstart', handleDragStart);
+                piece.addEventListener('dragend', handleDragEnd);
+            });
 
-    // ---- movers (peso + movimiento)
-    for (const m of Lvl.movers){
-      if (m.weight){
-        m.weightActive = false;
-        for (const pl of this.players) if (!pl.dead && pl.groundMover === m) m.weightActive = true;
-        for (const bx of Lvl.boxes) if (!bx.dead && bx.groundMover === m) m.weightActive = true;
-      }
-      m.update();
-    }
+            // Board slots
+            document.querySelectorAll('.puzzle-slot').forEach(slot => {
+                slot.addEventListener('dragover', handleDragOver);
+                slot.addEventListener('drop', handleDrop);
+                slot.addEventListener('dragleave', handleDragLeave);
+            });
+        }
 
-    // ---- entidades (el transporte por plataforma ocurre dentro de Player.update)
-    const solids = Lvl.platforms.concat(Lvl.movers);
-    for (const pl of this.players) pl.update(solids, Lvl.boxes, dt);
-    for (const bx of Lvl.boxes) bx.update(solids, Lvl.boxes);
+        let draggedPiece = null;
 
-    // ---- aplastamiento: queda solapado tras la física = aplastado
-    for (const m of Lvl.movers){
-      for (const pl of this.players){
-        if (!pl.dead && aabb(pl, m)) pl.die(true);
-      }
-      for (const bx of Lvl.boxes){
-        if (!bx.dead && aabb(bx, m) && Math.abs(m.lastDy) > Math.abs(m.lastDx)) bx.dead = true, bx.respawnT = 80;
-      }
-    }
-    for (const b of Lvl.buttons) b.update();
-    for (const lv of Lvl.levers) lv.update();
-    for (const p of Lvl.pools) p.update();
-    Particles.update();
+        function handleDragStart(e) {
+            draggedPiece = e.target;
+            e.target.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+            e.dataTransfer.setData('correctIndex', e.target.dataset.correctIndex);
+        }
 
-    // ---- puerta-abierta indicators & completion
-    const dF = Lvl.doors.find(d => d.type === 'fire'), dW = Lvl.doors.find(d => d.type === 'water');
-    const f = this.players[0], w = this.players[1];
-    dF.on = !f.dead && f.inDoor; dW.on = !w.dead && w.inDoor;
-    if (dF.on && dW.on){
-      this.completeT++;
-      if (this.completeT === 1) AudioSys.door();
-      if (this.completeT >= 40) this.completeLevel();
-    } else this.completeT = 0;
+        function handleDragEnd(e) {
+            e.target.classList.remove('dragging');
+            document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('hover'));
+        }
 
-    Input.clearEdges();
-  },
+        function handleDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const slot = e.target.closest('.puzzle-slot');
+            if (slot) slot.classList.add('hover');
+        }
 
-  completeLevel(){
-    this.state = 'complete';
-    const Lvl = this.level, secs = this.timer;
-    const allGems = this.gems[0] >= Lvl.gemTotals[0] && this.gems[1] >= Lvl.gemTotals[1];
-    const stars = (allGems && secs <= Lvl.par) ? 3 : ((allGems || secs <= Lvl.par) ? 2 : 1);
-    const timeBonus = Math.max(0, Math.round((Lvl.par - secs)) * 8);
-    const bonus = 400 + timeBonus;
-    this.score += bonus;
-    SaveSys.result(this.levelNum, stars, this.score, secs);
-    AudioSys.win();
-    UI.hud(false);
-    UI.showComplete(stars, secs, this.gems[0] + this.gems[1], Lvl.gemTotals[0] + Lvl.gemTotals[1], bonus);
-    Particles.burst(W / 2, H / 2 - 40, 40, ['#ffd76b','#ff8a7a','#9be8ff','#ffe9b0'], 6, { glow:true });
-  },
-  gameOver(){
-    if (this.state === 'over') return;
-    this.state = 'over';
-    AudioSys.over();
-    UI.hud(false);
-    UI.show('scrOver');
-  }
-};
+        function handleDragLeave(e) {
+            const slot = e.target.closest('.puzzle-slot');
+            if (slot) slot.classList.remove('hover');
+        }
 
-// ============================ UI ============================
-const UI = {
-  el:{}, hudOn:false, hintTimer:null, lastHud:'',
-  init(){
-    const $ = id => document.getElementById(id);
-    ['hud','hudName','hudGF','hudGW','hudTime','hudHearts','hudScore','hintbar','scrMenu','scrSelect','scrHow','scrPause',
-     'scrComplete','scrOver','scrVictory','lvlGrid','mPlay','mSelect','mHow','mMode','selBack','howBack',
-     'pResume','pRetry','pMenu','cmSub','cmTitle','cmTime','cmGems','cmBonus','cmScore','cNext','cRetry','cMenu',
-     'oRetry','oMenu','vtScore','vtStars','vAgain','vMenu','btnPause','btnMute','st1','st2','st3','btnSwap']
-      .forEach(id => this.el[id] = $(id));
+        function handleDrop(e) {
+            e.preventDefault();
+            const slot = e.target.closest('.puzzle-slot');
+            if (!slot || !draggedPiece) return;
 
-    this.el.mPlay.onclick = () => { AudioSys.init(); AudioSys.resume(); AudioSys.ui(); Game.startLevel(Math.min(10, SaveSys.data.unlocked)); };
-    this.el.mSelect.onclick = () => { AudioSys.ui(); this.show('scrSelect'); Game.state = 'select'; this.buildSelect(); };
-    this.el.mHow.onclick = () => { AudioSys.ui(); this.show('scrHow'); Game.state = 'how'; };
-    this.el.mMode.onclick = () => { AudioSys.ui(); Game.setMode(Game.mode === 'coop' ? 'solo' : 'coop'); };
-    this.el.selBack.onclick = () => { AudioSys.ui(); this.show('scrMenu'); Game.state = 'menu'; };
-    this.el.howBack.onclick = () => { AudioSys.ui(); this.show('scrMenu'); Game.state = 'menu'; };
-    this.el.pResume.onclick = () => { AudioSys.ui(); Game.resume(); };
-    this.el.pRetry.onclick = () => { AudioSys.ui(); Game.restartLevel(); };
-    this.el.pMenu.onclick = () => { AudioSys.ui(); Game.toMenu(); };
-    this.el.cNext.onclick = () => {
-      AudioSys.ui();
-      if (Game.levelNum >= 10){ this.showVictory(); }
-      else Game.startLevel(Game.levelNum + 1);
-    };
-    this.el.cRetry.onclick = () => { AudioSys.ui(); Game.restartLevel(); };
-    this.el.cMenu.onclick = () => { AudioSys.ui(); Game.toMenu(); };
-    this.el.oRetry.onclick = () => { AudioSys.ui(); Game.restartLevel(); };
-    this.el.oMenu.onclick = () => { AudioSys.ui(); Game.toMenu(); };
-    this.el.vAgain.onclick = () => { AudioSys.ui(); Game.score = 0; Game.startLevel(1); };
-    this.el.vMenu.onclick = () => { AudioSys.ui(); Game.toMenu(); };
-    this.el.btnPause.onclick = () => { AudioSys.ui(); Game.pause(); };
-    this.el.btnMute.onclick = () => { Game.toggleMute(); };
-    this.el.btnSwap.onclick = () => { Input.active = 1 - Input.active; AudioSys.swap(); };
+            slot.classList.remove('hover');
 
-    Game.setMode(SaveSys.data.mode || 'coop');
-    Game.muted = !!SaveSys.data.muted;
-    AudioSys.setMuted(Game.muted);
-    this.syncMute();
+            // Don't allow drop on already correct slot
+            if (slot.querySelector('.placed-piece')) return;
 
-    // táctil
-    if ('ontouchstart' in window || navigator.maxTouchPoints > 0) document.body.classList.add('touch');
-    document.querySelectorAll('.pbtn').forEach(b => {
-      const p = +b.dataset.p, a = b.dataset.a;
-      const on = e => { e.preventDefault(); AudioSys.init(); AudioSys.resume(); Input.touch[p][a] = true; };
-      const off = e => { e.preventDefault(); Input.touch[p][a] = false; };
-      b.addEventListener('pointerdown', on);
-      b.addEventListener('pointerup', off);
-      b.addEventListener('pointercancel', off);
-      b.addEventListener('pointerleave', off);
-    });
-  },
-  bodyClasses(){
-    document.body.classList.toggle('solo', Game.mode === 'solo');
-  },
-  syncMode(){
-    this.el.mMode.textContent = Game.mode === 'coop'
-      ? 'Modo: 2 Jugadores (cooperativo)' : 'Modo: 1 Jugador (cambio con TAB)';
-  },
-  syncMute(){
-    this.el.btnMute.innerHTML = Game.muted ? '&#10007;' : '&#9834;';
-  },
-  show(id){
-    ['scrMenu','scrSelect','scrHow','scrPause','scrComplete','scrOver','scrVictory']
-      .forEach(s => this.el[s].classList.add('hidden'));
-    if (id) this.el[id].classList.remove('hidden');
-  },
-  hud(on){ this.hudOn = on; this.el.hud.classList.toggle('hidden', !on); },
-  hint(text){
-    const hb = this.el.hintbar;
-    hb.textContent = text;
-    hb.classList.add('show');
-    clearTimeout(this.hintTimer);
-    this.hintTimer = setTimeout(() => hb.classList.remove('show'), 5200);
-  },
-  buildSelect(){
-    const g = this.el.lvlGrid;
-    g.innerHTML = '';
-    for (let i = 1; i <= 10; i++){
-      const locked = i > SaveSys.data.unlocked;
-      const d = document.createElement('div');
-      d.className = 'lvl' + (locked ? ' locked' : '');
-      const b = SaveSys.data.best[i];
-      const stars = b ? '\u2605'.repeat(b.stars) + '\u2606'.repeat(3 - b.stars) : '\u2606\u2606\u2606';
-      d.innerHTML = `<div class="n">${i}</div><div class="t">${locked ? 'Bloqueada' : LEVEL_NAMES[i]}</div><div class="s">${stars}</div>`;
-      if (!locked) d.onclick = () => { AudioSys.ui(); Game.startLevel(i); };
-      g.appendChild(d);
-    }
-  },
-  showComplete(stars, secs, gems, totalGems, bonus){
-    this.show('scrComplete');
-    this.el.cmSub.textContent = 'Cámara ' + Game.levelNum + ' · ' + Game.level.name;
-    this.el.cmTitle.textContent = '¡NIVEL COMPLETADO!';
-    this.el.cmTime.textContent = fmtTime(secs) + ' (par ' + fmtTime(Game.level.par) + ')';
-    this.el.cmGems.textContent = gems + '/' + totalGems;
-    this.el.cmBonus.textContent = '+' + bonus;
-    this.el.cmScore.textContent = Game.score;
-    this.el.cNext.textContent = Game.levelNum >= 10 ? 'Ver final' : 'Siguiente \u25B6';
-    [this.el.st1, this.el.st2, this.el.st3].forEach((s, i) => {
-      s.classList.remove('pop');
-      void s.offsetWidth;
-      setTimeout(() => { if (i < stars){ s.classList.add('pop'); AudioSys.star(i); } }, 350 + i * 380);
-    });
-  },
-  showVictory(){
-    this.el.vtScore.textContent = Game.score;
-    this.el.vtStars.textContent = SaveSys.totalStars() + '/30';
-    this.show('scrVictory');
-    Game.state = 'victory';
-  },
-  updateHUD(){
-    if (!this.hudOn || !Game.level) return;
-    const Lvl = Game.level;
-    const hearts = '\u2665'.repeat(Math.max(0, Game.hearts));
-    const key = Lvl.n + '|' + Game.gems[0] + '|' + Game.gems[1] + '|' + hearts + '|' + Game.score;
-    if (key !== this.lastHud){
-      this.lastHud = key;
-      this.el.hudName.textContent = 'Nivel ' + Lvl.n + ' \u00B7 ' + Lvl.name;
-      this.el.hudGF.textContent = Game.gems[0] + '/' + Lvl.gemTotals[0];
-      this.el.hudGW.textContent = Game.gems[1] + '/' + Lvl.gemTotals[1];
-      let hh = '';
-      for (let i = 0; i < 3; i++) hh += i < Game.hearts ? '\u2665' : '<span class="off">\u2665</span>';
-      this.el.hudHearts.innerHTML = hh;
-      this.el.hudScore.textContent = Game.score;
-    }
-    this.el.hudTime.textContent = fmtTime(Game.timer);
-  }
-};
-const LEVEL_NAMES = { 1:'El Umbral', 2:'Pozos Gemelos', 3:'Foso Ácido', 4:'Ascensor', 5:'Palancas',
-  6:'Cajas', 7:'Doble Mecanismo', 8:'El Abismo', 9:'Corrientes', 10:'El Corazón' };
-// ============================ RENDER ============================
-const canvas = document.getElementById('c');
-const ctx = canvas.getContext('2d');
+            const pieceIndex = parseInt(draggedPiece.dataset.correctIndex);
+            const slotIndex = parseInt(slot.dataset.index);
 
-// HiDPI
-const DPR = Math.min(2, window.devicePixelRatio || 1);
-canvas.width = W * DPR; canvas.height = H * DPR;
-ctx.setTransform(DPR, 0, 0, DPR, 0, 0);
+            // Move piece to slot
+            placePieceInSlot(draggedPiece, slot);
 
-const THEMES = {
-  entry:    { top:'#241a2e', bot:'#0d0a12', pillar:'rgba(70,54,92,.5)',  cap:'rgba(110,88,140,.5)' },
-  pools:    { top:'#22182b', bot:'#0c0911', pillar:'rgba(66,50,88,.5)',  cap:'rgba(104,82,134,.5)' },
-  acid:     { top:'#1b2418', bot:'#0a0e09', pillar:'rgba(52,74,48,.5)',  cap:'rgba(84,116,78,.5)' },
-  machine:  { top:'#1d1d2b', bot:'#0b0b12', pillar:'rgba(56,58,84,.5)',  cap:'rgba(88,92,130,.5)' },
-  guardian: { top:'#261d18', bot:'#0e0a08', pillar:'rgba(84,62,44,.5)',  cap:'rgba(130,98,68,.5)' },
-  crates:   { top:'#251d15', bot:'#0d0a07', pillar:'rgba(80,60,40,.5)',  cap:'rgba(124,94,62,.5)' },
-  mechanism:{ top:'#1c1c2a', bot:'#0a0a11', pillar:'rgba(54,54,80,.5)',  cap:'rgba(86,86,126,.5)' },
-  abyss:    { top:'#1c1430', bot:'#090612', pillar:'rgba(60,44,96,.5)',  cap:'rgba(94,70,148,.5)' },
-  currents: { top:'#12202e', bot:'#070d14', pillar:'rgba(40,66,92,.5)',  cap:'rgba(62,102,140,.5)' },
-  heart:    { top:'#2b2012', bot:'#120c06', pillar:'rgba(96,70,36,.55)', cap:'rgba(150,112,56,.55)' },
-  menu:     { top:'#221a33', bot:'#0b0913', pillar:'rgba(64,50,94,.5)',  cap:'rgba(100,80,146,.5)' }
-};
+            // Update stats
+            moves++;
+            updateStats();
 
-// viñeta pre-renderizada
-const vig = document.createElement('canvas');
-vig.width = W; vig.height = H;
-{
-  const vc = vig.getContext('2d');
-  const g = vc.createRadialGradient(W / 2, H / 2, H * 0.35, W / 2, H / 2, H * 0.85);
-  g.addColorStop(0, 'rgba(0,0,0,0)'); g.addColorStop(1, 'rgba(0,0,0,.52)');
-  vc.fillStyle = g; vc.fillRect(0, 0, W, H);
-}
+            // Check if correct
+            if (pieceIndex === slotIndex) {
+                draggedPiece.classList.add('correct');
+                slot.classList.add('correct');
+                correctCount++;
+                score += 100;
+                
+                if (correctCount === gridSize * gridSize) {
+                    setTimeout(victory, 300);
+                }
+            } else {
+                score = Math.max(0, score - 10);
+            }
 
-function drawBackground(theme, t){
-  const th = THEMES[theme] || THEMES.entry;
-  const g = ctx.createLinearGradient(0, 0, 0, H);
-  g.addColorStop(0, th.top); g.addColorStop(1, th.bot);
-  ctx.fillStyle = g; ctx.fillRect(0, 0, W, H);
-  // columnas del templo (parallax leve)
-  const px = Cam.x * 0.35;
-  for (let i = 0; i < 6; i++){
-    const x = 60 + i * 168 + px;
-    ctx.fillStyle = th.pillar;
-    ctx.beginPath(); ctx.roundRect(x, 40, 58, H - 60, 8); ctx.fill();
-    ctx.fillStyle = th.cap;
-    ctx.fillRect(x - 7, 40, 72, 13);
-    ctx.fillRect(x - 5, H - 72, 68, 12);
-    // estrías
-    ctx.fillStyle = 'rgba(0,0,0,.18)';
-    for (let s = 0; s < 3; s++) ctx.fillRect(x + 12 + s * 14, 53, 3, H - 133);
-  }
-  // motas de polvo
-  ctx.fillStyle = 'rgba(255,230,170,.14)';
-  for (let i = 0; i < 14; i++){
-    const dx = (i * 137.5 + t * (6 + i % 4)) % (W + 40) - 20;
-    const dy = 90 + (i * 61) % (H - 160) + Math.sin(t + i) * 12;
-    ctx.beginPath(); ctx.arc(dx, dy, 1.3, 0, TAU); ctx.fill();
-  }
-}
+            draggedPiece = null;
+            updateStats();
+        }
 
-function drawTorch(x, y, t, seed){
-  // soporte
-  ctx.fillStyle = '#3a2e1e';
-  ctx.fillRect(x - 3, y, 6, 16);
-  ctx.fillRect(x - 7, y - 4, 14, 5);
-  // llama
-  const fl = Math.sin(t * 9 + seed * 7) * 2, fl2 = Math.cos(t * 13 + seed * 3) * 1.6;
-  const g = ctx.createRadialGradient(x, y - 8, 1, x, y - 8, 16);
-  g.addColorStop(0, '#fff3c4'); g.addColorStop(0.4, '#ffb347'); g.addColorStop(1, 'rgba(255,90,30,0)');
-  ctx.save(); ctx.globalCompositeOperation = 'lighter';
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.ellipse(x + fl2 * 0.4, y - 8 + fl * 0.4, 6.5, 11 + fl * 0.5, 0, 0, TAU); ctx.fill();
-  // halo de luz
-  const halo = ctx.createRadialGradient(x, y - 6, 4, x, y - 6, 95);
-  halo.addColorStop(0, 'rgba(255,170,70,.13)'); halo.addColorStop(1, 'rgba(255,170,70,0)');
-  ctx.fillStyle = halo;
-  ctx.beginPath(); ctx.arc(x, y - 6, 95, 0, TAU); ctx.fill();
-  ctx.restore();
-}
+        function placePieceInSlot(piece, slot) {
+            const placed = document.createElement('div');
+            placed.className = 'placed-piece';
+            placed.style.backgroundImage = piece.style.backgroundImage;
+            slot.appendChild(placed);
+            piece.remove();
+        }
 
-function drawLinks(){
-  const Lvl = Game.level;
-  if (!Lvl) return;
-  ctx.save();
-  ctx.strokeStyle = 'rgba(232,193,90,.16)';
-  ctx.lineWidth = 2; ctx.setLineDash([5, 7]);
-  const all = Lvl.buttons.concat(Lvl.levers);
-  for (const src of all){
-    for (const m of Lvl.movers){
-      if (!m.links || !m.links.some(id => src.links.includes(id))) continue;
-      ctx.beginPath();
-      ctx.moveTo(src.x + (src.w || 30) / 2, src.y);
-      ctx.lineTo(m.x + m.w / 2, m.y + m.h / 2);
-      ctx.stroke();
-    }
-  }
-  ctx.restore();
-}
+        // ===== TOUCH SUPPORT =====
+        function enableTouchSupport() {
+            document.querySelectorAll('.piece').forEach(piece => {
+                piece.addEventListener('touchstart', (e) => {
+                    draggedPiece = piece;
+                    e.target.classList.add('dragging');
+                }, {passive: false});
 
-function draw(t){
-  ctx.save();
-  const inGame = Game.state === 'playing' || Game.state === 'paused' || Game.state === 'complete' || Game.state === 'over';
-  const theme = (inGame && Game.level) ? Game.level.theme : 'menu';
-  drawBackground(theme, t);
+                piece.addEventListener('touchmove', (e) => {
+                    e.preventDefault();
+                    const touch = e.touches[0];
+                    const slot = document.elementFromPoint(touch.clientX, touch.clientY)?.closest('.puzzle-slot');
+                    
+                    document.querySelectorAll('.puzzle-slot').forEach(s => s.classList.remove('hover'));
+                    if (slot) slot.classList.add('hover');
+                }, {passive: false});
 
-  if (inGame && Game.level){
-    ctx.translate(Math.round(Cam.x), Math.round(Cam.y));
-    const Lvl = Game.level;
-    // antorchas
-    Lvl.torches.forEach((tc, i) => drawTorch(tc.x, tc.y, t, i + 1));
-    // pozos
-    for (const p of Lvl.pools) p.draw(ctx, t);
-    drawLinks();
-    // plataformas
-    for (const p of Lvl.platforms){
-      if (p.type === 'stone') drawStone(p);
-      else if (p.type === 'wood') drawWood(p);
-      else drawBridgePlat(p);
-    }
-    // movers y portones
-    for (const m of Lvl.movers) m.draw(ctx, t);
-    // botones y palancas
-    for (const b of Lvl.buttons) b.draw(ctx, t);
-    for (const lv of Lvl.levers) lv.draw(ctx, t);
-    // puertas
-    for (const d of Lvl.doors) d.draw(ctx, t);
-    // gemas
-    for (const g of Lvl.gems) g.draw(ctx, t);
-    // cajas
-    for (const b of Lvl.boxes) b.draw(ctx, t);
-    // jugadores + luz propia
-    for (const pl of Game.players){
-      pl.draw(ctx, t);
-      const col = pl.type === 'fire' ? 'rgba(255,140,50,.07)' : 'rgba(80,210,255,.06)';
-      const lg = ctx.createRadialGradient(pl.x + 14, pl.y + 19, 4, pl.x + 14, pl.y + 19, 85);
-      lg.addColorStop(0, col); lg.addColorStop(1, 'rgba(0,0,0,0)');
-      ctx.save(); ctx.globalCompositeOperation = 'lighter';
-      ctx.fillStyle = lg; ctx.beginPath(); ctx.arc(pl.x + 14, pl.y + 19, 85, 0, TAU); ctx.fill();
-      ctx.restore();
-    }
-    // indicador de espera en puerta
-    const dF = Lvl.doors.find(d => d.type === 'fire'), dW = Lvl.doors.find(d => d.type === 'water');
-    if (dF && dW){
-      const waiting = (dF.on && !dW.on) ? dW : ((!dF.on && dW.on) ? dF : null);
-      if (waiting && Game.state === 'playing'){
-        const ay = waiting.y - 22 + Math.sin(t * 5) * 4;
-        ctx.fillStyle = 'rgba(255,233,176,.9)';
-        ctx.beginPath();
-        ctx.moveTo(waiting.x + waiting.w / 2 - 8, ay - 8);
-        ctx.lineTo(waiting.x + waiting.w / 2 + 8, ay - 8);
-        ctx.lineTo(waiting.x + waiting.w / 2, ay + 2);
-        ctx.closePath(); ctx.fill();
-      }
-    }
-    Particles.draw(ctx);
-  } else {
-    // menú: antorchas ambientales + partículas
-    drawTorch(150, 330, t, 1); drawTorch(810, 330, t, 2);
-    Particles.draw(ctx);
-  }
+                piece.addEventListener('touchend', (e) => {
+                    const touch = e.changedTouches[0];
+                    const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+                    const slot = elementBelow?.closest('.puzzle-slot');
+                    
+                    if (slot) {
+                        const pieceIndex = parseInt(draggedPiece.dataset.correctIndex);
+                        const slotIndex = parseInt(slot.dataset.index);
+                        
+                        if (!slot.querySelector('.placed-piece')) {
+                            placePieceInSlot(draggedPiece, slot);
+                            moves++;
+                            
+                            if (pieceIndex === slotIndex) {
+                                draggedPiece.classList.add('correct');
+                                slot.classList.add('correct');
+                                correctCount++;
+                                score += 100;
+                                
+                                if (correctCount === gridSize * gridSize) victory();
+                            } else {
+                                score = Math.max(0, score - 10);
+                            }
+                            updateStats();
+                        }
+                    }
+                    
+                    draggedPiece.classList.remove('dragging');
+                    draggedPiece = null;
+                }, {passive: false});
+            });
+        }
 
-  ctx.restore();
-  ctx.drawImage(vig, 0, 0, W, H);
-  UI.updateHUD();
-}
+        // ===== TIMER =====
+        function startTimer() {
+            startTime = Date.now();
+            clearInterval(gameTimer);
+            gameTimer = setInterval(() => {
+                const elapsed = Math.floor((Date.now() - startTime) / 1000);
+                const min = Math.floor(elapsed / 60);
+                const sec = elapsed % 60;
+                document.getElementById('timerVal').textContent = 
+                    `${min.toString().padStart(2, '0')}:${sec.toString().padStart(2, '0')}`;
+            }, 1000);
+        }
 
-function drawStone(p){
-  const g = ctx.createLinearGradient(0, p.y, 0, p.y + p.h);
-  g.addColorStop(0, '#5a544c'); g.addColorStop(0.3, '#453f38'); g.addColorStop(1, '#26221d');
-  ctx.fillStyle = g;
-  ctx.fillRect(p.x, p.y, p.w, p.h);
-  ctx.fillStyle = 'rgba(255,240,200,.16)';
-  ctx.fillRect(p.x, p.y, p.w, 3);
-  ctx.fillStyle = 'rgba(0,0,0,.35)';
-  ctx.fillRect(p.x, p.y + p.h - 3, p.w, 3);
-  // juntas de bloques (deterministas)
-  const rng = mulberry32(Math.floor(p.x * 13 + p.y * 7 + p.w));
-  ctx.strokeStyle = 'rgba(0,0,0,.25)'; ctx.lineWidth = 1;
-  for (let x = p.x + 22; x < p.x + p.w - 8; x += 26 + rng() * 14){
-    ctx.beginPath(); ctx.moveTo(x, p.y + 3); ctx.lineTo(x + rng() * 6 - 3, p.y + p.h - 3); ctx.stroke();
-  }
-  // musgo ocasional
-  ctx.fillStyle = 'rgba(90,140,70,.28)';
-  for (let x = p.x + 6; x < p.x + p.w - 6; x += 30){
-    if (rng() < 0.35) ctx.fillRect(x, p.y, 8 + rng() * 8, 2.5);
-  }
-}
-function drawWood(p){
-  const g = ctx.createLinearGradient(0, p.y, 0, p.y + p.h);
-  g.addColorStop(0, '#8a6238'); g.addColorStop(1, '#54381c');
-  ctx.fillStyle = g;
-  ctx.beginPath(); ctx.roundRect(p.x, p.y, p.w, p.h, 3); ctx.fill();
-  ctx.fillStyle = 'rgba(255,230,180,.18)';
-  ctx.fillRect(p.x + 2, p.y + 1.5, p.w - 4, 2);
-  ctx.strokeStyle = 'rgba(40,24,8,.5)'; ctx.lineWidth = 1;
-  for (let x = p.x + 13; x < p.x + p.w; x += 13){
-    ctx.beginPath(); ctx.moveTo(x, p.y + 2); ctx.lineTo(x, p.y + p.h - 2); ctx.stroke();
-  }
-}
-function drawBridgePlat(p){
-  ctx.strokeStyle = '#4a3018'; ctx.lineWidth = 2;
-  ctx.beginPath();
-  ctx.moveTo(p.x, p.y - 4); ctx.quadraticCurveTo(p.x + p.w / 2, p.y + 8, p.x + p.w, p.y - 4);
-  ctx.stroke();
-  for (let x = 0; x < p.w; x += 14){
-    ctx.fillStyle = '#7a5a33';
-    ctx.fillRect(p.x + x, p.y, 11, p.h);
-    ctx.fillStyle = 'rgba(0,0,0,.3)';
-    ctx.fillRect(p.x + x, p.y + p.h - 2, 11, 2);
-  }
-  ctx.strokeStyle = 'rgba(190,150,90,.5)'; ctx.lineWidth = 1;
-  for (let x = 0; x <= p.w; x += 28){
-    ctx.beginPath(); ctx.moveTo(p.x + x, p.y - 4); ctx.lineTo(p.x + x, p.y + p.h); ctx.stroke();
-  }
-}
+        // ===== UPDATE STATS =====
+        function updateStats() {
+            document.getElementById('movesVal').textContent = moves;
+            document.getElementById('scoreVal').textContent = score;
+        }
 
-// ============================ BUCLE ============================
-const STEP = 1000 / 60;
-let last = performance.now(), acc = 0;
-function frame(now){
-  requestAnimationFrame(frame);
-  let el = Math.min(100, now - last); last = now;
-  acc += el;
-  let steps = 0;
-  while (acc >= STEP && steps < 4){ Game.update(1); acc -= STEP; steps++; }
-  draw(now / 1000);
-}
+        // ===== VICTORY =====
+        function victory() {
+            clearInterval(gameTimer);
+            document.getElementById('finalTime').textContent = document.getElementById('timerVal').textContent;
+            document.getElementById('finalMoves').textContent = moves;
+            document.getElementById('finalScore').textContent = score;
+            document.getElementById('victoryOverlay').classList.add('active');
+            createConfetti();
+        }
 
-// ============================ ARRANQUE ============================
-window.__err = [];
-window.addEventListener('error', e => { window.__err.push(String(e.message)); });
+        function createConfetti() {
+            const colors = ['#fbbf24', '#f59e0b', '#a855f7', '#9333ea', '#4ade80', '#22c55e', '#60a5fa', '#3b82f6'];
+            for (let i = 0; i < 60; i++) {
+                setTimeout(() => {
+                    const c = document.createElement('div');
+                    c.className = 'confetti';
+                    c.style.left = Math.random() * 100 + '%';
+                    c.style.background = colors[Math.floor(Math.random() * colors.length)];
+                    c.style.width = (Math.random() * 6 + 3) + 'px';
+                    c.style.height = c.style.width;
+                    c.style.animationDelay = Math.random() * 2 + 's';
+                    document.body.appendChild(c);
+                    setTimeout(() => {
+                        if (document.body.contains(c)) document.body.removeChild(c);
+                    }, 4000);
+                }, i * 30);
+            }
+        }
 
-SaveSys.load();
-Input.init();
-UI.init();
-UI.show('scrMenu');
-Game.state = 'menu';
-requestAnimationFrame(frame);
-</script>
+        // ===== SHOW PREVIEW =====
+        function showPreview() {
+            if (chosenImage) {
+                const overlay = document.getElementById('previewOverlay');
+                document.getElementById('previewImg').src = chosenImage.src;
+                overlay.classList.add('active');
+                setTimeout(() => overlay.classList.remove('active'), 2000);
+            }
+        }
+
+        // ===== MISC =====
+        function resetGame() {
+            if (chosenImage) {
+                correctCount = 0;
+                moves = 0;
+                score = 0;
+                buildBoard();
+                buildPieces();
+                enableDragDrop();
+                enableTouchSupport();
+                startTimer();
+            }
+        }
+
+        function replay() {
+            document.getElementById('victoryOverlay').classList.remove('active');
+            correctCount = 0;
+            moves = 0;
+            score = 0;
+            buildBoard();
+            buildPieces();
+            enableDragDrop();
+            enableTouchSupport();
+            startTimer();
+        }
+
+        function changeImage() {
+            document.getElementById('victoryOverlay').classList.remove('active');
+            correctCount = 0;
+            moves = 0;
+            score = 0;
+            document.getElementById('puzzleBoard').innerHTML = '';
+            document.getElementById('piecesList').innerHTML = '';
+            chosenImage = null;
+            
+            document.getElementById('previewBox').classList.remove('has-image');
+            document.getElementById('previewBox').innerHTML = `
+                <div class="image-placeholder">
+                    <div class="icon">🖼️</div>
+                    <div class="text">Click para elegir</div>
+                </div>
+            `;
+            document.getElementById('previewBox').onclick = openImageModal;
+            clearInterval(gameTimer);
+        }
+
+        // Setup touch support
+        function enableTouchSupport() {
+            document.querySelectorAll('.piece').forEach(piece => {
+                piece.addEventListener('touchstart', (e) => this.handleTouchStart(e), {passive: false});
+                piece.addEventListener('touchmove', (e) => this.handleTouchMove(e), {passive: false});
+                piece.addEventListener('touchend', (e) => this.handleTouchEnd(e), {passive: false});
+            });
+        }
+
+        function handleTouchStart(e) {
+            const piece = e.target;
+            if (piece.classList.contains('correct')) return;
+            
+            const touch = e.touches[0];
+            draggedPiece = piece;
+            const rect = piece.getBoundingClientRect();
+            touchOffset.x = touch.clientX - rect.left;
+            touchOffset.y = touch.clientY - rect.top;
+            piece.classList.add('dragging');
+            piece.style.position = 'fixed';
+            piece.style.zIndex = '1000';
+            piece.style.left = (touch.clientX - touchOffset.x) + 'px';
+            piece.style.top = (touch.clientY - touchOffset.y) + 'px';
+            e.preventDefault();
+        }
+
+        function handleTouchMove(e) {
+            if (!draggedPiece) return;
+            const touch = e.touches[0];
+            draggedPiece.style.left = (touch.clientX - touchOffset.x) + 'px';
+            draggedPiece.style.top = (touch.clientY - touchOffset.y) + 'px';
+            e.preventDefault();
+        }
+
+        function handleTouchEnd(e) {
+            if (!draggedPiece) return;
+            const touch = e.changedTouches[0];
+            const elementBelow = document.elementFromPoint(touch.clientX, touch.clientY);
+            const slot = elementBelow?.closest('.puzzle-slot');
+            
+            if (slot) {
+                const pieceIndex = draggedPiece.dataset.correctIndex;
+                const slotIndex = slot.dataset.index;
+                placePiece(pieceIndex, slotIndex);
+            }
+            
+            draggedPiece.classList.remove('dragging');
+            draggedPiece.style.position = '';
+            draggedPiece.style.zIndex = '';
+            draggedPiece.style.left = '';
+            draggedPiece.style.top = '';
+            draggedPiece = null;
+        }
+
+        // Show notification
+        function showNotification(msg, type) {
+            const notif = document.createElement('div');
+            notif.textContent = msg;
+            notif.style.cssText = `
+                position:fixed;
+                top:20px;
+                right:20px;
+                padding:10px 20px;
+                border-radius:8px;
+                color:white;
+                font-weight:bold;
+                z-index:5000;
+                background:${type === 'success' ? '#10b981' : type === 'warning' ? '#f59e0b' : '#667eea'};
+                animation:fadeIn 0.3s;
+            `;
+            document.body.appendChild(notif);
+            setTimeout(() => notif.remove(), 2500);
+        }
+    </script>
 </body>
 </html>
