@@ -3,1274 +3,1498 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FNF Battle Mode - Friday Night Funkin'</title>
+    <title>Fireboy and Watergirl: Temple of Elements</title>
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Rubik:wght@400;700;900&display=swap');
-        
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
-            user-select: none;
         }
 
         body {
-            font-family: 'Rubik', sans-serif;
-            background: #000;
-            overflow: hidden;
-            position: relative;
-            height: 100vh;
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
             display: flex;
             justify-content: center;
             align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
         }
 
-        /* Fondo animado estilo FNF */
-        .background {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: linear-gradient(180deg, #1a0033 0%, #330066 50%, #4d0099 100%);
-            animation: bgPulse 4s ease-in-out infinite;
-        }
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
-        @keyframes bgPulse {
-            0%, 100% { filter: brightness(1); }
-            50% { filter: brightness(1.2); }
-        }
-
-        /* Efectos de fondo */
-        .bg-effects {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background: 
-                radial-gradient(circle at 30% 40%, rgba(255, 0, 255, 0.3) 0%, transparent 50%),
-                radial-gradient(circle at 70% 60%, rgba(0, 255, 255, 0.3) 0%, transparent 50%);
-            animation: bgRotate 20s linear infinite;
-        }
-
-        @keyframes bgRotate {
-            from { transform: rotate(0deg); }
-            to { transform: rotate(360deg); }
-        }
-
-        /* Grid de fondo */
-        .grid-bg {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            background-image: 
-                linear-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px),
-                linear-gradient(90deg, rgba(255, 255, 255, 0.1) 1px, transparent 1px);
-            background-size: 50px 50px;
-            animation: gridMove 10s linear infinite;
-            opacity: 0.3;
-        }
-
-        @keyframes gridMove {
-            from { transform: translate(0, 0); }
-            to { transform: translate(50px, 50px); }
-        }
-
-        /* Etapa del juego */
-        .stage {
-            position: fixed;
-            width: 100%;
-            height: 100%;
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-end;
-            padding: 0 50px;
-            z-index: 5;
-        }
-
-        /* Contenedor principal */
         .game-container {
             position: relative;
-            width: 100%;
-            max-width: 1400px;
+            width: 100vw;
             height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
-            z-index: 10;
         }
 
-        /* UI Superior */
-        .ui-top {
+        canvas {
+            border: 4px solid #2c3e50;
+            box-shadow: 0 0 30px rgba(0, 0, 0, 0.8);
+            background: #0d0b08;
+            max-width: 100%;
+            max-height: 100%;
+        }
+
+        .hud {
             position: absolute;
             top: 20px;
-            width: 100%;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            justify-content: space-between;
-            padding: 0 50px;
-            z-index: 100;
-        }
-
-        /* Puntuación estilo FNF */
-        .score-container {
-            background: rgba(0, 0, 0, 0.8);
-            border: 3px solid #fff;
-            border-radius: 10px;
-            padding: 10px 20px;
-            color: #fff;
-            font-size: 24px;
-            font-weight: 900;
-            text-shadow: 2px 2px 0 #000;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        /* Combo */
-        .combo-container {
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
-            border: 3px solid #fff;
-            border-radius: 10px;
-            padding: 10px 20px;
-            color: #fff;
-            font-size: 28px;
-            font-weight: 900;
-            text-shadow: 2px 2px 0 #000;
-            animation: comboGlow 0.5s ease-in-out infinite;
-            transform: scale(1);
-            transition: transform 0.2s;
-        }
-
-        .combo-container.pulse {
-            animation: comboPulse 0.3s ease-out;
-        }
-
-        @keyframes comboPulse {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); }
-            100% { transform: scale(1); }
-        }
-
-        @keyframes comboGlow {
-            0%, 100% { box-shadow: 0 0 20px rgba(255, 0, 255, 0.8); }
-            50% { box-shadow: 0 0 30px rgba(0, 255, 255, 0.8); }
-        }
-
-        /* Barra de salud */
-        .health-bar {
-            position: absolute;
-            top: 80px;
-            width: 400px;
-            height: 25px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 3px solid #fff;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(255, 255, 255, 0.5);
-        }
-
-        .health-fill {
-            height: 100%;
-            background: linear-gradient(90deg, #ff0066, #ff3366);
-            width: 50%;
-            transition: width 0.3s ease;
-            box-shadow: inset 0 0 10px rgba(255, 255, 255, 0.5);
-        }
-
-        /* Indicador de turno */
-        .turn-indicator {
-            position: absolute;
-            top: 120px;
-            width: 300px;
-            padding: 10px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #fff;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 20px;
-            font-weight: 900;
-            text-align: center;
-            text-transform: uppercase;
-            animation: turnPulse 1s ease-in-out infinite;
-        }
-
-        .turn-indicator.player {
-            border-color: #00ffff;
-            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
-        }
-
-        .turn-indicator.opponent {
-            border-color: #ff0066;
-            box-shadow: 0 0 20px rgba(255, 0, 102, 0.8);
-        }
-
-        @keyframes turnPulse {
-            0%, 100% { opacity: 0.8; }
-            50% { opacity: 1; }
-        }
-
-        /* Personaje oponente */
-        .opponent-character {
-            position: absolute;
-            bottom: 150px;
-            right: 100px;
-            width: 140px;
-            height: 200px;
-            background: linear-gradient(135deg, #ff0066, #ff3366);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 70px;
-            box-shadow: 0 10px 30px rgba(255, 0, 102, 0.5);
-            animation: opponentIdle 0.6s ease-in-out infinite;
-            z-index: 20;
-        }
-
-        @keyframes opponentIdle {
-            0%, 100% { transform: translateY(0) rotate(2deg); }
-            50% { transform: translateY(-10px) rotate(-2deg); }
-        }
-
-        .opponent-character.singing {
-            animation: opponentSing 0.2s ease-out;
-        }
-
-        @keyframes opponentSing {
-            0% { transform: scale(1) rotate(10deg); }
-            50% { transform: scale(1.2) rotate(-10deg); }
-            100% { transform: scale(1) rotate(2deg); }
-        }
-
-        /* Personaje jugador */
-        .player-character {
-            position: absolute;
-            bottom: 150px;
-            left: 100px;
-            width: 120px;
-            height: 180px;
-            background: linear-gradient(135deg, #00ffff, #0099ff);
-            border-radius: 20px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 60px;
-            box-shadow: 0 10px 30px rgba(0, 255, 255, 0.5);
-            animation: playerIdle 0.5s ease-in-out infinite;
-            z-index: 20;
-        }
-
-        @keyframes playerIdle {
-            0%, 100% { transform: translateY(0) rotate(-2deg); }
-            50% { transform: translateY(-10px) rotate(2deg); }
-        }
-
-        .player-character.singing {
-            animation: playerSing 0.2s ease-out;
-        }
-
-        @keyframes playerSing {
-            0% { transform: scale(1) rotate(-10deg); }
-            50% { transform: scale(1.2) rotate(10deg); }
-            100% { transform: scale(1) rotate(-2deg); }
-        }
-
-        /* Track de notas del jugador */
-        .note-track {
-            position: absolute;
-            bottom: 0;
-            right: 50px;
-            width: 500px;
-            height: 100vh;
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            padding-bottom: 150px;
-            z-index: 15;
-        }
-
-        /* Track de notas del oponente */
-        .opponent-note-track {
-            position: absolute;
-            bottom: 0;
-            left: 50px;
-            width: 500px;
-            height: 100vh;
-            display: flex;
-            justify-content: space-around;
-            align-items: flex-end;
-            padding-bottom: 150px;
-            z-index: 15;
-            transform: scaleX(-1);
-        }
-
-        /* Lane individual */
-        .lane {
-            width: 100px;
-            height: 100%;
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-        }
-
-        .lane-bg {
-            position: absolute;
-            width: 90px;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.3);
-            border: 2px solid rgba(255, 255, 255, 0.2);
-            border-radius: 10px;
-        }
-
-        /* Receptor de notas estilo FNF */
-        .receptor {
-            width: 90px;
-            height: 90px;
-            position: absolute;
-            bottom: 0;
+            gap: 30px;
+            color: white;
+            font-size: 14px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.8);
             z-index: 10;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            background: rgba(0, 0, 0, 0.6);
+            padding: 10px 20px;
             border-radius: 10px;
-            transition: all 0.1s;
+            border: 2px solid #34495e;
         }
 
-        .receptor.left {
-            background: linear-gradient(135deg, #ff0066, #ff3366);
-            border: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(255, 0, 102, 0.8);
-        }
-
-        .receptor.down {
-            background: linear-gradient(135deg, #00ff66, #33ff66);
-            border: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(0, 255, 102, 0.8);
-        }
-
-        .receptor.up {
-            background: linear-gradient(135deg, #66ff00, #99ff33);
-            border: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(102, 255, 0, 0.8);
-        }
-
-        .receptor.right {
-            background: linear-gradient(135deg, #0066ff, #3366ff);
-            border: 3px solid #fff;
-            box-shadow: 0 0 20px rgba(0, 102, 255, 0.8);
-        }
-
-        .receptor.pressed {
-            transform: scale(0.85);
-            filter: brightness(1.5);
-        }
-
-        .receptor.splash {
-            animation: splash 0.3s ease-out;
-        }
-
-        @keyframes splash {
-            0% { transform: scale(1); }
-            50% { transform: scale(1.3); filter: brightness(2); }
-            100% { transform: scale(1); }
-        }
-
-        /* Flechas estilo FNF */
-        .arrow {
-            width: 70px;
-            height: 70px;
-            font-size: 50px;
-            color: #fff;
-            text-shadow: 3px 3px 0 rgba(0, 0, 0, 0.5);
+        .hud-item {
             display: flex;
             align-items: center;
-            justify-content: center;
-            font-weight: 900;
+            gap: 8px;
         }
 
-        /* Notas estilo FNF */
-        .note {
-            width: 70px;
-            height: 70px;
+        .hud-icon {
+            width: 20px;
+            height: 20px;
+            display: inline-block;
+        }
+
+        .controls {
             position: absolute;
-            border-radius: 10px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 40px;
-            color: #fff;
-            font-weight: 900;
-            text-shadow: 2px 2px 0 rgba(0, 0, 0, 0.5);
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
-        }
-
-        .note.left {
-            background: linear-gradient(135deg, #ff0066, #ff3366);
-        }
-
-        .note.down {
-            background: linear-gradient(135deg, #00ff66, #33ff66);
-        }
-
-        .note.up {
-            background: linear-gradient(135deg, #66ff00, #99ff33);
-        }
-
-        .note.right {
-            background: linear-gradient(135deg, #0066ff, #3366ff);
-        }
-
-        .note.player-fall {
-            animation: noteFall 2s linear;
-        }
-
-        .note.opponent-fall {
-            animation: opponentNoteFall 2s linear;
-        }
-
-        @keyframes noteFall {
-            from {
-                top: -70px;
-            }
-            to {
-                top: calc(100vh - 220px);
-            }
-        }
-
-        @keyframes opponentNoteFall {
-            from {
-                top: -70px;
-            }
-            to {
-                top: calc(100vh - 220px);
-            }
-        }
-
-        /* Efectos de hit */
-        .hit-effect {
-            position: absolute;
-            width: 100px;
-            height: 100px;
-            pointer-events: none;
-            animation: hitBurst 0.5s ease-out forwards;
-            z-index: 50;
-        }
-
-        @keyframes hitBurst {
-            0% {
-                transform: scale(0) rotate(0deg);
-                opacity: 1;
-            }
-            100% {
-                transform: scale(2) rotate(180deg);
-                opacity: 0;
-            }
-        }
-
-        .hit-effect .rating {
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            font-size: 24px;
-            font-weight: 900;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .hit-effect.perfect .rating {
-            color: #ffd700;
-        }
-
-        .hit-effect.good .rating {
-            color: #00ff00;
-        }
-
-        .hit-effect.bad .rating {
-            color: #ff0000;
-        }
-
-        /* Juicio flotante */
-        .judgment {
-            position: absolute;
-            top: 40%;
+            bottom: 20px;
             left: 50%;
             transform: translateX(-50%);
-            font-size: 40px;
-            font-weight: 900;
-            text-shadow: 3px 3px 0 #000;
-            animation: judgmentFloat 1s ease-out forwards;
-            pointer-events: none;
-            z-index: 100;
+            display: flex;
+            gap: 50px;
+            color: white;
+            font-size: 10px;
+            text-align: center;
+            z-index: 10;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #34495e;
         }
 
-        @keyframes judgmentFloat {
-            0% {
-                opacity: 0;
-                transform: translateX(-50%) translateY(0) scale(0.5);
-            }
-            50% {
-                opacity: 1;
-                transform: translateX(-50%) translateY(-20px) scale(1.2);
-            }
-            100% {
-                opacity: 0;
-                transform: translateX(-50%) translateY(-40px) scale(1);
-            }
-        }
-
-        .judgment.perfect { color: #ffd700; }
-        .judgment.good { color: #00ff00; }
-        .judgment.bad { color: #ff0000; }
-        .judgment.miss { color: #ff0066; }
-
-        /* Pantalla de inicio */
-        .start-screen {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.95);
+        .control-group {
             display: flex;
             flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            z-index: 1000;
-            transition: opacity 0.5s;
+            gap: 5px;
         }
 
-        .start-screen.hidden {
-            opacity: 0;
-            pointer-events: none;
+        .control-title {
+            color: #f39c12;
+            margin-bottom: 5px;
+            font-size: 11px;
         }
 
-        .game-title {
-            font-size: 80px;
-            font-weight: 900;
-            margin-bottom: 20px;
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            animation: titlePulse 2s ease-in-out infinite;
-            text-shadow: 0 0 30px rgba(255, 0, 255, 0.5);
-        }
-
-        @keyframes titlePulse {
-            0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.05); }
-        }
-
-        .start-btn {
-            padding: 20px 60px;
-            font-size: 36px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
-            color: #fff;
-            border: none;
-            border-radius: 15px;
-            cursor: pointer;
-            transition: all 0.3s;
-            box-shadow: 0 10px 30px rgba(255, 0, 255, 0.5);
-            text-transform: uppercase;
-            letter-spacing: 2px;
-        }
-
-        .start-btn:hover {
-            transform: translateY(-5px) scale(1.05);
-            box-shadow: 0 15px 40px rgba(255, 0, 255, 0.7);
-        }
-
-        .instructions {
-            color: #fff;
-            margin-top: 30px;
-            text-align: center;
-            font-size: 20px;
-            opacity: 0.8;
-        }
-
-        /* Game Over */
-        .game-over {
-            position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background: rgba(0, 0, 0, 0.95);
-            padding: 40px;
-            border-radius: 20px;
-            text-align: center;
-            color: #fff;
-            z-index: 1000;
-            display: none;
-            border: 3px solid #ff0066;
-            box-shadow: 0 0 30px rgba(255, 0, 102, 0.8);
-        }
-
-        .game-over.show {
-            display: block;
-            animation: gameOverAppear 0.5s ease-out;
-        }
-
-        @keyframes gameOverAppear {
-            from {
-                opacity: 0;
-                transform: translate(-50%, -50%) scale(0.5);
-            }
-            to {
-                opacity: 1;
-                transform: translate(-50%, -50%) scale(1);
-            }
-        }
-
-        .game-over h2 {
-            font-size: 48px;
-            margin-bottom: 20px;
-            color: #ff0066;
-            text-shadow: 2px 2px 0 #000;
-        }
-
-        .final-score {
-            font-size: 32px;
-            margin-bottom: 30px;
-            color: #ffd700;
-        }
-
-        .restart-btn {
-            padding: 15px 40px;
-            font-size: 24px;
-            font-weight: 900;
-            background: linear-gradient(135deg, #ff00ff, #00ffff);
-            color: #fff;
-            border: none;
-            border-radius: 10px;
-            cursor: pointer;
-            transition: all 0.3s;
-            text-transform: uppercase;
-        }
-
-        .restart-btn:hover {
-            transform: scale(1.1);
-            box-shadow: 0 0 20px rgba(255, 0, 255, 0.8);
-        }
-
-        /* Controles en pantalla */
-        .on-screen-controls {
-            position: absolute;
-            bottom: 30px;
-            left: 50%;
-            transform: translateX(-50%);
-            display: flex;
-            gap: 15px;
-            z-index: 100;
-        }
-
-        .key-hint {
-            width: 60px;
-            height: 60px;
-            background: rgba(0, 0, 0, 0.8);
-            border: 2px solid #fff;
-            border-radius: 10px;
-            color: #fff;
-            font-size: 30px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-weight: 900;
-            opacity: 0.5;
+        .key {
+            display: inline-block;
+            padding: 4px 8px;
+            background: #34495e;
+            border: 2px solid #2c3e50;
+            border-radius: 4px;
+            margin: 0 2px;
+            font-size: 9px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
             transition: all 0.2s;
         }
 
-        .key-hint.active {
-            opacity: 1;
-            transform: scale(0.9);
-            background: rgba(255, 255, 255, 0.2);
+        .key.active {
+            background: #e74c3c;
+            transform: translateY(1px);
+            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         }
 
-        /* Efecto de bloqueo durante turno del oponente */
-        .blocked-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(255, 0, 102, 0.1);
-            pointer-events: none;
-            z-index: 90;
-            display: none;
+        .fire-keys .key.active {
+            background: #e74c3c;
         }
 
-        .blocked-overlay.active {
-            display: block;
-            animation: blockPulse 0.5s ease-in-out infinite;
+        .water-keys .key.active {
+            background: #3498db;
         }
 
-        @keyframes blockPulse {
-            0%, 100% { opacity: 0.1; }
-            50% { opacity: 0.2; }
+        .message {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #f39c12;
+            font-size: 24px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            animation: fadeInOut 1.5s ease-in-out;
+            background: rgba(0, 0, 0, 0.8);
+            padding: 15px 25px;
+            border-radius: 10px;
+            border: 3px solid #f39c12;
+        }
+
+        .level-transition {
+            position: absolute;
+            top: 40%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: #fff;
+            font-size: 32px;
+            text-shadow: 4px 4px 8px rgba(0, 0, 0, 0.9);
+            z-index: 100;
+            animation: levelPulse 1.5s ease-in-out;
+            background: linear-gradient(135deg, #e74c3c, #3498db);
+            padding: 20px 40px;
+            border-radius: 15px;
+            border: 4px solid #f39c12;
+        }
+
+        @keyframes fadeInOut {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.1); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+        }
+
+        @keyframes levelPulse {
+            0% { opacity: 0; transform: translate(-50%, -50%) scale(0.5); }
+            50% { opacity: 1; transform: translate(-50%, -50%) scale(1.2); }
+            100% { opacity: 0; transform: translate(-50%, -50%) scale(1); }
+        }
+
+        @media (max-width: 768px) {
+            .hud {
+                font-size: 10px;
+                gap: 15px;
+                padding: 8px 15px;
+            }
+            
+            .controls {
+                font-size: 8px;
+                gap: 25px;
+                padding: 10px;
+            }
+            
+            .control-title {
+                font-size: 9px;
+            }
+            
+            .key {
+                padding: 3px 6px;
+                font-size: 7px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="background"></div>
-    <div class="bg-effects"></div>
-    <div class="grid-bg"></div>
-
-    <!-- Overlay de bloqueo -->
-    <div class="blocked-overlay" id="blockedOverlay"></div>
-
-    <!-- Pantalla de inicio -->
-    <div class="start-screen" id="startScreen">
-        <h1 class="game-title">FNF BATTLE MODE</h1>
-        <button class="start-btn" onclick="startGame()">BATTLE!</button>
-        <div class="instructions">
-            <p>USE ARROW KEYS: ← ↓ ↑ →</p>
-            <p>BEAT YOUR OPPONENT IN THIS RAP BATTLE!</p>
-        </div>
-    </div>
-
-    <!-- Contenedor del juego -->
     <div class="game-container">
-        <!-- UI Superior -->
-        <div class="ui-top">
-            <div class="score-container">
-                SCORE: <span id="score">0</span>
+        <div class="hud">
+            <div class="hud-item">
+                <span class="hud-icon">🔥</span>
+                <span id="fireLives">❤️❤️❤️</span>
             </div>
-            <div class="combo-container" id="comboDisplay">
-                <span id="combo">0</span> COMBO
+            <div class="hud-item">
+                <span class="hud-icon">💧</span>
+                <span id="waterLives">❤️❤️❤️</span>
             </div>
-        </div>
-
-        <!-- Barra de salud -->
-        <div class="health-bar">
-            <div class="health-fill" id="healthFill"></div>
-        </div>
-
-        <!-- Indicador de turno -->
-        <div class="turn-indicator player" id="turnIndicator">
-            YOUR TURN
-        </div>
-
-        <!-- Personaje oponente -->
-        <div class="opponent-character" id="opponent">🎸</div>
-
-        <!-- Personaje jugador -->
-        <div class="player-character" id="player">🎤</div>
-
-        <!-- Track de notas del oponente -->
-        <div class="opponent-note-track">
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor left" data-key="ArrowLeft">
-                    <div class="arrow">←</div>
-                </div>
+            <div class="hud-item">
+                <span class="hud-icon">💎</span>
+                <span id="score">0</span>
             </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor down" data-key="ArrowDown">
-                    <div class="arrow">↓</div>
-                </div>
+            <div class="hud-item">
+                <span class="hud-icon">⏱️</span>
+                <span id="timer">00:00</span>
             </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor up" data-key="ArrowUp">
-                    <div class="arrow">↑</div>
-                </div>
-            </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor right" data-key="ArrowRight">
-                    <div class="arrow">→</div>
-                </div>
+            <div class="hud-item">
+                <span class="hud-icon">📍</span>
+                <span>Nivel <span id="currentLevel">1</span></span>
             </div>
         </div>
 
-        <!-- Track de notas del jugador -->
-        <div class="note-track">
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor left" data-key="ArrowLeft">
-                    <div class="arrow">←</div>
+        <canvas id="gameCanvas"></canvas>
+
+        <div class="controls">
+            <div class="control-group fire-keys">
+                <div class="control-title">🔥 Fireboy</div>
+                <div>
+                    <span class="key" id="fire-up">W</span> Saltar
+                </div>
+                <div>
+                    <span class="key" id="fire-left">A</span>
+                    <span class="key" id="fire-right">D</span> Mover
                 </div>
             </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor down" data-key="ArrowDown">
-                    <div class="arrow">↓</div>
+            <div class="control-group water-keys">
+                <div class="control-title">💧 Watergirl</div>
+                <div>
+                    <span class="key" id="water-up">↑</span> Saltar
                 </div>
-            </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor up" data-key="ArrowUp">
-                    <div class="arrow">↑</div>
-                </div>
-            </div>
-            <div class="lane">
-                <div class="lane-bg"></div>
-                <div class="receptor right" data-key="ArrowRight">
-                    <div class="arrow">→</div>
+                <div>
+                    <span class="key" id="water-left">←</span>
+                    <span class="key" id="water-right">→</span> Mover
                 </div>
             </div>
         </div>
-
-        <!-- Controles en pantalla -->
-        <div class="on-screen-controls">
-            <div class="key-hint" data-key="ArrowLeft">←</div>
-            <div class="key-hint" data-key="ArrowDown">↓</div>
-            <div class="key-hint" data-key="ArrowUp">↑</div>
-            <div class="key-hint" data-key="ArrowRight">→</div>
-        </div>
-    </div>
-
-    <!-- Pantalla de Game Over -->
-    <div class="game-over" id="gameOver">
-        <h2>GAME OVER</h2>
-        <div class="final-score">SCORE: <span id="finalScore">0</span></div>
-        <button class="restart-btn" onclick="restartGame()">TRY AGAIN</button>
     </div>
 
     <script>
-        // Variables del juego
-        let score = 0;
-        let combo = 0;
-        let health = 50;
-        let gameActive = false;
-        let noteSpeed = 2000;
-        let playerNotes = [];
-        let opponentNotes = [];
-        let isPlayerTurn = true;
-        let turnTimer;
-        let noteGenerationTimer;
-        let opponentNoteTimer;
-        let keys = {
-            'ArrowLeft': false,
-            'ArrowDown': false,
-            'ArrowUp': false,
-            'ArrowRight': false
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+
+        // Responsive canvas setup
+        function resizeCanvas() {
+            const container = document.querySelector('.game-container');
+            const maxWidth = window.innerWidth * 0.95;
+            const maxHeight = window.innerHeight * 0.85;
+            
+            // Maintain aspect ratio
+            const aspectRatio = 900 / 600;
+            let width = maxWidth;
+            let height = width / aspectRatio;
+            
+            if (height > maxHeight) {
+                height = maxHeight;
+                width = height * aspectRatio;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Scale game elements
+            if (gameState.scale !== width / 900) {
+                gameState.scale = width / 900;
+                if (gameState.currentLevel > 0) {
+                    loadLevel(gameState.currentLevel);
+                }
+            }
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Game state
+        const gameState = {
+            score: 0,
+            timer: 0,
+            currentLevel: 0,
+            isPlaying: true,
+            transitioning: false,
+            scale: 1,
+            particles: []
         };
 
-        // Patrones de notas para el oponente
-        const opponentPatterns = [
-            ['left', 'down', 'up', 'right'],
-            ['left', 'right', 'down', 'up'],
-            ['up', 'up', 'down', 'down'],
-            ['left', 'left', 'right', 'right'],
-            ['left', 'down', 'up', 'right', 'left', 'down'],
-            ['up', 'right', 'down', 'left', 'up']
-        ];
-
-        // Iniciar juego
-        function startGame() {
-            document.getElementById('startScreen').classList.add('hidden');
-            gameActive = true;
-            score = 0;
-            combo = 0;
-            health = 50;
-            isPlayerTurn = true;
-            updateUI();
-            startTurnSystem();
-            gameLoop();
-        }
-
-        // Sistema de turnos
-        function startTurnSystem() {
-            switchTurn();
-            
-            // Generar notas del jugador
-            noteGenerationTimer = setInterval(() => {
-                if (gameActive && isPlayerTurn) {
-                    generatePlayerNote();
-                }
-            }, 600);
-        }
-
-        // Cambiar turno
-        function switchTurn() {
-            isPlayerTurn = !isPlayerTurn;
-            const turnIndicator = document.getElementById('turnIndicator');
-            const blockedOverlay = document.getElementById('blockedOverlay');
-            
-            if (isPlayerTurn) {
-                turnIndicator.textContent = 'YOUR TURN';
-                turnIndicator.className = 'turn-indicator player';
-                blockedOverlay.classList.remove('active');
+        // Player class
+        class Player {
+            constructor(x, y, type, color) {
+                this.x = x * gameState.scale;
+                this.y = y * gameState.scale;
+                this.width = 30 * gameState.scale;
+                this.height = 40 * gameState.scale;
+                this.type = type;
+                this.color = color;
+                this.vx = 0;
+                this.vy = 0;
+                this.speed = 3 * gameState.scale;
+                this.jumpPower = 10 * gameState.scale;
+                this.onGround = false;
+                this.lives = 3;
+                this.facing = 1;
+                this.animationFrame = 0;
+                this.image = new Image();
+                this.imageLoaded = false;
                 
-                // Generar notas del jugador
-                startPlayerNotes();
-            } else {
-                turnIndicator.textContent = "OPPONENT'S TURN";
-                turnIndicator.className = 'turn-indicator opponent';
-                blockedOverlay.classList.add('active');
+                // Load character image
+                this.image.src = type === 'fire' 
+                    ? 'https://i.imgur.com/8hQz8zC.png' 
+                    : 'https://i.imgur.com/5Q2R5rF.png';
+                    
+                this.image.onload = () => {
+                    this.imageLoaded = true;
+                };
+            }
+
+            update() {
+                // Apply gravity
+                this.vy += 0.4 * gameState.scale;
                 
-                // Generar notas del oponente
-                startOpponentNotes();
-            }
-            
-            // Cambiar de turno cada 8 segundos
-            clearTimeout(turnTimer);
-            turnTimer = setTimeout(() => {
-                if (gameActive) {
-                    switchTurn();
+                // Update position
+                this.x += this.vx;
+                this.y += this.vy;
+                
+                // Friction
+                this.vx *= 0.85;
+                
+                // Screen boundaries
+                if (this.x < 0) this.x = 0;
+                if (this.x + this.width > canvas.width) this.x = canvas.width - this.width;
+                
+                // Ground collision
+                if (this.y + this.height > canvas.height - 20) {
+                    this.y = canvas.height - 20 - this.height;
+                    this.vy = 0;
+                    this.onGround = true;
                 }
-            }, 8000);
-        }
-
-        // Generar nota del jugador
-        function generatePlayerNote() {
-            const lanes = ['left', 'down', 'up', 'right'];
-            const randomLane = lanes[Math.floor(Math.random() * lanes.length)];
-            createNote(randomLane, 'player');
-        }
-
-        // Crear nota
-        function createNote(lane, owner) {
-            const note = document.createElement('div');
-            note.className = `note ${lane} ${owner}-fall`;
-            note.innerHTML = getArrowSymbol(lane);
-            note.dataset.lane = lane;
-            note.dataset.owner = owner;
-            
-            const track = owner === 'player' ? 
-                document.querySelector('.note-track') : 
-                document.querySelector('.opponent-note-track');
-            
-            const laneElement = track.querySelector(`.lane:has(.receptor[data-key="Arrow${getKeyName(lane)}"])`);
-            laneElement.appendChild(note);
-            
-            if (owner === 'player') {
-                playerNotes.push(note);
-            } else {
-                opponentNotes.push(note);
-            }
-            
-            // Remover nota después de la animación
-            setTimeout(() => {
-                if (note.parentNode) {
-                    note.remove();
-                    if (owner === 'player') {
-                        playerNotes = playerNotes.filter(n => n !== note);
-                        if (gameActive && isPlayerTurn) {
-                            missNote();
+                
+                // Platform collision
+                if (currentLevel) {
+                    currentLevel.platforms.forEach(platform => {
+                        const scaledPlatform = {
+                            x: platform.x * gameState.scale,
+                            y: platform.y * gameState.scale,
+                            width: platform.width * gameState.scale,
+                            height: platform.height * gameState.scale
+                        };
+                        
+                        if (this.checkCollision(scaledPlatform)) {
+                            // Top collision
+                            if (this.vy > 0 && this.y < scaledPlatform.y) {
+                                this.y = scaledPlatform.y - this.height;
+                                this.vy = 0;
+                                this.onGround = true;
+                            }
+                            // Bottom collision
+                            else if (this.vy < 0 && this.y > scaledPlatform.y) {
+                                this.y = scaledPlatform.y + scaledPlatform.height;
+                                this.vy = 0;
+                            }
+                            // Side collisions
+                            else if (this.vx > 0) {
+                                this.x = scaledPlatform.x - this.width;
+                                this.vx = 0;
+                            } else if (this.vx < 0) {
+                                this.x = scaledPlatform.x + scaledPlatform.width;
+                                this.vx = 0;
+                            }
                         }
+                    });
+                    
+                    // Hazard collision
+                    currentLevel.hazards.forEach(hazard => {
+                        const scaledHazard = {
+                            x: hazard.x * gameState.scale,
+                            y: hazard.y * gameState.scale,
+                            width: hazard.width * gameState.scale,
+                            height: hazard.height * gameState.scale
+                        };
+                        
+                        if (this.checkCollision(scaledHazard)) {
+                            if ((hazard.type === 'fire' && this.type === 'water') ||
+                                (hazard.type === 'water' && this.type === 'fire') ||
+                                hazard.type === 'mixed') {
+                                this.takeDamage();
+                            }
+                        }
+                    });
+                    
+                    // Gem collection
+                    currentLevel.gems = currentLevel.gems.filter(gem => {
+                        const scaledGem = {
+                            x: gem.x * gameState.scale,
+                            y: gem.y * gameState.scale,
+                            size: gem.size * gameState.scale
+                        };
+                        
+                        if (this.checkGemCollision(scaledGem)) {
+                            if (gem.type === this.type) {
+                                gameState.score += 100;
+                                document.getElementById('score').textContent = gameState.score;
+                                this.createCollectParticles(scaledGem.x + scaledGem.size/2, scaledGem.y + scaledGem.size/2);
+                                return false;
+                            }
+                        }
+                        return true;
+                    });
+                    
+                    // Door activation
+                    currentLevel.doors.forEach(door => {
+                        const scaledDoor = {
+                            x: door.x * gameState.scale,
+                            y: door.y * gameState.scale,
+                            width: door.width * gameState.scale,
+                            height: door.height * gameState.scale
+                        };
+                        
+                        if (this.checkCollision(scaledDoor) && door.type === this.type) {
+                            door.activated = true;
+                        }
+                    });
+                }
+                
+                // Animation
+                if (Math.abs(this.vx) > 0.5) {
+                    this.animationFrame = (this.animationFrame + 0.2) % 4;
+                } else {
+                    this.animationFrame = 0;
+                }
+            }
+
+            checkCollision(obj) {
+                return this.x < obj.x + obj.width &&
+                       this.x + this.width > obj.x &&
+                       this.y < obj.y + obj.height &&
+                       this.y + this.height > obj.y;
+            }
+
+            checkGemCollision(gem) {
+                const centerX = this.x + this.width / 2;
+                const centerY = this.y + this.height / 2;
+                const gemCenterX = gem.x + gem.size / 2;
+                const gemCenterY = gem.y + gem.size / 2;
+                const distance = Math.sqrt(Math.pow(centerX - gemCenterX, 2) + Math.pow(centerY - gemCenterY, 2));
+                return distance < (this.width / 2 + gem.size / 2);
+            }
+
+            takeDamage() {
+                this.lives--;
+                this.createDamageParticles();
+                
+                if (this.type === 'fire') {
+                    document.getElementById('fireLives').textContent = '❤️'.repeat(Math.max(0, this.lives));
+                } else {
+                    document.getElementById('waterLives').textContent = '❤️'.repeat(Math.max(0, this.lives));
+                }
+                
+                if (this.lives <= 0) {
+                    gameOver();
+                } else {
+                    // Reset position
+                    if (this.type === 'fire') {
+                        this.x = currentLevel.fireStart.x * gameState.scale;
+                        this.y = currentLevel.fireStart.y * gameState.scale;
                     } else {
-                        opponentNotes = opponentNotes.filter(n => n !== note);
+                        this.x = currentLevel.waterStart.x * gameState.scale;
+                        this.y = currentLevel.waterStart.y * gameState.scale;
                     }
+                    this.vx = 0;
+                    this.vy = 0;
                 }
-            }, noteSpeed);
-        }
+            }
 
-        // Iniciar notas del oponente
-        function startOpponentNotes() {
-            let patternIndex = 0;
-            let noteIndex = 0;
-            
-            opponentNoteTimer = setInterval(() => {
-                if (!gameActive || isPlayerTurn) {
-                    clearInterval(opponentNoteTimer);
-                    return;
+            createCollectParticles(x, y) {
+                for (let i = 0; i < 10; i++) {
+                    gameState.particles.push(new Particle(x, y, this.color));
                 }
-                
-                const pattern = opponentPatterns[patternIndex % opponentPatterns.length];
-                const lane = pattern[noteIndex % pattern.length];
-                createNote(lane, 'opponent');
-                
-                // Simular que el oponente presiona la nota
-                setTimeout(() => {
-                    if (!isPlayerTurn && gameActive) {
-                        opponentHitNote(lane);
-                    }
-                }, noteSpeed - 200);
-                
-                noteIndex++;
-                if (noteIndex >= pattern.length) {
-                    noteIndex = 0;
-                    patternIndex++;
-                }
-            }, 400);
-        }
+            }
 
-        // Oponente acierta nota
-        function opponentHitNote(lane) {
-            const receptor = document.querySelector(`.opponent-note-track .receptor[data-key="Arrow${getKeyName(lane)}"]`);
-            const note = opponentNotes.find(n => n.dataset.lane === lane && n.dataset.owner === 'opponent');
-            
-            if (note && receptor) {
-                removeNote(note, 'opponent');
-                receptor.classList.add('splash');
-                setTimeout(() => receptor.classList.remove('splash'), 300);
+            createDamageParticles() {
+                for (let i = 0; i < 15; i++) {
+                    gameState.particles.push(new Particle(
+                        this.x + this.width / 2,
+                        this.y + this.height / 2,
+                        '#ff0000'
+                    ));
+                }
+            }
+
+            draw() {
+                ctx.save();
                 
-                // Animar oponente
-                animateOpponent();
+                if (this.imageLoaded) {
+                    // Draw character image
+                    ctx.drawImage(this.image, this.x, this.y, this.width, this.height);
+                } else {
+                    // Fallback to colored rectangle
+                    ctx.fillStyle = this.color;
+                    ctx.fillRect(this.x, this.y, this.width, this.height);
+                    
+                    // Character details
+                    ctx.fillStyle = 'rgba(255, 255, 255, 0.3)';
+                    ctx.fillRect(this.x + 5, this.y + 5, this.width - 10, 10);
+                    
+                    // Eyes
+                    ctx.fillStyle = '#fff';
+                    ctx.fillRect(this.x + 8, this.y + 12, 4, 4);
+                    ctx.fillRect(this.x + 18, this.y + 12, 4, 4);
+                }
                 
-                // Reducir salud del jugador
-                health = Math.max(0, health - 2);
-                updateUI();
+                ctx.restore();
+            }
+
+            jump() {
+                if (this.onGround) {
+                    this.vy = -this.jumpPower;
+                    this.onGround = false;
+                }
+            }
+
+            moveLeft() {
+                this.vx = -this.speed;
+                this.facing = -1;
+            }
+
+            moveRight() {
+                this.vx = this.speed;
+                this.facing = 1;
             }
         }
 
-        // Iniciar notas del jugador
-        function startPlayerNotes() {
-            // Las notas ya se generan automáticamente en el intervalo
+        // Particle class
+        class Particle {
+            constructor(x, y, color) {
+                this.x = x;
+                this.y = y;
+                this.vx = (Math.random() - 0.5) * 4 * gameState.scale;
+                this.vy = (Math.random() - 0.5) * 4 * gameState.scale;
+                this.color = color;
+                this.life = 1;
+                this.decay = 0.02;
+                this.size = Math.random() * 3 * gameState.scale + 2 * gameState.scale;
+            }
+
+            update() {
+                this.x += this.vx;
+                this.y += this.vy;
+                this.vy += 0.1 * gameState.scale;
+                this.life -= this.decay;
+                this.size *= 0.98;
+            }
+
+            draw() {
+                ctx.save();
+                ctx.globalAlpha = this.life;
+                ctx.fillStyle = this.color;
+                ctx.beginPath();
+                ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.restore();
+            }
         }
 
-        // Obtener símbolo de flecha
-        function getArrowSymbol(lane) {
-            const symbols = {
-                'left': '←',
-                'down': '↓',
-                'up': '↑',
-                'right': '→'
-            };
-            return symbols[lane];
-        }
+        // Level designs
+        const levels = {
+            1: {
+                name: "Entrada a la Caverna",
+                platforms: [
+                    {x: 0, y: 480, width: 300, height: 20, type: 'stone'},
+                    {x: 350, y: 480, width: 300, height: 20, type: 'stone'},
+                    {x: 700, y: 480, width: 200, height: 20, type: 'stone'},
+                    {x: 100, y: 400, width: 100, height: 15, type: 'wood'},
+                    {x: 400, y: 400, width: 100, height: 15, type: 'wood'},
+                    {x: 650, y: 400, width: 100, height: 15, type: 'wood'},
+                    {x: 250, y: 320, width: 100, height: 15, type: 'wood'},
+                    {x: 500, y: 320, width: 100, height: 15, type: 'wood'},
+                    {x: 750, y: 320, width: 100, height: 15, type: 'wood'},
+                    {x: 150, y: 240, width: 100, height: 15, type: 'wood'},
+                    {x: 450, y: 240, width: 100, height: 15, type: 'wood'},
+                    {x: 700, y: 240, width: 100, height: 15, type: 'wood'},
+                    {x: 300, y: 160, width: 100, height: 15, type: 'wood'},
+                    {x: 550, y: 160, width: 100, height: 15, type: 'wood'},
+                    {x: 800, y: 160, width: 100, height: 15, type: 'wood'},
+                    {x: 200, y: 80, width: 100, height: 15, type: 'wood'},
+                    {x: 500, y: 80, width: 100, height: 15, type: 'wood'},
+                    {x: 750, y: 80, width: 100, height: 15, type: 'wood'},
+                    {x: 350, y: 0, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 300, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 650, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 200, y: 315, width: 50, height: 15, type: 'fire'},
+                    {x: 600, y: 315, width: 50, height: 15, type: 'water'},
+                    {x: 250, y: 235, width: 50, height: 15, type: 'fire'},
+                    {x: 550, y: 235, width: 50, height: 15, type: 'water'},
+                    {x: 400, y: 155, width: 50, height: 15, type: 'fire'},
+                    {x: 650, y: 155, width: 50, height: 15, type: 'water'},
+                    {x: 300, y: 75, width: 50, height: 15, type: 'fire'},
+                    {x: 600, y: 75, width: 50, height: 15, type: 'water'}
+                ],
+                gems: [
+                    {x: 150, y: 365, size: 12, type: 'fire'},
+                    {x: 450, y: 365, size: 12, type: 'water'},
+                    {x: 700, y: 365, size: 12, type: 'fire'},
+                    {x: 300, y: 285, size: 12, type: 'water'},
+                    {x: 550, y: 285, size: 12, type: 'fire'},
+                    {x: 200, y: 205, size: 12, type: 'water'},
+                    {x: 500, y: 205, size: 12, type: 'fire'},
+                    {x: 750, y: 205, size: 12, type: 'water'},
+                    {x: 350, y: 125, size: 12, type: 'fire'},
+                    {x: 600, y: 125, size: 12, type: 'water'},
+                    {x: 250, y: 45, size: 12, type: 'fire'},
+                    {x: 550, y: 45, size: 12, type: 'water'},
+                    {x: 400, y: -35, size: 15, type: 'fire'},
+                    {x: 450, y: -35, size: 15, type: 'water'},
+                    {x: 500, y: -35, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 20, y: 440},
+                waterStart: {x: 60, y: 440}
+            },
+            2: {
+                name: "Puentes Colgantes",
+                platforms: [
+                    {x: 0, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 200, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 400, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 600, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 750, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 75, y: 380, width: 80, height: 12, type: 'wood'},
+                    {x: 275, y: 380, width: 80, height: 12, type: 'wood'},
+                    {x: 475, y: 380, width: 80, height: 12, type: 'wood'},
+                    {x: 675, y: 380, width: 80, height: 12, type: 'wood'},
+                    {x: 150, y: 280, width: 120, height: 8, type: 'bridge'},
+                    {x: 350, y: 280, width: 120, height: 8, type: 'bridge'},
+                    {x: 550, y: 280, width: 120, height: 8, type: 'bridge'},
+                    {x: 200, y: 180, width: 80, height: 12, type: 'wood'},
+                    {x: 400, y: 180, width: 80, height: 12, type: 'wood'},
+                    {x: 600, y: 180, width: 80, height: 12, type: 'wood'},
+                    {x: 250, y: 80, width: 120, height: 8, type: 'bridge'},
+                    {x: 450, y: 80, width: 120, height: 8, type: 'bridge'},
+                    {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 150, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 350, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 550, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 700, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 155, y: 275, width: 30, height: 8, type: 'mixed'},
+                    {x: 355, y: 275, width: 30, height: 8, type: 'mixed'},
+                    {x: 555, y: 275, width: 30, height: 8, type: 'mixed'},
+                    {x: 255, y: 75, width: 30, height: 8, type: 'mixed'},
+                    {x: 455, y: 75, width: 30, height: 8, type: 'mixed'}
+                ],
+                gems: [
+                    {x: 115, y: 345, size: 12, type: 'fire'},
+                    {x: 315, y: 345, size: 12, type: 'water'},
+                    {x: 515, y: 345, size: 12, type: 'fire'},
+                    {x: 715, y: 345, size: 12, type: 'water'},
+                    {x: 210, y: 245, size: 12, type: 'fire'},
+                    {x: 410, y: 245, size: 12, type: 'water'},
+                    {x: 610, y: 245, size: 12, type: 'fire'},
+                    {x: 240, y: 145, size: 12, type: 'water'},
+                    {x: 440, y: 145, size: 12, type: 'fire'},
+                    {x: 640, y: 145, size: 12, type: 'water'},
+                    {x: 310, y: 45, size: 12, type: 'fire'},
+                    {x: 510, y: 45, size: 12, type: 'water'},
+                    {x: 400, y: -55, size: 15, type: 'fire'},
+                    {x: 450, y: -55, size: 15, type: 'water'},
+                    {x: 500, y: -55, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -70, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -70, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 15, y: 440},
+                waterStart: {x: 55, y: 440}
+            },
+            3: {
+                name: "Laberinto de Cristal",
+                platforms: [
+                    {x: 0, y: 480, width: 100, height: 20, type: 'stone'},
+                    {x: 150, y: 480, width: 100, height: 20, type: 'stone'},
+                    {x: 300, y: 480, width: 100, height: 20, type: 'stone'},
+                    {x: 450, y: 480, width: 100, height: 20, type: 'stone'},
+                    {x: 600, y: 480, width: 100, height: 20, type: 'stone'},
+                    {x: 750, y: 480, width: 150, height: 20, type: 'stone'},
+                    {x: 50, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 200, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 350, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 500, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 650, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 800, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 125, y: 320, width: 80, height: 12, type: 'wood'},
+                    {x: 275, y: 320, width: 80, height: 12, type: 'wood'},
+                    {x: 425, y: 320, width: 80, height: 12, type: 'wood'},
+                    {x: 575, y: 320, width: 80, height: 12, type: 'wood'},
+                    {x: 725, y: 320, width: 80, height: 12, type: 'wood'},
+                    {x: 175, y: 240, width: 100, height: 8, type: 'bridge'},
+                    {x: 375, y: 240, width: 100, height: 8, type: 'bridge'},
+                    {x: 575, y: 240, width: 100, height: 8, type: 'bridge'},
+                    {x: 250, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 450, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 650, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 325, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 525, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 350, y: 0, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 100, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 250, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 400, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 550, y: 485, width: 50, height: 15, type: 'water'},
+                    {x: 700, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 130, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 280, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 430, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 580, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 730, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 180, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 380, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 580, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 330, y: 75, width: 20, height: 8, type: 'mixed'},
+                    {x: 530, y: 75, width: 20, height: 8, type: 'mixed'}
+                ],
+                gems: [
+                    {x: 90, y: 365, size: 12, type: 'fire'},
+                    {x: 240, y: 365, size: 12, type: 'water'},
+                    {x: 390, y: 365, size: 12, type: 'fire'},
+                    {x: 540, y: 365, size: 12, type: 'water'},
+                    {x: 690, y: 365, size: 12, type: 'fire'},
+                    {x: 840, y: 365, size: 12, type: 'water'},
+                    {x: 165, y: 285, size: 12, type: 'fire'},
+                    {x: 315, y: 285, size: 12, type: 'water'},
+                    {x: 465, y: 285, size: 12, type: 'fire'},
+                    {x: 615, y: 285, size: 12, type: 'water'},
+                    {x: 765, y: 285, size: 12, type: 'fire'},
+                    {x: 225, y: 205, size: 12, type: 'water'},
+                    {x: 425, y: 205, size: 12, type: 'fire'},
+                    {x: 625, y: 205, size: 12, type: 'water'},
+                    {x: 290, y: 125, size: 12, type: 'fire'},
+                    {x: 490, y: 125, size: 12, type: 'water'},
+                    {x: 690, y: 125, size: 12, type: 'fire'},
+                    {x: 375, y: 45, size: 12, type: 'water'},
+                    {x: 575, y: 45, size: 12, type: 'fire'},
+                    {x: 400, y: -35, size: 15, type: 'fire'},
+                    {x: 450, y: -35, size: 15, type: 'water'},
+                    {x: 500, y: -35, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 10, y: 440},
+                waterStart: {x: 50, y: 440}
+            },
+            4: {
+                name: "Cámara de los Elementos",
+                platforms: [
+                    {x: 0, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 180, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 360, y: 480, width: 180, height: 20, type: 'stone'},
+                    {x: 600, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 780, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 60, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 240, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 420, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 660, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 840, y: 400, width: 60, height: 12, type: 'wood'},
+                    {x: 150, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 360, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 570, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 750, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 240, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 480, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 690, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 120, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 320, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 520, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 720, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 200, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 400, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 600, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 800, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 300, y: 0, width: 100, height: 12, type: 'wood'},
+                    {x: 500, y: 0, width: 100, height: 12, type: 'wood'},
+                    {x: 350, y: -60, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 120, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 300, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 540, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 720, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 160, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 370, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 580, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 760, y: 315, width: 20, height: 10, type: 'mixed'},
+                    {x: 250, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 490, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 700, y: 235, width: 20, height: 8, type: 'mixed'},
+                    {x: 210, y: 75, width: 20, height: 8, type: 'mixed'},
+                    {x: 410, y: 75, width: 20, height: 8, type: 'mixed'},
+                    {x: 610, y: 75, width: 20, height: 8, type: 'mixed'},
+                    {x: 810, y: 75, width: 20, height: 8, type: 'mixed'}
+                ],
+                gems: [
+                    {x: 100, y: 365, size: 12, type: 'fire'},
+                    {x: 280, y: 365, size: 12, type: 'water'},
+                    {x: 460, y: 365, size: 12, type: 'fire'},
+                    {x: 700, y: 365, size: 12, type: 'water'},
+                    {x: 870, y: 365, size: 12, type: 'fire'},
+                    {x: 195, y: 285, size: 12, type: 'water'},
+                    {x: 405, y: 285, size: 12, type: 'fire'},
+                    {x: 615, y: 285, size: 12, type: 'water'},
+                    {x: 795, y: 285, size: 12, type: 'fire'},
+                    {x: 300, y: 205, size: 12, type: 'water'},
+                    {x: 540, y: 205, size: 12, type: 'fire'},
+                    {x: 750, y: 205, size: 12, type: 'water'},
+                    {x: 160, y: 125, size: 12, type: 'fire'},
+                    {x: 360, y: 125, size: 12, type: 'water'},
+                    {x: 560, y: 125, size: 12, type: 'fire'},
+                    {x: 760, y: 125, size: 12, type: 'water'},
+                    {x: 250, y: 45, size: 12, type: 'water'},
+                    {x: 450, y: 45, size: 12, type: 'fire'},
+                    {x: 650, y: 45, size: 12, type: 'water'},
+                    {x: 850, y: 45, size: 12, type: 'fire'},
+                    {x: 350, y: -35, size: 12, type: 'fire'},
+                    {x: 550, y: -35, size: 12, type: 'water'},
+                    {x: 400, y: -95, size: 15, type: 'fire'},
+                    {x: 450, y: -95, size: 15, type: 'water'},
+                    {x: 500, y: -95, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -110, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -110, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 15, y: 440},
+                waterStart: {x: 55, y: 440}
+            },
+            5: {
+                name: "Santuario del Fuego y Agua",
+                platforms: [
+                    {x: 0, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 200, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 400, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 600, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 760, y: 480, width: 140, height: 20, type: 'stone'},
+                    {x: 70, y: 400, width: 90, height: 12, type: 'wood'},
+                    {x: 270, y: 400, width: 90, height: 12, type: 'wood'},
+                    {x: 470, y: 400, width: 90, height: 12, type: 'wood'},
+                    {x: 670, y: 400, width: 90, height: 12, type: 'wood'},
+                    {x: 870, y: 400, width: 30, height: 12, type: 'wood'},
+                    {x: 170, y: 320, width: 100, height: 12, type: 'wood'},
+                    {x: 370, y: 320, width: 100, height: 12, type: 'wood'},
+                    {x: 570, y: 320, width: 100, height: 12, type: 'wood'},
+                    {x: 770, y: 320, width: 100, height: 12, type: 'wood'},
+                    {x: 220, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 420, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 620, y: 240, width: 120, height: 8, type: 'bridge'},
+                    {x: 820, y: 240, width: 80, height: 8, type: 'bridge'},
+                    {x: 120, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 320, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 520, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 720, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 170, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 370, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 570, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 770, y: 80, width: 100, height: 8, type: 'bridge'},
+                    {x: 220, y: 0, width: 80, height: 12, type: 'wood'},
+                    {x: 420, y: 0, width: 80, height: 12, type: 'wood'},
+                    {x: 620, y: 0, width: 80, height: 12, type: 'wood'},
+                    {x: 820, y: 0, width: 80, height: 12, type: 'wood'},
+                    {x: 320, y: -60, width: 80, height: 12, type: 'wood'},
+                    {x: 520, y: -60, width: 80, height: 12, type: 'wood'},
+                    {x: 350, y: -100, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 140, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 340, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 540, y: 485, width: 60, height: 15, type: 'fire'},
+                    {x: 740, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 220, y: 330, width: 20, height: 10, type: 'mixed'},
+                    {x: 420, y: 370, width: 20, height: 10, type: 'mixed'},
+                    {x: 620, y: 330, width: 20, height: 10, type: 'mixed'},
+                    {x: 290, y: 210, width: 20, height: 10, type: 'mixed'},
+                    {x: 490, y: 170, width: 20, height: 10, type: 'mixed'},
+                    {x: 690, y: 210, width: 20, height: 10, type: 'mixed'},
+                    {x: 180, y: 130, width: 15, height: 8, type: 'water'},
+                    {x: 380, y: 90, width: 15, height: 8, type: 'fire'},
+                    {x: 580, y: 130, width: 15, height: 8, type: 'water'},
+                    {x: 780, y: 90, width: 15, height: 8, type: 'fire'},
+                    {x: 240, y: 50, width: 20, height: 10, type: 'mixed'},
+                    {x: 440, y: 10, width: 20, height: 10, type: 'mixed'},
+                    {x: 640, y: 50, width: 20, height: 10, type: 'mixed'},
+                    {x: 840, y: 30, width: 20, height: 10, type: 'mixed'}
+                ],
+                gems: [
+                    {x: 115, y: 345, size: 12, type: 'fire'},
+                    {x: 285, y: 305, size: 12, type: 'water'},
+                    {x: 485, y: 345, size: 12, type: 'fire'},
+                    {x: 685, y: 305, size: 12, type: 'water'},
+                    {x: 865, y: 345, size: 12, type: 'fire'},
+                    {x: 190, y: 265, size: 12, type: 'water'},
+                    {x: 390, y: 225, size: 12, type: 'fire'},
+                    {x: 590, y: 265, size: 12, type: 'water'},
+                    {x: 790, y: 225, size: 12, type: 'fire'},
+                    {x: 140, y: 105, size: 12, type: 'water'},
+                    {x: 340, y: 65, size: 12, type: 'fire'},
+                    {x: 540, y: 105, size: 12, type: 'water'},
+                    {x: 740, y: 65, size: 12, type: 'fire'},
+                    {x: 875, y: 105, size: 12, type: 'water'},
+                    {x: 200, y: 25, size: 12, type: 'fire'},
+                    {x: 400, y: -15, size: 12, type: 'water'},
+                    {x: 600, y: 25, size: 12, type: 'fire'},
+                    {x: 800, y: 5, size: 12, type: 'water'},
+                    {x: 400, y: -45, size: 15, type: 'fire'},
+                    {x: 450, y: -45, size: 15, type: 'water'},
+                    {x: 500, y: -45, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -150, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -150, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 15, y: 440},
+                waterStart: {x: 55, y: 440}
+            },
+            6: {
+                name: "Cámara Final del Legado",
+                platforms: [
+                    {x: 0, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 170, y: 470, width: 130, height: 30, type: 'stone'},
+                    {x: 360, y: 480, width: 180, height: 20, type: 'stone'},
+                    {x: 590, y: 470, width: 130, height: 30, type: 'stone'},
+                    {x: 780, y: 480, width: 120, height: 20, type: 'stone'},
+                    {x: 60, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 220, y: 360, width: 80, height: 12, type: 'wood'},
+                    {x: 410, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 620, y: 360, width: 80, height: 12, type: 'wood'},
+                    {x: 820, y: 400, width: 80, height: 12, type: 'wood'},
+                    {x: 140, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 330, y: 280, width: 90, height: 12, type: 'wood'},
+                    {x: 530, y: 320, width: 90, height: 12, type: 'wood'},
+                    {x: 720, y: 280, width: 90, height: 12, type: 'wood'},
+                    {x: 230, y: 240, width: 100, height: 8, type: 'bridge'},
+                    {x: 430, y: 200, width: 100, height: 8, type: 'bridge'},
+                    {x: 630, y: 240, width: 100, height: 8, type: 'bridge'},
+                    {x: 100, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 300, y: 120, width: 80, height: 12, type: 'wood'},
+                    {x: 500, y: 160, width: 80, height: 12, type: 'wood'},
+                    {x: 700, y: 120, width: 80, height: 12, type: 'wood'},
+                    {x: 850, y: 160, width: 50, height: 12, type: 'wood'},
+                    {x: 180, y: 80, width: 80, height: 12, type: 'wood'},
+                    {x: 380, y: 40, width: 80, height: 12, type: 'wood'},
+                    {x: 580, y: 80, width: 80, height: 12, type: 'wood'},
+                    {x: 780, y: 60, width: 80, height: 12, type: 'wood'},
+                    {x: 350, y: -20, width: 200, height: 15, type: 'wood'}
+                ],
+                hazards: [
+                    {x: 120, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 300, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 540, y: 485, width: 50, height: 15, type: 'fire'},
+                    {x: 720, y: 485, width: 60, height: 15, type: 'water'},
+                    {x: 200, y: 350, width: 20, height: 10, type: 'mixed'},
+                    {x: 450, y: 390, width: 20, height: 10, type: 'mixed'},
+                    {x: 700, y: 350, width: 20, height: 10, type: 'mixed'},
+                    {x: 280, y: 230, width: 20, height: 10, type: 'mixed'},
+                    {x: 480, y: 190, width: 20, height: 10, type: 'mixed'},
+                    {x: 680, y: 230, width: 20, height: 10, type: 'mixed'},
+                    {x: 180, y: 150, width: 15, height: 8, type: 'water'},
+                    {x: 380, y: 110, width: 15, height: 8, type: 'fire'},
+                    {x: 580, y: 150, width: 15, height: 8, type: 'water'},
+                    {x: 780, y: 110, width: 15, height: 8, type: 'fire'},
+                    {x: 260, y: 70, width: 20, height: 10, type: 'mixed'},
+                    {x: 460, y: 30, width: 20, height: 10, type: 'mixed'},
+                    {x: 660, y: 70, width: 20, height: 10, type: 'mixed'},
+                    {x: 860, y: 50, width: 20, height: 10, type: 'mixed'}
+                ],
+                gems: [
+                    {x: 100, y: 365, size: 12, type: 'fire'},
+                    {x: 260, y: 325, size: 12, type: 'water'},
+                    {x: 450, y: 365, size: 12, type: 'fire'},
+                    {x: 660, y: 325, size: 12, type: 'water'},
+                    {x: 860, y: 365, size: 12, type: 'fire'},
+                    {x: 185, y: 285, size: 12, type: 'water'},
+                    {x: 375, y: 245, size: 12, type: 'fire'},
+                    {x: 575, y: 285, size: 12, type: 'water'},
+                    {x: 765, y: 245, size: 12, type: 'fire'},
+                    {x: 140, y: 125, size: 12, type: 'water'},
+                    {x: 340, y: 85, size: 12, type: 'fire'},
+                    {x: 540, y: 125, size: 12, type: 'water'},
+                    {x: 740, y: 85, size: 12, type: 'fire'},
+                    {x: 875, y: 125, size: 12, type: 'water'},
+                    {x: 220, y: 45, size: 12, type: 'fire'},
+                    {x: 420, y: 5, size: 12, type: 'water'},
+                    {x: 620, y: 45, size: 12, type: 'fire'},
+                    {x: 820, y: 25, size: 12, type: 'water'},
+                    {x: 400, y: -45, size: 15, type: 'fire'},
+                    {x: 450, y: -45, size: 15, type: 'water'},
+                    {x: 500, y: -45, size: 15, type: 'fire'}
+                ],
+                doors: [
+                    {x: 420, y: -50, width: 35, height: 40, type: 'fire', activated: false},
+                    {x: 465, y: -50, width: 35, height: 40, type: 'water', activated: false}
+                ],
+                fireStart: {x: 10, y: 450},
+                waterStart: {x: 50, y: 450}
+            }
+        };
 
-        // Obtener nombre de tecla
-        function getKeyName(lane) {
-            const keyNames = {
-                'left': 'Left',
-                'down': 'Down',
-                'up': 'Up',
-                'right': 'Right'
-            };
-            return keyNames[lane];
-        }
+        let currentLevel = null;
+        let fireboy = null;
+        let watergirl = null;
 
-        // Manejar teclas presionadas
+        // Input handling
+        const keys = {};
+
         document.addEventListener('keydown', (e) => {
-            if (!gameActive || !isPlayerTurn) return;
+            keys[e.key.toLowerCase()] = true;
             
-            if (keys.hasOwnProperty(e.key) && !keys[e.key]) {
-                keys[e.key] = true;
-                handleKeyPress(e.key);
-                
-                // Animar receptor
-                const receptor = document.querySelector(`.note-track .receptor[data-key="${e.key}"]`);
-                if (receptor) {
-                    receptor.classList.add('pressed');
-                    setTimeout(() => receptor.classList.remove('pressed'), 100);
-                }
-                
-                // Animar hint
-                const hint = document.querySelector(`.key-hint[data-key="${e.key}"]`);
-                if (hint) {
-                    hint.classList.add('active');
-                    setTimeout(() => hint.classList.remove('active'), 100);
-                }
-            }
+            // Visual feedback
+            if (e.key.toLowerCase() === 'w') document.getElementById('fire-up').classList.add('active');
+            if (e.key.toLowerCase() === 'a') document.getElementById('fire-left').classList.add('active');
+            if (e.key.toLowerCase() === 's') document.getElementById('fire-down').classList.add('active');
+            if (e.key.toLowerCase() === 'd') document.getElementById('fire-right').classList.add('active');
+            if (e.key === 'ArrowUp') document.getElementById('water-up').classList.add('active');
+            if (e.key === 'ArrowLeft') document.getElementById('water-left').classList.add('active');
+            if (e.key === 'ArrowDown') document.getElementById('water-down').classList.add('active');
+            if (e.key === 'ArrowRight') document.getElementById('water-right').classList.add('active');
         });
 
         document.addEventListener('keyup', (e) => {
-            if (keys.hasOwnProperty(e.key)) {
-                keys[e.key] = false;
-            }
+            keys[e.key.toLowerCase()] = false;
+            
+            // Remove visual feedback
+            if (e.key.toLowerCase() === 'w') document.getElementById('fire-up').classList.remove('active');
+            if (e.key.toLowerCase() === 'a') document.getElementById('fire-left').classList.remove('active');
+            if (e.key.toLowerCase() === 's') document.getElementById('fire-down').classList.remove('active');
+            if (e.key.toLowerCase() === 'd') document.getElementById('fire-right').classList.remove('active');
+            if (e.key === 'ArrowUp') document.getElementById('water-up').classList.remove('active');
+            if (e.key === 'ArrowLeft') document.getElementById('water-left').classList.remove('active');
+            if (e.key === 'ArrowDown') document.getElementById('water-down').classList.remove('active');
+            if (e.key === 'ArrowRight') document.getElementById('water-right').classList.remove('active');
         });
 
-        // Manejar presión de tecla
-        function handleKeyPress(key) {
-            const receptor = document.querySelector(`.note-track .receptor[data-key="${key}"]`);
-            if (!receptor) return;
+        function handleInput() {
+            if (!gameState.isPlaying || !fireboy || !watergirl) return;
+
+            // Fireboy controls (WASD)
+            if (keys['w']) fireboy.jump();
+            if (keys['a']) fireboy.moveLeft();
+            if (keys['d']) fireboy.moveRight();
+
+            // Watergirl controls (Arrow keys)
+            if (keys['arrowup']) watergirl.jump();
+            if (keys['arrowleft']) watergirl.moveLeft();
+            if (keys['arrowright']) watergirl.moveRight();
+        }
+
+        function loadLevel(levelNum) {
+            const levelData = levels[levelNum];
+            if (!levelData) return;
+
+            currentLevel = JSON.parse(JSON.stringify(levelData));
+            fireboy = new Player(
+                currentLevel.fireStart.x,
+                currentLevel.fireStart.y,
+                'fire',
+                '#ff6b6b'
+            );
+            watergirl = new Player(
+                currentLevel.waterStart.x,
+                currentLevel.waterStart.y,
+                'water',
+                '#4ecdc4'
+            );
             
-            const lane = receptor.parentElement;
-            const notesInLane = lane.querySelectorAll('.note');
-            
-            for (let note of notesInLane) {
-                const noteRect = note.getBoundingClientRect();
-                const receptorRect = receptor.getBoundingClientRect();
-                const distance = Math.abs(noteRect.bottom - receptorRect.top);
+            gameState.currentLevel = levelNum;
+            document.getElementById('currentLevel').textContent = levelNum;
+            document.getElementById('score').textContent = gameState.score;
+        }
+
+        function drawCaveBackground() {
+            // Static cave background - no moving elements
+            const gradient = ctx.createRadialGradient(canvas.width/2, canvas.height/2, 0, canvas.width/2, canvas.height/2, canvas.width/2);
+            gradient.addColorStop(0, '#2c2416');
+            gradient.addColorStop(0.5, '#1a1611');
+            gradient.addColorStop(1, '#0d0b08');
+            ctx.fillStyle = gradient;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Static cave texture
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.4)';
+            for (let i = 0; i < 30; i++) {
+                const x = Math.random() * canvas.width;
+                const y = Math.random() * canvas.height;
+                const size = Math.random() * 80 + 40;
+                ctx.beginPath();
+                ctx.arc(x, y, size, 0, Math.PI * 2);
+                ctx.fill();
+            }
+
+            // Static stalactites
+            ctx.fillStyle = '#3e2723';
+            for (let i = 0; i < 12; i++) {
+                const x = (i + 1) * (canvas.width / 13);
+                const height = Math.random() * 25 + 15;
+                ctx.beginPath();
+                ctx.moveTo(x - 10, 0);
+                ctx.lineTo(x + 10, 0);
+                ctx.lineTo(x, height);
+                ctx.closePath();
+                ctx.fill();
+            }
+
+            // Static vines (no animation)
+            ctx.strokeStyle = '#2e7d32';
+            ctx.lineWidth = 3;
+            for (let i = 0; i < 8; i++) {
+                const x = Math.random() * canvas.width;
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                for (let j = 0; j < 10; j++) {
+                    const y = j * 50;
+                    const offset = Math.sin(j * 0.5) * 10; // Removed time-based animation
+                    ctx.lineTo(x + offset, y);
+                }
+                ctx.stroke();
+            }
+        }
+
+        function drawPlatform(platform) {
+            const scaledPlatform = {
+                x: platform.x * gameState.scale,
+                y: platform.y * gameState.scale,
+                width: platform.width * gameState.scale,
+                height: platform.height * gameState.scale
+            };
+
+            if (platform.type === 'wood') {
+                // Wooden platform with grain
+                const gradient = ctx.createLinearGradient(scaledPlatform.x, scaledPlatform.y, scaledPlatform.x, scaledPlatform.y + scaledPlatform.height);
+                gradient.addColorStop(0, '#8d6e63');
+                gradient.addColorStop(0.5, '#6d4c41');
+                gradient.addColorStop(1, '#5d4037');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
                 
-                if (distance < 40) {
-                    // Perfect
-                    perfectHit(note, receptor);
-                    break;
-                } else if (distance < 80) {
-                    // Good
-                    goodHit(note, receptor);
-                    break;
-                } else if (distance < 120) {
-                    // Bad
-                    badHit(note, receptor);
-                    break;
+                // Wood grain
+                ctx.strokeStyle = '#4e342e';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < scaledPlatform.width; i += 8 * gameState.scale) {
+                    ctx.beginPath();
+                    ctx.moveTo(scaledPlatform.x + i, scaledPlatform.y);
+                    ctx.lineTo(scaledPlatform.x + i + 3 * gameState.scale, scaledPlatform.y + scaledPlatform.height);
+                    ctx.stroke();
+                }
+                
+                // Moss patches
+                ctx.fillStyle = '#4caf50';
+                for (let i = 0; i < scaledPlatform.width; i += 20 * gameState.scale) {
+                    if (Math.random() < 0.3) {
+                        ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y, 5 * gameState.scale, 3 * gameState.scale);
+                    }
+                }
+            } else if (platform.type === 'bridge') {
+                // Hanging bridge
+                ctx.strokeStyle = '#5d4037';
+                ctx.lineWidth = 2;
+                
+                // Bridge planks
+                for (let i = 0; i < scaledPlatform.width; i += 15 * gameState.scale) {
+                    ctx.fillStyle = '#8d6e63';
+                    ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y, 12 * gameState.scale, scaledPlatform.height);
+                }
+                
+                // Ropes
+                ctx.beginPath();
+                ctx.moveTo(scaledPlatform.x, scaledPlatform.y - 5 * gameState.scale);
+                ctx.lineTo(scaledPlatform.x + scaledPlatform.width, scaledPlatform.y - 5 * gameState.scale);
+                ctx.moveTo(scaledPlatform.x, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
+                ctx.lineTo(scaledPlatform.x + scaledPlatform.width, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
+                ctx.stroke();
+                
+                // Vertical ropes
+                for (let i = 0; i <= scaledPlatform.width; i += 30 * gameState.scale) {
+                    ctx.beginPath();
+                    ctx.moveTo(scaledPlatform.x + i, scaledPlatform.y - 5 * gameState.scale);
+                    ctx.lineTo(scaledPlatform.x + i, scaledPlatform.y + scaledPlatform.height + 5 * gameState.scale);
+                    ctx.stroke();
+                }
+            } else {
+                // Stone platform
+                const gradient = ctx.createLinearGradient(scaledPlatform.x, scaledPlatform.y, scaledPlatform.x, scaledPlatform.y + scaledPlatform.height);
+                gradient.addColorStop(0, '#616161');
+                gradient.addColorStop(0.5, '#424242');
+                gradient.addColorStop(1, '#212121');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
+                
+                // Stone texture
+                ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+                for (let i = 0; i < scaledPlatform.width; i += 25 * gameState.scale) {
+                    for (let j = 0; j < scaledPlatform.height; j += 25 * gameState.scale) {
+                        if (Math.random() < 0.4) {
+                            ctx.fillRect(scaledPlatform.x + i, scaledPlatform.y + j, 12 * gameState.scale, 12 * gameState.scale);
+                        }
+                    }
+                }
+            }
+            
+            // Platform border
+            ctx.strokeStyle = '#000';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(scaledPlatform.x, scaledPlatform.y, scaledPlatform.width, scaledPlatform.height);
+        }
+
+        function drawHazard(hazard) {
+            const scaledHazard = {
+                x: hazard.x * gameState.scale,
+                y: hazard.y * gameState.scale,
+                width: hazard.width * gameState.scale,
+                height: hazard.height * gameState.scale
+            };
+
+            if (hazard.type === 'mixed') {
+                // Acid pool
+                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x + scaledHazard.width, scaledHazard.y);
+                gradient.addColorStop(0, '#4caf50');
+                gradient.addColorStop(0.5, '#388e3c');
+                gradient.addColorStop(1, '#2e7d32');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                
+                // Static bubbles (no animation)
+                ctx.fillStyle = 'rgba(255, 255, 255, 0.4)';
+                for (let i = 0; i < scaledHazard.width; i += 12 * gameState.scale) {
+                    const offset = Math.sin(i * 0.3) * 2;
+                    const bubbleY = scaledHazard.y + offset + Math.sin(i) * 2;
+                    ctx.beginPath();
+                    ctx.arc(scaledHazard.x + i + 6 * gameState.scale, bubbleY, 2 * gameState.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else if (hazard.type === 'fire') {
+                // Lava pool
+                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x, scaledHazard.y + scaledHazard.height);
+                gradient.addColorStop(0, '#ff5722');
+                gradient.addColorStop(0.5, '#e64a19');
+                gradient.addColorStop(1, '#d84315');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                
+                // Static lava bubbles (no animation)
+                ctx.fillStyle = 'rgba(255, 152, 0, 0.6)';
+                for (let i = 0; i < scaledHazard.width; i += 10 * gameState.scale) {
+                    const offset = Math.sin(i * 0.4) * 3;
+                    const bubbleY = scaledHazard.y + offset + Math.sin(i) * 2;
+                    ctx.beginPath();
+                    ctx.arc(scaledHazard.x + i + 5 * gameState.scale, bubbleY, 3 * gameState.scale, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            } else {
+                // Water pool
+                const gradient = ctx.createLinearGradient(scaledHazard.x, scaledHazard.y, scaledHazard.x, scaledHazard.y + scaledHazard.height);
+                gradient.addColorStop(0, '#03a9f4');
+                gradient.addColorStop(0.5, '#0288d1');
+                gradient.addColorStop(1, '#0277bd');
+                ctx.fillStyle = gradient;
+                ctx.fillRect(scaledHazard.x, scaledHazard.y, scaledHazard.width, scaledHazard.height);
+                
+                // Static water ripples (no animation)
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.3)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i < scaledHazard.width; i += 15 * gameState.scale) {
+                    const offset = Math.sin(i * 0.2) * 2;
+                    ctx.beginPath();
+                    ctx.arc(scaledHazard.x + i + 7 * gameState.scale, scaledHazard.y + scaledHazard.height/2 + offset, 4 * gameState.scale, 0, Math.PI * 2);
+                    ctx.stroke();
                 }
             }
         }
 
-        // Perfect hit
-        function perfectHit(note, receptor) {
-            removeNote(note, 'player');
-            score += 350;
-            combo++;
-            health = Math.min(100, health + 3);
+        function drawGem(gem) {
+            const scaledGem = {
+                x: gem.x * gameState.scale,
+                y: gem.y * gameState.scale,
+                size: gem.size * gameState.scale
+            };
+
+            ctx.save();
+            ctx.translate(scaledGem.x + scaledGem.size/2, scaledGem.y + scaledGem.size/2);
+            ctx.rotate(Date.now() * 0.002); // Keep gem rotation
             
-            receptor.classList.add('splash');
-            setTimeout(() => receptor.classList.remove('splash'), 300);
+            // Gem glow
+            const glowGradient = ctx.createRadialGradient(0, 0, 0, 0, 0, scaledGem.size * 1.5);
+            glowGradient.addColorStop(0, gem.type === 'fire' ? 'rgba(255, 107, 107, 0.8)' : 'rgba(78, 205, 196, 0.8)');
+            glowGradient.addColorStop(0.5, gem.type === 'fire' ? 'rgba(255, 107, 107, 0.4)' : 'rgba(78, 205, 196, 0.4)');
+            glowGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = glowGradient;
+            ctx.fillRect(-scaledGem.size * 1.5, -scaledGem.size * 1.5, scaledGem.size * 3, scaledGem.size * 3);
             
-            createHitEffect(receptor, 'PERFECT', 'perfect');
-            showJudgment('PERFECT', 'perfect');
-            animatePlayer();
+            // Diamond shape
+            ctx.fillStyle = gem.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
+            ctx.beginPath();
+            ctx.moveTo(0, -scaledGem.size);
+            ctx.lineTo(scaledGem.size, 0);
+            ctx.lineTo(0, scaledGem.size);
+            ctx.lineTo(-scaledGem.size, 0);
+            ctx.closePath();
+            ctx.fill();
             
-            updateUI();
+            // Inner shine
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.7)';
+            ctx.beginPath();
+            ctx.moveTo(0, -scaledGem.size * 0.6);
+            ctx.lineTo(scaledGem.size * 0.6, 0);
+            ctx.lineTo(0, scaledGem.size * 0.6);
+            ctx.lineTo(-scaledGem.size * 0.6, 0);
+            ctx.closePath();
+            ctx.fill();
+            
+            ctx.restore();
         }
 
-        // Good hit
-        function goodHit(note, receptor) {
-            removeNote(note, 'player');
-            score += 200;
-            combo++;
-            health = Math.min(100, health + 2);
+        function drawDoor(door) {
+            const scaledDoor = {
+                x: door.x * gameState.scale,
+                y: door.y * gameState.scale,
+                width: door.width * gameState.scale,
+                height: door.height * gameState.scale
+            };
+
+            // Door frame
+            ctx.fillStyle = door.activated ? 'rgba(255, 255, 255, 0.2)' : 'rgba(0, 0, 0, 0.8)';
+            ctx.fillRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
             
-            createHitEffect(receptor, 'GOOD', 'good');
-            showJudgment('GOOD', 'good');
-            animatePlayer();
-            
-            updateUI();
-        }
-
-        // Bad hit
-        function badHit(note, receptor) {
-            removeNote(note, 'player');
-            score += 50;
-            combo = 0;
-            health = Math.max(0, health - 3);
-            
-            createHitEffect(receptor, 'BAD', 'bad');
-            showJudgment('BAD', 'bad');
-            
-            updateUI();
-        }
-
-        // Miss note
-        function missNote() {
-            combo = 0;
-            health = Math.max(0, health - 5);
-            showJudgment('MISS', 'miss');
-            updateUI();
-        }
-
-        // Remover nota
-        function removeNote(note, owner) {
-            note.remove();
-            if (owner === 'player') {
-                playerNotes = playerNotes.filter(n => n !== note);
-            } else {
-                opponentNotes = opponentNotes.filter(n => n !== note);
-            }
-        }
-
-        // Crear efecto de hit
-        function createHitEffect(receptor, text, type) {
-            const effect = document.createElement('div');
-            effect.className = `hit-effect ${type}`;
-            effect.innerHTML = `<div class="rating">${text}</div>`;
-            const rect = receptor.getBoundingClientRect();
-            effect.style.left = rect.left + rect.width/2 - 50 + 'px';
-            effect.style.top = rect.top + rect.height/2 - 50 + 'px';
-            document.body.appendChild(effect);
-            
-            setTimeout(() => effect.remove(), 500);
-        }
-
-        // Mostrar juicio
-        function showJudgment(text, type) {
-            const judgment = document.createElement('div');
-            judgment.className = `judgment ${type}`;
-            judgment.textContent = text;
-            document.querySelector('.game-container').appendChild(judgment);
-            
-            setTimeout(() => judgment.remove(), 1000);
-        }
-
-        // Animar jugador
-        function animatePlayer() {
-            const player = document.getElementById('player');
-            player.classList.remove('singing');
-            void player.offsetWidth;
-            player.classList.add('singing');
-            setTimeout(() => player.classList.remove('singing'), 200);
-        }
-
-        // Animar oponente
-        function animateOpponent() {
-            const opponent = document.getElementById('opponent');
-            opponent.classList.remove('singing');
-            void opponent.offsetWidth;
-            opponent.classList.add('singing');
-            setTimeout(() => opponent.classList.remove('singing'), 200);
-        }
-
-        // Actualizar UI
-        function updateUI() {
-            document.getElementById('score').textContent = score;
-            document.getElementById('combo').textContent = combo;
-            document.getElementById('healthFill').style.width = health + '%';
-            
-            // Animar combo
-            if (combo > 0 && combo % 10 === 0) {
-                const comboDisplay = document.getElementById('comboDisplay');
-                comboDisplay.classList.add('pulse');
-                setTimeout(() => comboDisplay.classList.remove('pulse'), 300);
+            // mystical portal effect
+            if (door.activated) {
+                const portalGradient = ctx.createRadialGradient(
+                    scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2, 0,
+                    scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2, scaledDoor.width
+                );
+                portalGradient.addColorStop(0, door.type === 'fire' ? 'rgba(255, 107, 107, 0.9)' : 'rgba(78, 205, 196, 0.9)');
+                portalGradient.addColorStop(0.5, door.type === 'fire' ? 'rgba(255, 107, 107, 0.5)' : 'rgba(78, 205, 196, 0.5)');
+                portalGradient.addColorStop(1, door.type === 'fire' ? 'rgba(255, 107, 107, 0.1)' : 'rgba(78, 205, 196, 0.1)');
+                ctx.fillStyle = portalGradient;
+                ctx.fillRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
             }
             
-            // Cambiar color de la barra de salud
-            const healthFill = document.getElementById('healthFill');
-            if (health < 20) {
-                healthFill.style.background = 'linear-gradient(90deg, #ff0000, #ff3333)';
-            } else if (health < 50) {
-                healthFill.style.background = 'linear-gradient(90deg, #ff6600, #ff9933)';
-            } else {
-                healthFill.style.background = 'linear-gradient(90deg, #ff0066, #ff3366)';
-            }
+            // Door frame
+            ctx.strokeStyle = door.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
+            ctx.lineWidth = 3;
+            ctx.strokeRect(scaledDoor.x, scaledDoor.y, scaledDoor.width, scaledDoor.height);
+            
+            // Inner frame
+            ctx.strokeStyle = door.type === 'fire' ? '#ff9999' : '#7dd8d2';
+            ctx.lineWidth = 1;
+            ctx.strokeRect(scaledDoor.x + 3, scaledDoor.y + 3, scaledDoor.width - 6, scaledDoor.height - 6);
+            
+            // Chest symbol
+            ctx.fillStyle = door.type === 'fire' ? '#ff6b6b' : '#4ecdc4';
+            ctx.font = `bold ${20 * gameState.scale}px Arial`;
+            ctx.textAlign = 'center';
+            ctx.fillText('📦', scaledDoor.x + scaledDoor.width/2, scaledDoor.y + scaledDoor.height/2 + 5 * gameState.scale);
         }
 
-        // Game loop
+        function drawLevel() {
+            // Draw static cave background
+            drawCaveBackground();
+
+            if (!currentLevel) return;
+
+            // Draw platforms
+            currentLevel.platforms.forEach(platform => {
+                drawPlatform(platform);
+            });
+
+            // Draw hazards
+            currentLevel.hazards.forEach(hazard => {
+                drawHazard(hazard);
+            });
+
+            // Draw gems
+            currentLevel.gems.forEach(gem => {
+                drawGem(gem);
+            });
+
+            // Draw doors
+            currentLevel.doors.forEach(door => {
+                drawDoor(door);
+            });
+
+            // Draw particles
+            gameState.particles.forEach(particle => {
+                particle.draw();
+            });
+
+            // Draw players
+            if (fireboy) fireboy.draw();
+            if (watergirl) watergirl.draw();
+        }
+
+        function checkLevelComplete() {
+            if (!currentLevel || !fireboy || !watergirl) return false;
+            
+            let allDoorsActivated = currentLevel.doors.every(door => door.activated);
+            let allGemsCollected = currentLevel.gems.length === 0;
+            
+            return allDoorsActivated && allGemsCollected;
+        }
+
+        function showMessage(text) {
+            const message = document.createElement('div');
+            message.className = 'message';
+            message.textContent = text;
+            document.querySelector('.game-container').appendChild(message);
+            setTimeout(() => message.remove(), 1500);
+        }
+
+        function showLevelTransition(levelNum) {
+            const transition = document.createElement('div');
+            transition.className = 'level-transition';
+            transition.textContent = `Nivel ${levelNum}`;
+            document.querySelector('.game-container').appendChild(transition);
+            setTimeout(() => transition.remove(), 1500);
+        }
+
+        function gameOver() {
+            gameState.isPlaying = false;
+            showMessage('¡Game Over! Recarga para jugar');
+        }
+
         function gameLoop() {
-            if (!gameActive) return;
+            if (!gameState.isPlaying) return;
+
+            handleInput();
             
-            // Disminuir salud gradualmente
-            health = Math.max(0, health - 0.02);
-            updateUI();
+            if (fireboy) fireboy.update();
+            if (watergirl) watergirl.update();
             
-            // Game Over si la salud llega a 0
-            if (health <= 0) {
-                endGame();
-                return;
+            // Update particles
+            gameState.particles = gameState.particles.filter(particle => {
+                particle.update();
+                return particle.life > 0;
+            });
+            
+            drawLevel();
+
+            // Check level completion
+            if (checkLevelComplete() && !gameState.transitioning) {
+                gameState.transitioning = true;
+                gameState.score += 500;
+                document.getElementById('score').textContent = gameState.score;
+                showMessage(`¡Nivel ${gameState.currentLevel} Completado!`);
+                
+                setTimeout(() => {
+                    if (gameState.currentLevel < Object.keys(levels).length) {
+                        gameState.currentLevel++;
+                        showLevelTransition(gameState.currentLevel);
+                        loadLevel(gameState.currentLevel);
+                        gameState.transitioning = false;
+                    } else {
+                        showMessage('¡Juego Completado! ¡Felicidades!');
+                        gameState.isPlaying = false;
+                    }
+                }, 1500);
             }
-            
-            // Aumentar dificultad
-            if (score > 1000 && noteSpeed > 1600) {
-                noteSpeed = 1600;
-            } else if (score > 2500 && noteSpeed > 1300) {
-                noteSpeed = 1300;
-            } else if (score > 5000 && noteSpeed > 1000) {
-                noteSpeed = 1000;
-            }
-            
+
             requestAnimationFrame(gameLoop);
         }
 
-        // Finalizar juego
-        function endGame() {
-            gameActive = false;
-            clearInterval(noteGenerationTimer);
-            clearInterval(opponentNoteTimer);
-            clearTimeout(turnTimer);
+        function startGame() {
+            loadLevel(1);
+            gameLoop();
             
-            // Limpiar notas
-            playerNotes.forEach(note => {
-                if (note.parentNode) note.remove();
-            });
-            opponentNotes.forEach(note => {
-                if (note.parentNode) note.remove();
-            });
-            playerNotes = [];
-            opponentNotes = [];
-            
-            // Mostrar pantalla de game over
-            document.getElementById('finalScore').textContent = score;
-            document.getElementById('gameOver').classList.add('show');
+            // Start timer
+            setInterval(() => {
+                if (gameState.isPlaying && !gameState.transitioning) {
+                    gameState.timer++;
+                    let minutes = Math.floor(gameState.timer / 60);
+                    let seconds = gameState.timer % 60;
+                    document.getElementById('timer').textContent = 
+                        `${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                }
+            }, 1000);
         }
 
-        // Reiniciar juego
-        function restartGame() {
-            document.getElementById('gameOver').classList.remove('show');
-            document.getElementById('blockedOverlay').classList.remove('active');
-            noteSpeed = 2000;
-            startGame();
-        }
+        // Start the game
+        startGame();
     </script>
 </body>
 </html>
