@@ -3,78 +3,79 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Mi Minecraft JS</title>
+<title>MI MUNDO</title>
+<!-- Fuente de píxeles estilo Minecraft (si no carga, se usa una monoespaciada) -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
 <style>
+    :root { --pixel: 'Press Start 2P', 'Courier New', monospace; }
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; font-family: Arial, 'Segoe UI', sans-serif; user-select: none; }
-
+    html, body { width: 100%; height: 100%; overflow: hidden; background: #000; user-select: none; font-family: var(--pixel); }
     #game-container { width: 100%; height: 100%; }
     canvas { display: block; image-rendering: pixelated; }
 
     /* ---- Mira central ---- */
-    #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 26px; font-weight: bold; pointer-events: none; text-shadow: 0 0 3px #000; z-index: 10; }
+    #crosshair { position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #fff; font-size: 22px; pointer-events: none; text-shadow: 0 0 3px #000; z-index: 10; }
 
-    /* ---- HUD (bloque mirado + coordenadas) ---- */
-    #hud-info { position: fixed; top: 10px; right: 10px; background: rgba(0,0,0,0.55); color: #fff; padding: 10px 14px; border-radius: 6px; font-size: 13px; line-height: 1.7; z-index: 10; pointer-events: none; min-width: 200px; }
-    #block-name { font-weight: bold; color: #9f9; }
+    /* ---- Coordenadas (chip pequeño, arriba a la derecha) ---- */
+    #coords { position: fixed; top: 10px; right: 10px; font-size: 8px; line-height: 1; color: #fff; background: rgba(0, 0, 0, 0.42); padding: 7px 9px; border-radius: 4px; letter-spacing: 1px; z-index: 10; pointer-events: none; }
 
-    /* ---- Hotbar (9 slots) ---- */
-    #hotbar { position: fixed; bottom: 14px; left: 50%; transform: translateX(-50%); display: flex; gap: 4px; background: rgba(0,0,0,0.45); padding: 5px; border-radius: 6px; z-index: 10; }
-    .hotbar-slot { width: 48px; height: 48px; border: 2px solid #777; border-radius: 4px; position: relative; background: rgba(25,25,25,0.65); }
-    .hotbar-slot.active { border-color: #fff; box-shadow: 0 0 9px rgba(255,255,255,0.8); }
-    .block-preview { position: absolute; inset: 5px; border-radius: 2px; background-size: 100% 100%; image-rendering: pixelated; }
-    .slot-number { position: absolute; top: 0; left: 3px; font-size: 10px; color: #fff; text-shadow: 1px 1px 0 #000; }
+    /* ---- Aviso del bloque elegido (aparece y se desvanece) ---- */
+    #block-toast { position: fixed; bottom: 118px; left: 50%; transform: translateX(-50%); color: #fff; font-size: 10px; text-shadow: 2px 2px 0 #000; opacity: 0; transition: opacity 0.4s; z-index: 10; pointer-events: none; white-space: nowrap; }
+    #block-toast.show { opacity: 1; }
 
-    /* ---- Menú de inicio / pausa ---- */
-    #start-overlay { position: fixed; inset: 0; background: rgba(8, 14, 24, 0.88); display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 14px; z-index: 100; color: #fff; text-align: center; cursor: pointer; padding: 20px; }
-    #start-overlay h1 { font-size: 38px; letter-spacing: 2px; text-shadow: 3px 3px 0 #000; }
-    #start-overlay .big { font-size: 19px; color: #ffd94a; }
-    .controls { display: grid; grid-template-columns: auto auto; gap: 5px 16px; background: rgba(0,0,0,0.45); padding: 14px 22px; border-radius: 8px; font-size: 14px; text-align: left; }
-    .controls b { color: #9f9; text-align: right; }
+    /* ---- HUD inferior: barra de experiencia + hotbar ---- */
+    #bottom-hud { position: fixed; bottom: 12px; left: 50%; transform: translateX(-50%); z-index: 10; display: flex; flex-direction: column; align-items: center; gap: 5px; }
+    #xp-level { color: #80ff20; font-size: 11px; line-height: 1; text-shadow: 2px 2px 0 #000; }
+    #xp-bar { width: 480px; max-width: 90vw; height: 10px; background: #141414; border: 2px solid #000; border-radius: 3px; box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.18); overflow: hidden; }
+    #xp-fill { height: 100%; width: 0%; background: linear-gradient(#b6ff4e, #67d80c); transition: width 0.25s; }
+    #hotbar { display: flex; background: rgba(0, 0, 0, 0.5); border: 3px solid rgba(0, 0, 0, 0.55); border-radius: 6px; padding: 3px; }
+    .hotbar-slot { width: 50px; height: 50px; margin: 0 1px; position: relative; border: 2px solid rgba(255, 255, 255, 0.22); border-radius: 3px; background: rgba(20, 20, 20, 0.55); transition: transform 0.08s; }
+    .hotbar-slot.active { border-color: #fff; box-shadow: 0 0 0 2px #000, 0 0 10px rgba(255, 255, 255, 0.5); transform: scale(1.09); z-index: 1; }
+    .block-preview { position: absolute; inset: 6px; background-size: 100% 100%; image-rendering: pixelated; }
+    .slot-number { position: absolute; top: 1px; left: 3px; font-size: 7px; color: #eee; text-shadow: 1px 1px 0 #000; }
 
-    /* ---- Panel de texturas propias ---- */
-    #texture-panel { background: rgba(0,0,0,0.45); padding: 14px 22px; border-radius: 8px; max-width: 620px; font-size: 13px; cursor: default; line-height: 1.55; }
-    #texture-panel h3 { margin-bottom: 6px; color: #ffd94a; }
-    #texture-panel code { display: block; margin: 8px 0; color: #7fd0ff; font-size: 12px; }
-    #texture-panel button { background: #4a8f3c; color: #fff; border: none; padding: 8px 14px; border-radius: 4px; cursor: pointer; font-size: 14px; margin: 4px 6px 0 0; }
-    #texture-panel button:hover { filter: brightness(1.15); }
-    #texture-panel button.secondary { background: #666; }
-    #texture-status { margin-top: 8px; color: #9f9; min-height: 18px; font-size: 12px; }
+    /* ---- Muñeco del jugador (esquina superior izquierda) ---- */
+    #player-model { position: fixed; top: 10px; left: 10px; width: 150px; height: 190px; z-index: 150; pointer-events: none; }
+
+    /* ---- Menú limpio: el mundo gira detrás ---- */
+    #menu { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 24px; z-index: 100; background: rgba(160, 200, 255, 0.13); backdrop-filter: blur(2px); cursor: pointer; text-align: center; padding: 20px; }
+    body.menu-open #menu { display: flex; }
+    #menu h1 { color: #fff; font-size: clamp(26px, 6vw, 44px); letter-spacing: 4px; text-shadow: 4px 4px 0 #2c2c2c, 8px 8px 0 rgba(0, 0, 0, 0.25); }
+    #click-play { color: #ffff55; font-size: 13px; text-shadow: 2px 2px 0 #000; animation: pulse 1.6s infinite; }
+    @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+    #menu-hint { color: #fff; font-size: 8px; line-height: 2.1; background: rgba(0, 0, 0, 0.38); padding: 10px 16px; border-radius: 4px; }
+    #new-world-btn { font-family: var(--pixel); font-size: 9px; color: #fff; text-shadow: 1px 1px 0 #000; background: #6f6f6f; border: 2px solid #000; padding: 11px 16px; cursor: pointer; box-shadow: inset 0 3px 0 rgba(255, 255, 255, 0.28), inset 0 -4px 0 rgba(0, 0, 0, 0.35); }
+    #new-world-btn:hover { filter: brightness(1.15); }
+    #new-world-btn:disabled { opacity: 0.55; cursor: wait; }
+
+    /* ---- Ocultar el HUD mientras el menú está abierto ---- */
+    .hud { transition: opacity 0.25s; }
+    body.menu-open .hud { opacity: 0; pointer-events: none; }
 </style>
 </head>
-<body>
+<body class="menu-open">
 
 <div id="game-container"></div>
-<div id="crosshair">+</div>
+<div id="crosshair" class="hud">+</div>
+<div id="coords" class="hud">X 0 · Y 0 · Z 0</div>
+<div id="block-toast" class="hud"></div>
 
-<div id="hud-info">
-    <div id="block-name">Bloque: -</div>
-    <div id="coords">X: 0  Y: 0  Z: 0</div>
+<div id="bottom-hud" class="hud">
+    <div id="xp-level">0</div>
+    <div id="xp-bar"><div id="xp-fill"></div></div>
+    <div id="hotbar"></div>
 </div>
 
-<div id="hotbar"></div>
+<!-- Muñeco 3D del jugador (lo crea el juego con JavaScript) -->
+<div id="player-model"></div>
 
-<div id="start-overlay">
-    <h1>MI MINECRAFT JS</h1>
-    <p class="big">Haz clic en cualquier parte para jugar</p>
-    <div class="controls">
-        <b>W A S D</b><span>moverse</span>
-        <b>Espacio</b><span>saltar</span>
-        <b>Clic izquierdo</b><span>romper bloque</span>
-        <b>Clic derecho</b><span>colocar bloque</span>
-        <b>1-9 / rueda</b><span>elegir bloque</span>
-        <b>ESC</b><span>abrir este menú</span>
-    </div>
-    <div id="texture-panel">
-        <h3>Usa tus propias texturas</h3>
-        <p>El juego ya trae texturas dibujadas por sí mismo (por eso nunca se ve blanco).
-           Para usar las tuyas: guarda tus PNG con estos nombres exactos y cárgalos con el botón (ideal 16×16):</p>
-        <code>grass_top · grass_side · dirt · stone · log_side · log_top · leaves · netherrack · gold · iron · obsidian</code>
-        <button id="texture-btn">Cargar mis texturas (PNG)</button>
-        <button id="texture-reset" class="secondary">Restaurar las internas</button>
-        <input type="file" id="texture-input" accept="image/*" multiple hidden>
-        <p id="texture-status"></p>
-    </div>
+<div id="menu">
+    <h1>MI MUNDO</h1>
+    <p id="click-play">Haz clic en cualquier parte para jugar</p>
+    <p id="menu-hint">WASD moverse · ESPACIO saltar · CLIC IZQ romper · CLIC DER colocar<br>1-9 o RUEDA elegir bloque · X mano vacía · ESC volver aquí</p>
+    <button id="new-world-btn">Generar un mundo nuevo</button>
 </div>
 
 <!-- ================================================ -->
@@ -88,25 +89,45 @@
 'use strict';
 
 /* =====================================================================
-   1) TEXTURAS - dibujadas por el propio juego con canvas de 16x16.
-   NO dependen de internet -> los bloques NUNCA se ven blancos.
+   ██  APARTADO DE TEXTURAS — AQUÍ PONES LAS TUYAS  ██
 
-   ¿Quieres usar las TUYAS? Pulsa ESC dentro del juego y usa el botón
-   "Cargar mis texturas". Nombres válidos:
-   grass_top, grass_side, dirt, stone, log_side, log_top, leaves,
-   netherrack, gold, iron, obsidian
+   Escribe entre las comillas "" el link de tu imagen, por ejemplo:
+       dirt: "https://mi-web.com/tierra.png"
+   También funcionan imágenes en base64 (texto larguísimo que empieza
+   por "data:image/png;base64,..."). Ideal: PNG de 16x16 píxeles.
+
+   Si dejas las comillas vacías "", el juego usa su textura interna
+   (dibujada por él mismo, por eso NUNCA se ve blanco).
+   Nombres válidos (no cambiar las palabras de la izquierda):
    ===================================================================== */
-
-// (Opcional) Si tienes tus PNG subidos a internet, pon sus URLs aquí.
-// Si una URL falla, el juego sigue usando la textura interna.
-const CUSTOM_TEXTURE_URLS = {
-    // dirt: "https://ejemplo.com/mi_tierra.png"
+const TEXTURE_CONFIG = {
+    grass_top:  "",   // hierba, cara de arriba
+    grass_side: "",   // hierba, el lado con tierra
+    dirt:       "",   // tierra
+    stone:      "",   // piedra
+    log_side:   "",   // tronco, el lado
+    log_top:    "",   // tronco, arriba
+    leaves:     "",   // hojas del árbol
+    netherrack: "",   // piedra infernal
+    gold:       "",   // bloque de oro
+    iron:       "",   // bloque de hierro
+    obsidian:   ""    // obsidiana
 };
 
-// --- generador aleatorio con semilla (para que siempre se vea igual) ---
+/* --- generador aleatorio con semilla (texturas siempre iguales) --- */
 let _seed = 987654321;
 function rnd() { _seed = (_seed * 16807) % 2147483647; return (_seed - 1) / 2147483646; }
 function pick(arr) { return arr[Math.floor(rnd() * arr.length)]; }
+
+/* --- aleatorio con semilla para el MUNDO (cada semilla = otro mundo) --- */
+function mulberry32(a) {
+    return function () {
+        a |= 0; a = (a + 0x6D2B79F5) | 0;
+        let t = Math.imul(a ^ (a >>> 15), 1 | a);
+        t = (t + Math.imul(t ^ (t >>> 7), 61 | t)) ^ t;
+        return ((t ^ (t >>> 14)) >>> 0) / 4294967296;
+    };
+}
 
 function pixelCanvas(painter) {
     const c = document.createElement('canvas');
@@ -217,26 +238,14 @@ function getMaterials(key) {
     return materialCache[key];
 }
 
-/* URLs opcionales del objeto CUSTOM_TEXTURE_URLS */
-const urlLoader = new THREE.TextureLoader();
-Object.keys(CUSTOM_TEXTURE_URLS).forEach(texKey => {
-    if (!defaultTextures[texKey]) return;
-    urlLoader.load(CUSTOM_TEXTURE_URLS[texKey], tex => {
-        tex.magFilter = THREE.NearestFilter;
-        tex.minFilter = THREE.NearestFilter;
-        tex.generateMipmaps = false;
-        setMaterialTexture(texKey, tex);
-    }, undefined, function () { /* si falla, seguimos con la interna */ });
-});
-
 /* ===============================
    2) ESCENA, CÁMARA Y JUGADOR
    =============================== */
 const scene = new THREE.Scene();
 scene.background = new THREE.Color(0x87ceeb);
-scene.fog = new THREE.Fog(0x87ceeb, 60, 160);
+scene.fog = new THREE.Fog(0x87ceeb, 130, 420);   // en el menú se ve más lejos
 
-const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 400);
+const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 600);
 camera.rotation.order = 'YXZ';
 camera.position.set(0, 1.2, 0);   // altura de los ojos (cambia el 1.2 si quieres)
 
@@ -255,20 +264,37 @@ const sun = new THREE.DirectionalLight(0xffffff, 0.4);
 sun.position.set(60, 100, 40);
 scene.add(sun);
 
-/* ===============================
-   3) MUNDO 100x100 (InstancedMesh)
-   hierba arriba -> 3 tierra -> 5 piedra
-   =============================== */
-const WORLD_SIZE = 100, DIRT_LAYERS = 3, STONE_LAYERS = 5, TREE_COUNT = 35, PLACE_BUFFER = 1500;
-const worldMap = new Map();     // "x,y,z" -> {t: tipo, id: instancia}
+/* =======================================
+   3) MUNDO ALEATORIO (InstancedMesh)
+   La SEMILLA decide las colinas y los
+   árboles: otra semilla = otro mundo.
+   ======================================= */
+const WORLD_SIZE = 200, DIRT_LAYERS = 3, STONE_LAYERS = 5, TREE_COUNT = 140, PLACE_BUFFER = 3000;
+const WORLD_FLOOR = -14;   // la capa más profunda no necesita dibujarse por debajo
+const worldMap = new Map();        // "x,y,z" -> {t: tipo, id: instancia}
+const baseKeys = new Set();        // celdas que pertenecen al terreno generado
 const blockMeshes = {}, freeSlots = {}, usedCount = {};
 const blockGeo = new THREE.BoxGeometry(1, 1, 1);
+let isGenerating = false;
+
+let worldSeed = 1;                 // se fija al arrancar (o al crear un mundo nuevo)
 
 const _mat4 = new THREE.Matrix4(), _quat = new THREE.Quaternion();
 const _vec = new THREE.Vector3(), _one = new THREE.Vector3(1, 1, 1);
 const _zero = new THREE.Vector3(0.0001, 0.0001, 0.0001), _hidden = new THREE.Vector3(0, -10000, 0);
 
 function cellKey(x, y, z) { return x + ',' + y + ',' + z; }
+
+/* Altura del terreno con colinas suaves, decidida por la semilla */
+function terrainHeight(x, z) {
+    const a = (worldSeed % 628) / 100;
+    const b = (worldSeed % 314) / 100;
+    return Math.round(
+        Math.sin(x * 0.08 + a) * 2.2 +
+        Math.cos(z * 0.065 + b) * 2.2 +
+        Math.sin((x - z) * 0.045 + a + b) * 1.4
+    );
+}
 
 function createBlockMesh(type, capacity) {
     const mesh = new THREE.InstancedMesh(blockGeo, getMaterials(type), capacity);
@@ -284,6 +310,16 @@ function createBlockMesh(type, capacity) {
 function addBlock(type, x, y, z) {
     const k = cellKey(x, y, z);
     if (worldMap.has(k)) return;                   // ya ocupado: no sobrescribir
+    const rec = { t: type, id: -1, shown: false }; // shown = tiene dibujo en pantalla
+    worldMap.set(k, rec);
+    if (isGenerating) baseKeys.add(k);             // apunta qué es terreno original
+    else showBlock(rec, x, y, z);
+}
+
+/* Le da instancia (dibujo) a un bloque que aún no la tiene */
+function showBlock(rec, x, y, z) {
+    if (rec.shown) return;
+    const type = rec.t;
     let id;
     if (freeSlots[type].length) id = freeSlots[type].pop();   // reciclar huecos
     else {
@@ -296,7 +332,16 @@ function addBlock(type, x, y, z) {
     _mat4.compose(_vec, _quat, _one);
     blockMeshes[type].setMatrixAt(id, _mat4);
     blockMeshes[type].instanceMatrix.needsUpdate = true;
-    worldMap.set(k, { t: type, id: id });
+    rec.id = id;
+    rec.shown = true;
+}
+
+/* Al romper un bloque, los vecinos enterrados que quedan al aire aparecen */
+function revealNeighbors(x, y, z) {
+    [[1, 0, 0], [-1, 0, 0], [0, 1, 0], [0, -1, 0], [0, 0, 1], [0, 0, -1]].forEach(function (d) {
+        const rec = worldMap.get(cellKey(x + d[0], y + d[1], z + d[2]));
+        if (rec && !rec.shown) showBlock(rec, x + d[0], y + d[1], z + d[2]);
+    });
 }
 
 function removeBlock(x, y, z) {
@@ -304,61 +349,101 @@ function removeBlock(x, y, z) {
     const rec = worldMap.get(k);
     if (!rec) return null;
     worldMap.delete(k);                            // deja de existir (colisión y rayo lo ignoran)
-    _mat4.compose(_hidden, _quat, _zero);          // la instancia se esconde (escala ~0)
-    blockMeshes[rec.t].setMatrixAt(rec.id, _mat4);
-    blockMeshes[rec.t].instanceMatrix.needsUpdate = true;
-    freeSlots[rec.t].push(rec.id);
+    if (rec.shown) {
+        _mat4.compose(_hidden, _quat, _zero);      // la instancia se esconde (escala ~0)
+        blockMeshes[rec.t].setMatrixAt(rec.id, _mat4);
+        blockMeshes[rec.t].instanceMatrix.needsUpdate = true;
+        freeSlots[rec.t].push(rec.id);
+    }
+    revealNeighbors(x, y, z);
     return rec.t;
 }
 
-function randomInt(min, max) { return Math.floor(Math.random() * (max - min + 1)) + min; }
+/* Borra todas las mallas del mundo (para crear uno nuevo) */
+function clearWorldMeshes() {
+    Object.keys(blockMeshes).forEach(function (t) {
+        scene.remove(blockMeshes[t]);
+        if (blockMeshes[t].dispose) blockMeshes[t].dispose();
+        delete blockMeshes[t];
+    });
+    Object.keys(freeSlots).forEach(k => { delete freeSlots[k]; });
+    Object.keys(usedCount).forEach(k => { delete usedCount[k]; });
+    worldMap.clear();
+    baseKeys.clear();
+}
+
+function solidCell(x, y, z) {
+    if (y < WORLD_FLOOR) return true;              // debajo del mundo: relleno virtual
+    return worldMap.has(cellKey(x, y, z));
+}
+
+/* Un bloque "se ve" si tiene alguna cara tocando el aire */
+function isExposed(x, y, z) {
+    return !solidCell(x + 1, y, z) || !solidCell(x - 1, y, z) ||
+           !solidCell(x, y + 1, z) || !solidCell(x, y - 1, z) ||
+           !solidCell(x, y, z + 1) || !solidCell(x, y, z - 1);
+}
 
 function buildWorld() {
     const h = WORLD_SIZE / 2;
-    createBlockMesh('grass',    WORLD_SIZE * WORLD_SIZE + PLACE_BUFFER);
-    createBlockMesh('dirt',     WORLD_SIZE * WORLD_SIZE * DIRT_LAYERS + PLACE_BUFFER);
-    createBlockMesh('stone',    WORLD_SIZE * WORLD_SIZE * STONE_LAYERS + PLACE_BUFFER);
-    createBlockMesh('wood',     TREE_COUNT * 4 + PLACE_BUFFER);
-    createBlockMesh('leaves',   TREE_COUNT * 50 + PLACE_BUFFER);
-    ['red', 'gold', 'silver', 'obsidian'].forEach(t => createBlockMesh(t, PLACE_BUFFER));
-
+    isGenerating = true;
     for (let x = -h; x < h; x++) {
         for (let z = -h; z < h; z++) {
-            addBlock('grass', x, -1, z);                                     // capa de hierba (superficie en y=0)
-            for (let d = 0; d < DIRT_LAYERS; d++)  addBlock('dirt',  x, -2 - d, z);                    // 3 de tierra
-            for (let s = 0; s < STONE_LAYERS; s++) addBlock('stone', x, -2 - DIRT_LAYERS - s, z);      // 5 de piedra
+            const g = terrainHeight(x, z);         // colinas según la semilla
+            addBlock('grass', x, g, z);                                        // superficie de hierba
+            for (let d = 1; d <= DIRT_LAYERS; d++)  addBlock('dirt',  x, g - d, z);              // 3 de tierra
+            for (let s = 1; s <= STONE_LAYERS; s++) addBlock('stone', x, g - DIRT_LAYERS - s, z); // 5 de piedra
         }
     }
     plantTrees();
+    isGenerating = false;
+    // TRUCO DE RENDIMIENTO: el mapa es 4 veces más grande, pero solo se
+    // dibujan los bloques que tienen una cara al aire. El resto vive en
+    // worldMap (para colisión) sin gastar dibujo, y aparecen solos al
+    // romper el bloque que los tapa (revealNeighbors).
+    const visible = {};
+    worldMap.forEach(function (rec, k) {
+        const p = k.split(',');
+        const x = +p[0], y = +p[1], z = +p[2];
+        if (isExposed(x, y, z)) (visible[rec.t] = visible[rec.t] || []).push([x, y, z, rec]);
+    });
+    ['grass', 'dirt', 'stone', 'wood', 'leaves', 'red', 'gold', 'silver', 'obsidian'].forEach(function (t) {
+        createBlockMesh(t, (visible[t] ? visible[t].length : 0) + PLACE_BUFFER);
+    });
+    Object.keys(visible).forEach(function (t) {
+        visible[t].forEach(function (a) { showBlock(a[3], a[0], a[1], a[2]); });
+    });
 }
 
 function plantTrees() {
+    const rng = mulberry32((worldSeed ^ 0x51ab3f) >>> 0);   // árboles también según la semilla
     const h = WORLD_SIZE / 2;
     const trunks = [];
     let tries = 0;
-    while (trunks.length < TREE_COUNT && tries < 3000) {
+    while (trunks.length < TREE_COUNT && tries < 12000) {
         tries++;
-        const tx = randomInt(-h + 4, h - 5);
-        const tz = randomInt(-h + 4, h - 5);
+        const tx = Math.floor(rng() * (WORLD_SIZE - 9)) - h + 4;
+        const tz = Math.floor(rng() * (WORLD_SIZE - 9)) - h + 4;
         if (Math.abs(tx) < 4 && Math.abs(tz) < 4) continue;    // dejar libre la zona de aparición
         let clear = true;
         for (const t of trunks) if (Math.abs(t.x - tx) < 7 && Math.abs(t.z - tz) < 7) { clear = false; break; }
         if (!clear) continue;
         trunks.push({ x: tx, z: tz });
 
-        for (let y = 0; y < 4; y++) addBlock('wood', tx, y, tz);          // tronco de 4
-        for (let dx = -2; dx <= 2; dx++) {                                // copa ancha (y=2)
+        const g = terrainHeight(tx, tz);
+        for (let y = 1; y <= 4; y++) addBlock('wood', tx, g + y, tz);       // tronco de 4
+        for (let dx = -2; dx <= 2; dx++) {                                  // copa ancha
             for (let dz = -2; dz <= 2; dz++) {
-                if (Math.abs(dx) === 2 && Math.abs(dz) === 2) continue;   // esquinas fuera
-                if (dx !== 0 || dz !== 0) addBlock('leaves', tx + dx, 2, tz + dz);
+                if (Math.abs(dx) === 2 && Math.abs(dz) === 2) continue;     // esquinas fuera
+                if (dx !== 0 || dz !== 0) addBlock('leaves', tx + dx, g + 3, tz + dz);
             }
         }
-        for (let dx = -2; dx <= 2; dx++) {                                // copa media en rombo (y=3)
+        for (let dx = -2; dx <= 2; dx++) {                                  // copa media en rombo
             for (let dz = -2; dz <= 2; dz++) {
-                if (Math.abs(dx) + Math.abs(dz) <= 2 && !(dx === 0 && dz === 0)) addBlock('leaves', tx + dx, 3, tz + dz);
+                if (Math.abs(dx) + Math.abs(dz) <= 2 && !(dx === 0 && dz === 0)) addBlock('leaves', tx + dx, g + 4, tz + dz);
             }
         }
-        [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(p => addBlock('leaves', tx + p[0], 4, tz + p[1])); // corona
+        [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(p => addBlock('leaves', tx + p[0], g + 5, tz + p[1])); // corona
     }
 }
 
@@ -397,8 +482,11 @@ function raycastBlock() {
 
 /* ===================================
    5) ROMPER Y COLOCAR (con anti-atasco)
+   Cada cambio se apunta en worldChanges
+   para el AUTOGUARDADO, y romper da XP.
    =================================== */
 const PLAYER_HALF = 0.3, PLAYER_HEIGHT = 1.8;
+let worldChanges = {};     // "x,y,z" -> -1 (se rompió terreno base) | número de slot (bloque colocado)
 
 function blockTouchesPlayer(x, y, z) {
     const p = player.position;
@@ -410,8 +498,14 @@ function blockTouchesPlayer(x, y, z) {
 function breakBlock() {
     const hit = raycastBlock();
     if (!hit) return;
+    const k = cellKey(hit.x, hit.y, hit.z);
     const type = removeBlock(hit.x, hit.y, hit.z);
-    if (type) { spawnParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, PARTICLE_COLORS[type]); swingHand(); }
+    if (!type) return;
+    if (baseKeys.has(k)) worldChanges[k] = -1;   // era terreno original: quedó eliminado
+    else delete worldChanges[k];                 // era colocado por ti: vuelve a estar vacío
+    spawnParticles(hit.x + 0.5, hit.y + 0.5, hit.z + 0.5, PARTICLE_COLORS[type] || 0x888888);
+    swingHand();
+    addXP(XP_VALUES[type] || 1);                 // romper bloques da experiencia
 }
 
 function placeBlock() {
@@ -419,12 +513,15 @@ function placeBlock() {
     if (!hit || (hit.nx === 0 && hit.ny === 0 && hit.nz === 0)) return;
     const x = hit.x + hit.nx, y = hit.y + hit.ny, z = hit.z + hit.nz;
     const h = WORLD_SIZE / 2;
-    if (x < -h || x >= h || z < -h || z >= h) return;                       // fuera del mapa
-    if (y < -(1 + DIRT_LAYERS + STONE_LAYERS) || y > 40) return;            // límites verticales
+    if (x < -h || x >= h || z < -h || z >= h) return;      // fuera del mapa
+    if (y < -20 || y > 40) return;                         // límites verticales
     if (worldMap.has(cellKey(x, y, z))) return;
-    if (blockTouchesPlayer(x, y, z)) return;                                // ANTI-ATASCO
+    if (blockTouchesPlayer(x, y, z)) return;               // ANTI-ATASCO
+    if (handEmpty) { showToast('Tienes la mano vacía (pulsa X)'); return; }
     addBlock(BLOCK_DEFS[selectedSlot].key, x, y, z);
+    worldChanges[cellKey(x, y, z)] = selectedSlot;
     swingHand();
+    saveGame();
 }
 
 /* ===============================
@@ -474,6 +571,7 @@ function updateParticles(delta) {
         p.pts.material.opacity = Math.min(1, p.life / 0.35);
     }
 }
+
 /* ===============================
    7) MANO EN PRIMERA PERSONA
    (lado derecho, sostiene el bloque)
@@ -497,7 +595,9 @@ function updateHeldBlock() {
     if (heldMesh) {
         hand.remove(heldMesh);
         heldMesh.geometry.dispose();          // los materiales están en caché, NO se eliminan
+        heldMesh = null;
     }
+    if (handEmpty) return;                    // mano vacía (tecla X)
     const def = BLOCK_DEFS[selectedSlot];
     heldMesh = new THREE.Mesh(new THREE.BoxGeometry(0.4, 0.4, 0.4), getMaterials(def.key));
     heldMesh.position.set(0, 0.12, -0.25);
@@ -527,7 +627,7 @@ function buildClouds() {
     const cloudMat = new THREE.MeshBasicMaterial({ color: 0xffffff, transparent: true, opacity: 0.85 });
     for (let i = 0; i < 12; i++) {
         const c = new THREE.Mesh(new THREE.BoxGeometry(6 + Math.random() * 10, 0.5, 4 + Math.random() * 8), cloudMat);
-        c.position.set((Math.random() - 0.5) * 260, 24 + Math.random() * 6, (Math.random() - 0.5) * 260);
+        c.position.set((Math.random() - 0.5) * 420, 26 + Math.random() * 8, (Math.random() - 0.5) * 420);
         scene.add(c);
         clouds.push(c);
     }
@@ -535,7 +635,7 @@ function buildClouds() {
 function updateClouds(delta) {
     for (const c of clouds) {
         c.position.x += 1.5 * delta;
-        if (c.position.x > 140) c.position.x = -140;
+        if (c.position.x > 230) c.position.x = -230;
     }
 }
 
@@ -610,7 +710,8 @@ function updatePhysics(delta) {
 }
 
 function respawn() {
-    player.position.set(0.5, 0, 0.5);
+    const g = terrainHeight(0, 0);
+    player.position.set(0.5, g + 1, 0.5);       // sobre la hierba del centro
     velocity.set(0, 0, 0);
 }
 
@@ -619,7 +720,9 @@ function respawn() {
    ======================================= */
 const SENSITIVITY = 0.0022;
 let isLocked = false;
+let inMenu = true;             // el menú está abierto al arrancar
 let selectedSlot = 0;
+let handEmpty = false;         // tecla X: jugar sin bloque en la mano
 
 document.addEventListener('mousemove', function (e) {
     if (!isLocked) return;
@@ -637,6 +740,12 @@ document.addEventListener('keydown', function (e) {
         case 'KeyA': case 'ArrowLeft':  input.left = true;     break;   // A = IZQUIERDA
         case 'KeyD': case 'ArrowRight': input.right = true;    break;   // D = DERECHA
         case 'Space': input.jump = true; e.preventDefault();   break;
+        case 'KeyX':                                       // mano vacía / con bloque
+            handEmpty = !handEmpty;
+            updateHeldBlock();
+            updateModelHeldBlock();
+            showToast(handEmpty ? 'Mano vacía' : BLOCK_DEFS[selectedSlot].name);
+            break;
         default:
             if (e.code.indexOf('Digit') === 0) {
                 const n = parseInt(e.code.slice(5), 10);
@@ -671,81 +780,208 @@ window.addEventListener('wheel', function (e) {
     selectSlot((selectedSlot + (e.deltaY > 0 ? 1 : -1) + 9) % 9);
 });
 
-/* ---- Bloqueo del ratón (Pointer Lock) ---- */
-const overlay = document.getElementById('start-overlay');
-overlay.addEventListener('click', function (e) {
-    if (e.target.closest('#texture-panel')) return;   // los clics en el panel NO abren el juego
+/* ---- Menú y bloqueo del ratón (Pointer Lock) ---- */
+const menuEl = document.getElementById('menu');
+menuEl.addEventListener('click', function (e) {
+    if (!booted) return;                               // aún se está generando el mundo
+    if (e.target.closest('#new-world-btn')) return;    // el botón NO arranca la partida
     const p = renderer.domElement.requestPointerLock();
     if (p && p.catch) p.catch(function () {});
 });
 document.addEventListener('pointerlockchange', function () {
     isLocked = document.pointerLockElement === renderer.domElement;
-    overlay.style.display = isLocked ? 'none' : 'flex';
-    if (!isLocked) clearInput();
+    if (isLocked) {
+        inMenu = false;
+        // volver EXACTAMENTE a donde estabas jugando
+        if (savedPlayState) {
+            player.position.fromArray(savedPlayState.pos);
+            player.rotation.y = savedPlayState.yaw;
+            camera.rotation.x = savedPlayState.pitch;
+            velocity.set(0, 0, 0);
+            savedPlayState = null;
+        }
+        document.body.classList.remove('menu-open');
+        scene.fog.near = 60; scene.fog.far = 160;      // niebla de juego
+    } else {
+        inMenu = true;
+        capturePlayState();                            // recuerda tu posición de juego
+        document.body.classList.add('menu-open');
+        clearInput();
+        saveGame();                                    // guardar al salir al menú
+        scene.fog.near = 130; scene.fog.far = 420;     // niebla amplia para la vista del menú
+    }
 });
 document.addEventListener('pointerlockerror', function () {
-    document.getElementById('texture-status').textContent =
-        'El navegador bloqueó el clic. Espera 1 segundo y vuelve a intentar.';
+    const el = document.getElementById('click-play');
+    el.textContent = 'Espera 1 segundo y vuelve a hacer clic';
+    setTimeout(function () { el.textContent = 'Haz clic para jugar'; }, 1800);
 });
 
-/* =======================================
-   11) TEXTURAS DEL USUARIO (desde tu PC)
-   ======================================= */
-function normalizeTexName(fileName) {
-    return fileName.toLowerCase().replace(/\.[^.]+$/, '').replace(/[\s-]+/g, '_');
+/* ===========================================
+   11) MUÑECO DEL JUGADOR (esquina superior izq.)
+   Es tu cuerpo en 3D, en un mini-render propio.
+   Camina, gira, salta, golpea y muestra el
+   bloque que llevas en la mano (o mano vacía).
+   =========================================== */
+const MODEL_W = 150, MODEL_H = 190;
+const modelRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
+modelRenderer.setSize(MODEL_W, MODEL_H);
+modelRenderer.setClearColor(0x000000, 0);          // fondo transparente
+modelRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+document.getElementById('player-model').appendChild(modelRenderer.domElement);
+
+const modelScene = new THREE.Scene();
+modelScene.add(new THREE.AmbientLight(0xffffff, 0.9));
+const modelSun = new THREE.DirectionalLight(0xffffff, 0.45);
+modelSun.position.set(2, 3, 4);
+modelScene.add(modelSun);
+const modelCam = new THREE.PerspectiveCamera(32, MODEL_W / MODEL_H, 0.1, 50);
+modelCam.position.set(0, 1.0, 3.2);
+modelCam.lookAt(0, 0.85, 0);
+
+/* --- piel estilo Steve, dibujada con canvas --- */
+const U = 0.052;                                   // 1 "píxel" del muñeco
+function skinTex(w, h, painter) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    painter(c.getContext('2d'));
+    const t = new THREE.CanvasTexture(c);
+    t.magFilter = THREE.NearestFilter;
+    t.minFilter = THREE.NearestFilter;
+    t.generateMipmaps = false;
+    return t;
+}
+const SKIN = '#c98f6b', SKIN2 = '#bd8159', HAIR = '#3b2416', SHIRT = '#00a8a8', SHIRT2 = '#008f8f', PANTS = '#3d44a5', SHOE = '#565656';
+function speck(ctx, w, h, cols, n) {
+    for (let i = 0; i < n; i++) {
+        ctx.fillStyle = pick(cols);
+        ctx.fillRect(Math.floor(rnd() * w), Math.floor(rnd() * h), 1, 1);
+    }
+}
+const faceTex = skinTex(8, 8, function (ctx) {
+    ctx.fillStyle = SKIN; ctx.fillRect(0, 0, 8, 8);
+    speck(ctx, 8, 8, [SKIN2], 8);
+    ctx.fillStyle = HAIR; ctx.fillRect(0, 0, 8, 2); ctx.fillRect(0, 2, 1, 1); ctx.fillRect(7, 2, 1, 1);
+    ctx.fillStyle = '#ffffff'; ctx.fillRect(1, 4, 1, 1); ctx.fillRect(6, 4, 1, 1);   // blanco de los ojos
+    ctx.fillStyle = '#4a3d8f'; ctx.fillRect(2, 4, 1, 1); ctx.fillRect(5, 4, 1, 1);   // pupilas
+    ctx.fillStyle = SKIN2;     ctx.fillRect(3, 5, 2, 1);                             // nariz
+    ctx.fillStyle = '#8d5542'; ctx.fillRect(3, 6, 2, 1);                             // boca
+});
+const scalpTex = skinTex(8, 8, function (ctx) {
+    ctx.fillStyle = SKIN; ctx.fillRect(0, 0, 8, 8);
+    speck(ctx, 8, 8, [SKIN2], 10);
+    ctx.fillStyle = HAIR; ctx.fillRect(0, 0, 8, 3);
+});
+const hairTex = skinTex(8, 8, function (ctx) {
+    ctx.fillStyle = HAIR; ctx.fillRect(0, 0, 8, 8);
+});
+const bodyTexM = skinTex(8, 12, function (ctx) {
+    ctx.fillStyle = SHIRT; ctx.fillRect(0, 0, 8, 12);
+    speck(ctx, 8, 12, [SHIRT2], 16);
+});
+const armTexM = skinTex(4, 12, function (ctx) {
+    ctx.fillStyle = SHIRT; ctx.fillRect(0, 0, 4, 3);      // manga
+    ctx.fillStyle = SKIN;  ctx.fillRect(0, 3, 4, 9);
+    speck(ctx, 4, 12, [SKIN2, SHIRT2], 8);
+});
+const legTexM = skinTex(4, 12, function (ctx) {
+    ctx.fillStyle = PANTS; ctx.fillRect(0, 0, 4, 12);
+    ctx.fillStyle = SHOE;  ctx.fillRect(0, 10, 4, 2);
+    speck(ctx, 4, 10, ['#343b93'], 5);
+});
+function lam(t) { return new THREE.MeshLambertMaterial({ map: t }); }
+
+const modelGroup = new THREE.Group();
+modelScene.add(modelGroup);
+
+// cabeza: la CARA mira hacia -z, igual que el jugador
+const headPivot = new THREE.Group();
+headPivot.position.set(0, 24 * U, 0);
+const headMesh = new THREE.Mesh(
+    new THREE.BoxGeometry(8 * U, 8 * U, 8 * U),
+    [lam(scalpTex), lam(scalpTex), lam(hairTex), lam(scalpTex), lam(scalpTex), lam(faceTex)]
+);
+headMesh.position.set(0, 4 * U, 0);
+headPivot.add(headMesh);
+modelGroup.add(headPivot);
+
+// torso
+const torsoMesh = new THREE.Mesh(new THREE.BoxGeometry(8 * U, 12 * U, 4 * U), lam(bodyTexM));
+torsoMesh.position.set(0, 18 * U, 0);
+modelGroup.add(torsoMesh);
+
+// brazos (pivote en el hombro, para que cuelguen bien)
+function buildArm(side) {
+    const pivot = new THREE.Group();
+    pivot.position.set(side * 6 * U, 22 * U, 0);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(4 * U, 12 * U, 4 * U), lam(armTexM));
+    m.position.set(0, -4 * U, 0);
+    pivot.add(m);
+    modelGroup.add(pivot);
+    return pivot;
+}
+const armL = buildArm(-1), armR = buildArm(1);
+
+// piernas (pivote en la cadera)
+function buildLeg(side) {
+    const pivot = new THREE.Group();
+    pivot.position.set(side * 2 * U, 12 * U, 0);
+    const m = new THREE.Mesh(new THREE.BoxGeometry(4 * U, 12 * U, 4 * U), lam(legTexM));
+    m.position.set(0, -6 * U, 0);
+    pivot.add(m);
+    modelGroup.add(pivot);
+    return pivot;
+}
+const legL = buildLeg(-1), legR = buildLeg(1);
+
+// bloque en la mano derecha del muñeco
+let modelHeld = null;
+function updateModelHeldBlock() {
+    if (modelHeld) { armR.remove(modelHeld); modelHeld = null; }
+    if (handEmpty) return;                    // se ve la mano vacía
+    modelHeld = new THREE.Mesh(blockGeo, getMaterials(BLOCK_DEFS[selectedSlot].key));
+    modelHeld.scale.set(4 * U, 4 * U, 4 * U);
+    modelHeld.position.set(0, -10 * U, -2 * U);   // delante de la mano, hacia la cámara
+    modelHeld.rotation.y = Math.PI / 5;
+    armR.add(modelHeld);
 }
 
-function applyUserTexture(texKey, dataURL) {
-    const img = new Image();
-    img.onload = function () {
-        const tex = new THREE.Texture(img);
-        tex.magFilter = THREE.NearestFilter;
-        tex.minFilter = THREE.NearestFilter;
-        tex.generateMipmaps = false;
-        tex.needsUpdate = true;
-        setMaterialTexture(texKey, tex);
-        refreshPreviews();
-    };
-    img.src = dataURL;
+let walkPhase = 0, modelSpin = 0;
+function updatePlayerModel(delta) {
+    if (inMenu) {
+        // en el menú gira despacio, como la pantalla de título
+        modelSpin += delta * 0.7;
+        modelGroup.rotation.y = modelSpin;
+        headPivot.rotation.x = Math.sin(modelSpin * 0.8) * 0.12;
+        headPivot.rotation.y = 0;
+        const sway = Math.sin(modelSpin * 1.4) * 0.06;
+        armL.rotation.x = sway; armR.rotation.x = -sway;
+        legL.rotation.x = 0; legR.rotation.x = 0;
+        return;
+    }
+    // dentro del juego: copia lo que haces
+    modelGroup.rotation.y = Math.PI;   // SIEMPRE de frente: su cara te mira, jamás gira
+    headPivot.rotation.x = Math.max(-0.7, Math.min(0.7, camera.rotation.x * 0.9));  // la cabeza mira arriba/abajo
+    headPivot.rotation.y = 0;
+    const speed = Math.hypot(velocity.x, velocity.z);
+    const swing = swingT < 0.3 ? Math.sin((swingT / 0.3) * Math.PI) : 0;
+    if (onGround) {
+        if (speed > 0.4) walkPhase += delta * (4 + speed * 2.2);
+        const amp = Math.min(1, speed / 4.5) * 0.8;
+        legL.rotation.x = Math.sin(walkPhase) * amp;
+        legR.rotation.x = -Math.sin(walkPhase) * amp;
+        armL.rotation.x = -Math.sin(walkPhase) * amp * 0.75;
+        armR.rotation.x = swing > 0 ? swing * 1.9 : Math.sin(walkPhase) * amp * 0.75;
+    } else {
+        // pose de salto
+        legL.rotation.x = 0.45; legR.rotation.x = -0.45;
+        armL.rotation.x = -0.5;
+        armR.rotation.x = swing > 0 ? swing * 1.9 : -0.5;
+    }
 }
 
-const texInput = document.getElementById('texture-input');
-texInput.addEventListener('change', function () {
-    const files = Array.from(texInput.files);
-    if (!files.length) return;
-    const ok = [], bad = [];
-    files.forEach(function (f) {
-        const key = normalizeTexName(f.name);
-        if (matBindings[key]) {
-            const r = new FileReader();
-            r.onload = function (ev) { applyUserTexture(key, ev.target.result); };
-            r.readAsDataURL(f);
-            ok.push(key);
-        } else bad.push(f.name);
-    });
-    let msg = '';
-    if (ok.length) msg += 'Cargadas: ' + ok.join(', ');
-    if (bad.length) msg += (ok.length ? ' | ' : '') + 'Nombres no válidos: ' + bad.join(', ');
-    document.getElementById('texture-status').textContent = msg || 'No se reconoció ningún archivo.';
-    texInput.value = '';
-});
-
-document.getElementById('texture-btn').addEventListener('click', function (e) {
-    e.stopPropagation();
-    texInput.click();
-});
-
-document.getElementById('texture-reset').addEventListener('click', function (e) {
-    e.stopPropagation();
-    TEX_KEYS.forEach(k => setMaterialTexture(k, defaultTextures[k]));
-    refreshPreviews();
-    document.getElementById('texture-status').textContent = 'Texturas internas restauradas.';
-});
-
-document.getElementById('texture-panel').addEventListener('click', function (e) { e.stopPropagation(); });
-
 /* =======================================
-   12) HOTBAR Y HUD
+   12) HUD: HOTBAR, EXPERIENCIA Y COORDENADAS
    ======================================= */
 const hotbarEl = document.getElementById('hotbar');
 const slotEls = [];
@@ -769,22 +1005,47 @@ function refreshPreviews() {
     });
 }
 
+/* ---- aviso temporal (nombre de bloque, nivel, avisos) ---- */
+const toastEl = document.getElementById('block-toast');
+let toastTimer = null;
+function showToast(txt) {
+    toastEl.textContent = txt;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 1500);
+}
+
+/* ---- experiencia: romper bloques da XP, al llenar subes de nivel ---- */
+let xpLevel = 0, xpCur = 0;
+function xpNeeded(level) { return 10 + level * 5; }
+const XP_VALUES = { grass: 1, dirt: 1, stone: 2, wood: 1, leaves: 1, red: 1, gold: 4, silver: 3, obsidian: 5 };
+function addXP(n) {
+    xpCur += n;
+    let leveled = false;
+    while (xpCur >= xpNeeded(xpLevel)) { xpCur -= xpNeeded(xpLevel); xpLevel++; leveled = true; }
+    updateXPUI();
+    if (leveled) showToast('¡Nivel ' + xpLevel + '!');
+    saveGame();
+}
+function updateXPUI() {
+    document.getElementById('xp-fill').style.width = Math.min(100, (xpCur / xpNeeded(xpLevel)) * 100) + '%';
+    document.getElementById('xp-level').textContent = xpLevel;
+}
+
 function selectSlot(i) {
     selectedSlot = i;
     slotEls.forEach(function (el, idx) { el.classList.toggle('active', idx === i); });
     updateHeldBlock();
+    updateModelHeldBlock();
+    showToast(handEmpty ? 'Mano vacía' : BLOCK_DEFS[i].name);
+    saveGame();
 }
 
-const blockNameEl = document.getElementById('block-name');
 const coordsEl = document.getElementById('coords');
-let lastBlockLabel = '', lastCoords = '';
-
-function updateHUD(hit) {
-    const def = hit ? BLOCK_DEFS.find(b => b.key === hit.type) : null;
-    const label = def ? def.name : '-';
-    if (label !== lastBlockLabel) { blockNameEl.textContent = 'Bloque: ' + label; lastBlockLabel = label; }
+let lastCoords = '';
+function updateHUD() {
     const p = player.position;
-    const c = 'X: ' + p.x.toFixed(1) + '  Y: ' + p.y.toFixed(1) + '  Z: ' + p.z.toFixed(1);
+    const c = 'X ' + Math.round(p.x) + ' · Y ' + Math.round(p.y) + ' · Z ' + Math.round(p.z);
     if (c !== lastCoords) { coordsEl.textContent = c; lastCoords = c; }
 }
 
@@ -794,27 +1055,195 @@ window.addEventListener('resize', function () {
     renderer.setSize(window.innerWidth, window.innerHeight);
 });
 
+/* =======================================
+   13) AUTOGUARDADO (localStorage)
+   Guarda la semilla del mundo, los bloques
+   rotos/colocados, tu posición, nivel de XP,
+   el slot y la mano. Vuelve solo al abrir.
+   ======================================= */
+const SAVE_KEY = 'mi-mundo-guardado-v1';
+let savedPlayState = null;   // posición de juego mientras estás en el menú
+
+function saveGame(force) {
+    try {
+        if (inMenu && !savedPlayState && !force) return;   // aún no hay partida que guardar
+        const st = savedPlayState || { pos: player.position.toArray(), yaw: player.rotation.y, pitch: camera.rotation.x };
+        localStorage.setItem(SAVE_KEY, JSON.stringify({
+            v: 1,
+            seed: worldSeed,
+            changes: worldChanges,
+            pos: st.pos,
+            yaw: st.yaw,
+            pitch: st.pitch,
+            slot: selectedSlot,
+            handEmpty: handEmpty,
+            xp: { level: xpLevel, cur: xpCur }
+        }));
+    } catch (err) { /* almacenamiento lleno o bloqueado: el juego sigue */ }
+}
+
+function loadSave() {
+    try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return null;
+        const d = JSON.parse(raw);
+        return (d && typeof d.seed === 'number') ? d : null;
+    } catch (err) { return null; }
+}
+
+/* Vuelve a poner los bloques guardados sobre el terreno generado */
+function applyChanges() {
+    Object.keys(worldChanges).forEach(function (k) {
+        const v = worldChanges[k];
+        const p = k.split(',');
+        const x = +p[0], y = +p[1], z = +p[2];
+        if (v === -1) { removeBlock(x, y, z); return; }
+        const def = BLOCK_DEFS[v];
+        if (!def) return;
+        removeBlock(x, y, z);
+        addBlock(def.key, x, y, z);
+    });
+}
+
+/* Borra TODO y genera otro mundo distinto y aleatorio */
+function createNewWorld() {
+    try { localStorage.removeItem(SAVE_KEY); } catch (err) {}
+    worldSeed = Math.floor(Math.random() * 2147483646) + 1;
+    worldChanges = {};
+    xpLevel = 0; xpCur = 0;
+    handEmpty = false;
+    clearWorldMeshes();
+    buildWorld();
+    respawn();
+    player.rotation.y = 0;
+    camera.rotation.x = 0;
+    capturePlayState();
+    updateXPUI();
+    updateHeldBlock();
+    updateModelHeldBlock();
+    showToast('Mundo nuevo creado');
+    saveGame(true);
+}
+
+/* Guardar al cerrar la pestaña, al cambiar de pestaña y cada 10 segundos */
+window.addEventListener('beforeunload', function () { saveGame(); });
+document.addEventListener('visibilitychange', function () { if (document.hidden) saveGame(); });
+setInterval(saveGame, 10000);
+
+/* Recuerda la posición de juego (para restaurarla al volver del menú) */
+function capturePlayState() {
+    savedPlayState = { pos: player.position.toArray(), yaw: player.rotation.y, pitch: camera.rotation.x };
+}
+
+/* --- aplica las texturas que pusiste en TEXTURE_CONFIG (arriba) --- */
+function applyTextureConfig() {
+    const keys = Object.keys(TEXTURE_CONFIG);
+    if (!keys.some(k => TEXTURE_CONFIG[k])) return;
+    const loader = new THREE.TextureLoader();
+    loader.setCrossOrigin('anonymous');
+    keys.forEach(function (k) {
+        const url = TEXTURE_CONFIG[k];
+        if (!url || !matBindings[k]) return;
+        loader.load(url, function (tex) {
+            tex.magFilter = THREE.NearestFilter;
+            tex.minFilter = THREE.NearestFilter;
+            tex.generateMipmaps = false;
+            setMaterialTexture(k, tex);
+            refreshPreviews();
+        }, undefined, function () {
+            console.warn('No se pudo cargar la textura "' + k + '" desde: ' + url);
+        });
+    });
+}
+
+/* --- botón "Generar un mundo nuevo": 1 clic = mundo aleatorio y a jugar --- */
+const nwBtn = document.getElementById('new-world-btn');
+nwBtn.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!booted || nwBtn.disabled) return;
+    nwBtn.disabled = true;
+    nwBtn.textContent = 'Generando mundo...';
+    setTimeout(function () {
+        createNewWorld();
+        nwBtn.disabled = false;
+        nwBtn.textContent = 'Generar un mundo nuevo';
+        const p = renderer.domElement.requestPointerLock();   // entra directo a jugar
+        if (p && p.catch) p.catch(function () {});
+    }, 60);
+});
+
 /* ===============================
-   13) BUCLE PRINCIPAL Y ARRANQUE
+   14) BUCLE PRINCIPAL Y ARRANQUE
    =============================== */
 const clock = new THREE.Clock();
+let orbitAngle = Math.random() * Math.PI * 2;
 
 function animate() {
     requestAnimationFrame(animate);
     const delta = Math.min(clock.getDelta(), 0.1);
-    if (isLocked) updatePhysics(delta);
+    if (isLocked) {
+        updatePhysics(delta);
+        updateHUD();
+    } else {
+        // VISTA DEL MENÚ: la cámara da vueltas alrededor del mundo
+        const h0 = terrainHeight(0, 0);
+        orbitAngle += delta * 0.08;
+        const ox = Math.cos(orbitAngle) * 45;
+        const oz = Math.sin(orbitAngle) * 45;
+        player.position.set(ox, h0 + 13, oz);      // cámara BAJA, casi a ras de las colinas
+        const tx = -ox, tz = -oz;
+        const ty = (h0 + 4) - (h0 + 13 + 1.2);     // mira hacia el horizonte, no al suelo
+        player.rotation.y = Math.atan2(-tx, -tz);
+        camera.rotation.x = Math.atan2(ty, Math.hypot(tx, tz));
+    }
     updateParticles(delta);
     updateClouds(delta);
     updateHand(delta);
-    updateHUD(isLocked ? raycastBlock() : null);
+    updatePlayerModel(delta);
     renderer.render(scene, camera);
+    modelRenderer.render(modelScene, modelCam);
 }
 
-buildWorld();
-buildClouds();
-refreshPreviews();
-selectSlot(0);
-animate();
+/* ---- arranque: carga el mundo guardado o crea uno aleatorio ---- */
+let booted = false;
+const _save = loadSave();
+worldSeed = _save ? _save.seed : (Math.floor(Math.random() * 2147483646) + 1);
+const clickPlay = document.getElementById('click-play');
+nwBtn.disabled = true;                                   // mientras genera, nada se pulsa
+nwBtn.textContent = 'Generando mundo...';
+clickPlay.textContent = 'Generando mundo...';
+
+function boot() {
+    buildWorld();
+    buildClouds();
+    refreshPreviews();
+    if (_save) {
+        worldChanges = _save.changes || {};
+        applyChanges();
+        if (_save.pos) player.position.set(_save.pos[0], _save.pos[1], _save.pos[2]);
+        else respawn();
+        player.rotation.y = _save.yaw || 0;
+        camera.rotation.x = _save.pitch || 0;
+        if (_save.xp) { xpLevel = _save.xp.level || 0; xpCur = _save.xp.cur || 0; }
+        handEmpty = !!_save.handEmpty;
+        selectSlot(_save.slot || 0);
+    } else {
+        worldChanges = {};
+        respawn();
+        selectSlot(0);
+        saveGame(true);
+    }
+    capturePlayState();     // ¡importante!: guarda dónde empiezas antes de que la cámara orbite
+    updateXPUI();
+    updateModelHeldBlock();
+    applyTextureConfig();
+    booted = true;
+    nwBtn.disabled = false;
+    nwBtn.textContent = 'Generar un mundo nuevo';
+    clickPlay.textContent = 'Haz clic en cualquier parte para jugar';
+    animate();
+}
+setTimeout(boot, 60);   // deja pintar el menú primero (evita pantalla en negro al abrir)
 </script>
 </body>
 </html>
