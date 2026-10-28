@@ -37,7 +37,9 @@
     .slot-number { position: absolute; top: 1px; left: 3px; font-size: 7px; color: #eee; text-shadow: 1px 1px 0 #000; }
 
     /* ---- Muñeco del jugador (esquina superior izquierda) ---- */
-    #player-model { position: fixed; top: 10px; left: 10px; width: 150px; height: 190px; z-index: 150; pointer-events: none; }
+    #player-model { position: fixed; top: 10px; left: 10px; width: 118px; height: 150px; z-index: 150; pointer-events: none; }
+    body.menu-open #player-model { pointer-events: auto; cursor: pointer; }
+    body.menu-open #player-model:hover { outline: 2px dashed rgba(255, 255, 255, 0.65); outline-offset: 3px; }
 
     /* ---- Menú limpio: el mundo gira detrás ---- */
     #menu { position: fixed; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; gap: 24px; z-index: 100; background: rgba(160, 200, 255, 0.13); backdrop-filter: blur(2px); cursor: pointer; text-align: center; padding: 20px; }
@@ -68,13 +70,15 @@
     <div id="hotbar"></div>
 </div>
 
-<!-- Muñeco 3D del jugador (lo crea el juego con JavaScript) -->
+<!-- Muñeco 3D del jugador (lo crea el juego con JavaScript). -->
+<!-- En el MENÚ: hazle clic para subir tu skin como en Minecraft -->
 <div id="player-model"></div>
+<input type="file" id="skin-input" accept="image/*" style="display:none">
 
 <div id="menu">
     <h1>MI MUNDO</h1>
     <p id="click-play">Haz clic en cualquier parte para jugar</p>
-    <p id="menu-hint">WASD moverse · ESPACIO saltar · CLIC IZQ romper · CLIC DER colocar<br>1-9 o RUEDA elegir bloque · X mano vacía · ESC volver aquí</p>
+    <p id="menu-hint">WASD moverse · ESPACIO saltar · CLIC IZQ romper · CLIC DER colocar<br>1-9 o RUEDA elegir bloque · X mano vacía · ESC volver aquí<br>Clic en el muñeco (arriba a la izquierda) para cambiar tu skin</p>
     <button id="new-world-btn">Generar un mundo nuevo</button>
 </div>
 
@@ -247,7 +251,7 @@ scene.fog = new THREE.Fog(0x87ceeb, 130, 420);   // en el menú se ve más lejos
 
 const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 600);
 camera.rotation.order = 'YXZ';
-camera.position.set(0, 1.2, 0);   // altura de los ojos (cambia el 1.2 si quieres)
+camera.position.set(0, 1.62, 0);   // ojos de alguien que mide 2 BLOQUES (antes 1.2: parecía enano)
 
 const player = new THREE.Object3D();   // el "cuerpo" (posición + física)
 player.position.set(0.5, 0, 0.5);
@@ -431,19 +435,19 @@ function plantTrees() {
         trunks.push({ x: tx, z: tz });
 
         const g = terrainHeight(tx, tz);
-        for (let y = 1; y <= 4; y++) addBlock('wood', tx, g + y, tz);       // tronco de 4
+        for (let y = 1; y <= 6; y++) addBlock('wood', tx, g + y, tz);       // tronco de 6: árboles más altos que tú
         for (let dx = -2; dx <= 2; dx++) {                                  // copa ancha
             for (let dz = -2; dz <= 2; dz++) {
                 if (Math.abs(dx) === 2 && Math.abs(dz) === 2) continue;     // esquinas fuera
-                if (dx !== 0 || dz !== 0) addBlock('leaves', tx + dx, g + 3, tz + dz);
+                if (dx !== 0 || dz !== 0) addBlock('leaves', tx + dx, g + 5, tz + dz);
             }
         }
         for (let dx = -2; dx <= 2; dx++) {                                  // copa media en rombo
             for (let dz = -2; dz <= 2; dz++) {
-                if (Math.abs(dx) + Math.abs(dz) <= 2 && !(dx === 0 && dz === 0)) addBlock('leaves', tx + dx, g + 4, tz + dz);
+                if (Math.abs(dx) + Math.abs(dz) <= 2 && !(dx === 0 && dz === 0)) addBlock('leaves', tx + dx, g + 6, tz + dz);
             }
         }
-        [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(p => addBlock('leaves', tx + p[0], g + 5, tz + p[1])); // corona
+        [[0, 0], [1, 0], [-1, 0], [0, 1], [0, -1]].forEach(p => addBlock('leaves', tx + p[0], g + 7, tz + p[1])); // corona
     }
 }
 
@@ -485,7 +489,7 @@ function raycastBlock() {
    Cada cambio se apunta en worldChanges
    para el AUTOGUARDADO, y romper da XP.
    =================================== */
-const PLAYER_HALF = 0.3, PLAYER_HEIGHT = 1.8;
+const PLAYER_HALF = 0.3, PLAYER_HEIGHT = 2.0;   // el jugador mide 2 bloques (salta 1)
 let worldChanges = {};     // "x,y,z" -> -1 (se rompió terreno base) | número de slot (bloque colocado)
 
 function blockTouchesPlayer(x, y, z) {
@@ -719,17 +723,22 @@ function respawn() {
    10) CONTROLES (ratón + teclado) CORREGIDOS
    ======================================= */
 const SENSITIVITY = 0.0022;
+const mousePos = { x: 0.5, y: 0.5 };   // posición del ratón (0..1): el muñeco del menú te sigue con la mirada
+let dollYaw = 0;                        // cuánto giraste el ratón hace poco: el muñeco lo imita levemente
 let isLocked = false;
 let inMenu = true;             // el menú está abierto al arrancar
 let selectedSlot = 0;
 let handEmpty = false;         // tecla X: jugar sin bloque en la mano
 
 document.addEventListener('mousemove', function (e) {
+    mousePos.x = e.clientX / window.innerWidth;       // para la mirada del muñeco en el menú
+    mousePos.y = e.clientY / window.innerHeight;
     if (!isLocked) return;
     player.rotation.y -= e.movementX * SENSITIVITY;   // girar izq/der (quita el "-" si lo quieres al revés)
     camera.rotation.x -= e.movementY * SENSITIVITY;   // subir/bajar vista
     const limit = Math.PI / 2 - 0.001;                // nunca más allá de 90 grados
     camera.rotation.x = Math.max(-limit, Math.min(limit, camera.rotation.x));
+    dollYaw = Math.max(-0.7, Math.min(0.7, dollYaw + e.movementX * 0.004));  // el muñeco gira leve hacia donde giras
 });
 
 document.addEventListener('keydown', function (e) {
@@ -823,7 +832,7 @@ document.addEventListener('pointerlockerror', function () {
    Camina, gira, salta, golpea y muestra el
    bloque que llevas en la mano (o mano vacía).
    =========================================== */
-const MODEL_W = 150, MODEL_H = 190;
+const MODEL_W = 118, MODEL_H = 150;   // un poco más pequeño para que no tape la vista
 const modelRenderer = new THREE.WebGLRenderer({ alpha: true, antialias: true });
 modelRenderer.setSize(MODEL_W, MODEL_H);
 modelRenderer.setClearColor(0x000000, 0);          // fondo transparente
@@ -918,6 +927,7 @@ function buildArm(side) {
     m.position.set(0, -4 * U, 0);
     pivot.add(m);
     modelGroup.add(pivot);
+    pivot.mesh = m;                     // acceso rápido para el cambio de skin
     return pivot;
 }
 const armL = buildArm(-1), armR = buildArm(1);
@@ -930,6 +940,7 @@ function buildLeg(side) {
     m.position.set(0, -6 * U, 0);
     pivot.add(m);
     modelGroup.add(pivot);
+    pivot.mesh = m;                     // acceso rápido para el cambio de skin
     return pivot;
 }
 const legL = buildLeg(-1), legR = buildLeg(1);
@@ -946,23 +957,26 @@ function updateModelHeldBlock() {
     armR.add(modelHeld);
 }
 
-let walkPhase = 0, modelSpin = 0;
+let walkPhase = 0, menuT = 0;
 function updatePlayerModel(delta) {
     if (inMenu) {
-        // en el menú gira despacio, como la pantalla de título
-        modelSpin += delta * 0.7;
-        modelGroup.rotation.y = modelSpin;
-        headPivot.rotation.x = Math.sin(modelSpin * 0.8) * 0.12;
-        headPivot.rotation.y = 0;
-        const sway = Math.sin(modelSpin * 1.4) * 0.06;
+        // en el menú NO gira: se queda de frente y solo te sigue con la mirada
+        menuT += delta;
+        modelGroup.rotation.y = Math.PI;
+        const mx = (mousePos.x - 0.5) * 1.2;                    // mira hacia tu ratón
+        const my = -(mousePos.y - 0.5) * 0.7;
+        headPivot.rotation.y += (mx - headPivot.rotation.y) * Math.min(1, delta * 6);
+        headPivot.rotation.x += (my - headPivot.rotation.x) * Math.min(1, delta * 6);
+        const sway = Math.sin(menuT * 1.6) * 0.05;              // respiración suave
         armL.rotation.x = sway; armR.rotation.x = -sway;
         legL.rotation.x = 0; legR.rotation.x = 0;
         return;
     }
-    // dentro del juego: copia lo que haces
-    modelGroup.rotation.y = Math.PI;   // SIEMPRE de frente: su cara te mira, jamás gira
+    // dentro del juego: de frente SIEMPRE, pero gira LEVEMENTE hacia donde giras
+    dollYaw -= dollYaw * Math.min(1, delta * 1.2);              // vuelve al centro solito
+    modelGroup.rotation.y = Math.PI + dollYaw * 0.35;           // cuerpecito con giro sutil
+    headPivot.rotation.y += (dollYaw - headPivot.rotation.y) * Math.min(1, delta * 10);  // la cabeza gira antes que el cuerpo
     headPivot.rotation.x = Math.max(-0.7, Math.min(0.7, camera.rotation.x * 0.9));  // la cabeza mira arriba/abajo
-    headPivot.rotation.y = 0;
     const speed = Math.hypot(velocity.x, velocity.z);
     const swing = swingT < 0.3 ? Math.sin((swingT / 0.3) * Math.PI) : 0;
     if (onGround) {
@@ -979,6 +993,84 @@ function updatePlayerModel(delta) {
         armR.rotation.x = swing > 0 ? swing * 1.9 : -0.5;
     }
 }
+
+/* =======================================
+   11.5) CAMBIO DE SKIN (como Minecraft)
+   En el menú, haz clic en el muñeco: se
+   abren tus archivos, eliges una imagen
+   de skin (64x64 o 64x32) y se aplica.
+   También queda guardada para siempre.
+   ======================================= */
+const SKIN_KEY = 'mi-mundo-skin-v1';
+const skinInput = document.getElementById('skin-input');
+const dollEl = document.getElementById('player-model');
+
+function texFromSkin(sk, x, y, w, h) {
+    const c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    const cx = c.getContext('2d');
+    cx.imageSmoothingEnabled = false;
+    cx.drawImage(sk, x, y, w, h, 0, 0, w, h);
+    const t = new THREE.CanvasTexture(c);
+    t.magFilter = THREE.NearestFilter;   // píxeles duros como en Minecraft
+    t.minFilter = THREE.NearestFilter;
+    t.generateMipmaps = false;
+    return t;
+}
+
+/* materiales en el orden de BoxGeometry: [+x, -x, arriba, abajo, +z(frente cam.), -z(cara)] */
+function skinPartMats(sk, front, back, right, left, top, bottom) {
+    return [
+        lam(texFromSkin(sk, right[0], right[1], right[2], right[3])),
+        lam(texFromSkin(sk, left[0], left[1], left[2], left[3])),
+        lam(texFromSkin(sk, top[0], top[1], top[2], top[3])),
+        lam(texFromSkin(sk, bottom[0], bottom[1], bottom[2], bottom[3])),
+        lam(texFromSkin(sk, back[0], back[1], back[2], back[3])),
+        lam(texFromSkin(sk, front[0], front[1], front[2], front[3]))
+    ];
+}
+
+function applySkinImage(img) {
+    const sk = document.createElement('canvas');
+    sk.width = 64; sk.height = 64;
+    const sctx = sk.getContext('2d');
+    sctx.imageSmoothingEnabled = false;
+    sctx.drawImage(img, 0, 0, 64, 64);   // vale skin 64x64, 64x32 o cualquier imagen
+    // cabeza: cara(8,8) nuca(24,8) der(0,8) izq(16,8) arriba(8,0) abajo(16,0)
+    headMesh.material = skinPartMats(sk, [8,8,8,8], [24,8,8,8], [0,8,8,8], [16,8,8,8], [8,0,8,8], [16,0,8,8]);
+    // torso
+    torsoMesh.material = skinPartMats(sk, [20,20,8,12], [32,20,8,12], [16,20,4,12], [28,20,4,12], [20,16,8,4], [28,16,8,4]);
+    // brazos y piernas (se usa el lado derecho, como en las skins clásicas)
+    const armMats = skinPartMats(sk, [44,20,4,12], [52,20,4,12], [40,20,4,12], [48,20,4,12], [44,16,4,4], [48,16,4,4]);
+    const legMats = skinPartMats(sk, [4,20,4,12], [12,20,4,12], [0,20,4,12], [8,20,4,12], [4,16,4,4], [8,16,4,4]);
+    armR.mesh.material = armMats; armL.mesh.material = armMats;
+    legR.mesh.material = legMats; legL.mesh.material = legMats;
+    // la mano en primera persona se tiñe con el color medio del brazo de la skin
+    const d = sctx.getImageData(44, 20, 4, 12).data;
+    let r = 0, g = 0, b = 0, n = 0;
+    for (let i = 0; i < d.length; i += 4) { if (d[i + 3] > 10) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; } }
+    if (n) arm.material.color.setRGB(r / n / 255, g / n / 255, b / n / 255);
+    // la skin queda guardada incluso si cierras el juego
+    try { localStorage.setItem(SKIN_KEY, sk.toDataURL('image/png')); } catch (err) {}
+}
+
+dollEl.addEventListener('click', function (e) {
+    e.stopPropagation();
+    if (!inMenu || !booted) return;
+    skinInput.click();                   // abre tus archivos para elegir la skin
+});
+skinInput.addEventListener('change', function () {
+    const f = skinInput.files && skinInput.files[0];
+    skinInput.value = '';
+    if (!f) return;
+    const reader = new FileReader();
+    reader.onload = function () {
+        const img = new Image();
+        img.onload = function () { applySkinImage(img); };
+        img.src = reader.result;
+    };
+    reader.readAsDataURL(f);
+});
 
 /* =======================================
    12) HUD: HOTBAR, EXPERIENCIA Y COORDENADAS
@@ -1190,14 +1282,15 @@ function animate() {
         orbitAngle += delta * 0.08;
         const ox = Math.cos(orbitAngle) * 45;
         const oz = Math.sin(orbitAngle) * 45;
-        player.position.set(ox, h0 + 13, oz);      // cámara BAJA, casi a ras de las colinas
+        player.position.set(ox, h0 + 14, oz);      // cámara baja (un pelín más alta: los árboles ahora miden 8)
         const tx = -ox, tz = -oz;
-        const ty = (h0 + 4) - (h0 + 13 + 1.2);     // mira hacia el horizonte, no al suelo
+        const ty = (h0 + 4) - (h0 + 14 + 1.2);     // mira hacia el horizonte, no al suelo
         player.rotation.y = Math.atan2(-tx, -tz);
         camera.rotation.x = Math.atan2(ty, Math.hypot(tx, tz));
     }
     updateParticles(delta);
     updateClouds(delta);
+    hand.visible = !inMenu;    // en el fondo del menú NO se ve la mano flotando
     updateHand(delta);
     updatePlayerModel(delta);
     renderer.render(scene, camera);
@@ -1237,6 +1330,14 @@ function boot() {
     updateXPUI();
     updateModelHeldBlock();
     applyTextureConfig();
+    try {                                   // recupera tu skin guardada (si subiste una)
+        const savedSkin = localStorage.getItem(SKIN_KEY);
+        if (savedSkin) {
+            const im = new Image();
+            im.onload = function () { applySkinImage(im); };
+            im.src = savedSkin;
+        }
+    } catch (err) {}
     booted = true;
     nwBtn.disabled = false;
     nwBtn.textContent = 'Generar un mundo nuevo';
