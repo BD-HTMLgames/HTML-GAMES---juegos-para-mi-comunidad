@@ -92,26 +92,39 @@
 <script>
 'use strict';
 
-/* =====================================================================
-   ██  APARTADO DE TEXTURAS — AQUÍ PONES LAS TUYAS  ██
+/* ═══════════════════════════════════════════════════════════════════════
+   ██  TUS TEXTURAS — EDITA SOLO ESTE BLOQUE, TODO LO DEMÁS SIGUE IGUAL  ██
 
-   Escribe entre las comillas "" el link de tu imagen, por ejemplo:
-       dirt: "https://mi-web.com/tierra.png"
-   También funcionan imágenes en base64 (texto larguísimo que empieza
-   por "data:image/png;base64,..."). Ideal: PNG de 16x16 píxeles.
+   CÓMO SE USA (3 pasos):
+   1) Pon tu URL entre las comillas "" del bloque de abajo. Ejemplo:
+         dirt: "https://mi-pagina.com/tierra.png"
+   2) También valen imágenes base64 (textos largos que empiezan por
+      "data:image/png;base64,...").
+   3) Guarda el archivo y recarga la página. ¡Listo!
 
-   Si dejas las comillas vacías "", el juego usa su textura interna
-   (dibujada por él mismo, por eso NUNCA se ve blanco).
-   Nombres válidos (no cambiar las palabras de la izquierda):
-   ===================================================================== */
+   CONSEJOS:
+   · Ideal: PNG cuadrado (16x16, 32x32, el tamaño que quieras).
+   · Comillas vacías "" = se usa la textura interna del juego
+     (dibujada por él mismo, por eso NUNCA se ve blanco).
+   · NO cambies las palabras de la izquierda (son los nombres internos
+     que usa el juego para encontrar cada textura).
+
+   El bloque está ordenado por grupos: naturales, árboles y minerales.
+   ═══════════════════════════════════════════════════════════════════════ */
 const TEXTURE_CONFIG = {
+
+    /* ───── BLOQUES NATURALES (terreno) ───── */
     grass_top:  "",   // hierba, cara de arriba
     grass_side: "",   // hierba, el lado con tierra
     dirt:       "",   // tierra
     stone:      "",   // piedra
+
+    /* ───── ÁRBOLES ───── */
     log_side:   "",   // tronco, el lado
-    log_top:    "",   // tronco, arriba
+    log_top:    "",   // tronco, la corteza de arriba
     leaves:     "",   // hojas del árbol
+
+    /* ───── MINERALES Y ESPECIALES ───── */
     netherrack: "",   // piedra infernal
     gold:       "",   // bloque de oro
     iron:       "",   // bloque de hierro
@@ -723,7 +736,7 @@ function respawn() {
    10) CONTROLES (ratón + teclado) CORREGIDOS
    ======================================= */
 const SENSITIVITY = 0.0022;
-const mousePos = { x: 0.5, y: 0.5 };   // posición del ratón (0..1): el muñeco del menú te sigue con la mirada
+const mousePx = { x: window.innerWidth / 2, y: window.innerHeight * 0.55 };  // ratón EXACTO en píxeles: el muñeco del menú mira hacia ÉL
 let dollYaw = 0;                        // cuánto giraste el ratón hace poco: el muñeco lo imita levemente
 let isLocked = false;
 let inMenu = true;             // el menú está abierto al arrancar
@@ -731,8 +744,8 @@ let selectedSlot = 0;
 let handEmpty = false;         // tecla X: jugar sin bloque en la mano
 
 document.addEventListener('mousemove', function (e) {
-    mousePos.x = e.clientX / window.innerWidth;       // para la mirada del muñeco en el menú
-    mousePos.y = e.clientY / window.innerHeight;
+    mousePx.x = e.clientX;                            // posición real del ratón (la usa el muñeco del menú)
+    mousePx.y = e.clientY;
     if (!isLocked) return;
     player.rotation.y -= e.movementX * SENSITIVITY;   // girar izq/der (quita el "-" si lo quieres al revés)
     camera.rotation.x -= e.movementY * SENSITIVITY;   // subir/bajar vista
@@ -958,15 +971,25 @@ function updateModelHeldBlock() {
 }
 
 let walkPhase = 0, menuT = 0;
+const _headV = new THREE.Vector3();    // auxiliar: proyecta la cabeza del muñeco a píxeles de pantalla
 function updatePlayerModel(delta) {
     if (inMenu) {
-        // en el menú NO gira: se queda de frente y solo te sigue con la mirada
+        // en el menú NO gira el cuerpo: se queda de frente y su MIRADA SIGUE AL RATÓN
+        // de verdad. Se mide hacia dónde está el ratón VISTO DESDE SU CABEZA (antes
+        // se media desde el centro de la pantalla y por eso parecía mirar al lado
+        // contrario: ratón abajo-derecha del muñeco = mirada arriba-izquierda)
         menuT += delta;
         modelGroup.rotation.y = Math.PI;
-        const mx = (mousePos.x - 0.5) * 1.2;                    // mira hacia tu ratón
-        const my = -(mousePos.y - 0.5) * 0.7;
-        headPivot.rotation.y += (mx - headPivot.rotation.y) * Math.min(1, delta * 6);
-        headPivot.rotation.x += (my - headPivot.rotation.x) * Math.min(1, delta * 6);
+        const rect = dollEl.getBoundingClientRect();
+        _headV.set(0, 28 * U, 0).project(modelCam);             // centro exacto de su cabeza en pantalla
+        const hx = rect.left + (_headV.x * 0.5 + 0.5) * rect.width;
+        const hy = rect.top + (1 - (_headV.y * 0.5 + 0.5)) * rect.height;
+        const dx = mousePx.x - hx;                              // ratón a la derecha de su cabeza → positivo
+        const dy = mousePx.y - hy;                              // ratón por debajo de su cabeza → positivo
+        const tYaw = Math.max(-0.9, Math.min(0.9, dx / 300));   // gira hacia el lado del ratón
+        const tPit = Math.max(-0.6, Math.min(0.55, -dy / 300)); // ratón abajo → mira hacia abajo
+        headPivot.rotation.y += (tYaw - headPivot.rotation.y) * Math.min(1, delta * 7);
+        headPivot.rotation.x += (tPit - headPivot.rotation.x) * Math.min(1, delta * 7);
         const sway = Math.sin(menuT * 1.6) * 0.05;              // respiración suave
         armL.rotation.x = sway; armR.rotation.x = -sway;
         legL.rotation.x = 0; legR.rotation.x = 0;
@@ -997,61 +1020,117 @@ function updatePlayerModel(delta) {
 /* =======================================
    11.5) CAMBIO DE SKIN (como Minecraft)
    En el menú, haz clic en el muñeco: se
-   abren tus archivos, eliges una imagen
-   de skin (64x64 o 64x32) y se aplica.
-   También queda guardada para siempre.
+   abren tus archivos y eliges una skin.
+   · Lee skins de CUALQUIER tamaño (64x64,
+     128x128, 256x256...) SIN comprimirlas:
+     se conserva cada detalle.
+   · Lee LAS 2 CAPAS como Minecraft: la
+     base + la capa de encima (gorro,
+     chaqueta, mangas, pelo suelto...).
+   · También acepta skins antiguas 64x32.
+   · Queda guardada incluso si cierras.
    ======================================= */
 const SKIN_KEY = 'mi-mundo-skin-v1';
 const skinInput = document.getElementById('skin-input');
 const dollEl = document.getElementById('player-model');
 
-function texFromSkin(sk, x, y, w, h) {
-    const c = document.createElement('canvas');
-    c.width = w; c.height = h;
-    const cx = c.getContext('2d');
-    cx.imageSmoothingEnabled = false;
-    cx.drawImage(sk, x, y, w, h, 0, 0, w, h);
-    const t = new THREE.CanvasTexture(c);
-    t.magFilter = THREE.NearestFilter;   // píxeles duros como en Minecraft
-    t.minFilter = THREE.NearestFilter;
-    t.generateMipmaps = false;
-    return t;
+/* --- regiones de cada parte en una skin (coordenadas de la imagen 64x64) ---
+   f=frente  e=espalda  d=lado derecho  i=lado izquierdo  ar=arriba  ab=abajo
+   Cada región es [x, y, ancho, alto] y se multiplica por la escala de tu skin */
+const SKIN_HEAD = { f:[8,8,8,8],    e:[24,8,8,8],   d:[0,8,8,8],    i:[16,8,8,8],   ar:[8,0,8,8],   ab:[16,0,8,8] };
+const SKIN_BODY = { f:[20,20,8,12], e:[32,20,8,12], d:[16,20,4,12], i:[28,20,4,12], ar:[20,16,8,4], ab:[28,16,8,4] };
+const SKIN_ARMR = { f:[44,20,4,12], e:[52,20,4,12], d:[40,20,4,12], i:[48,20,4,12], ar:[44,16,4,4], ab:[48,16,4,4] };
+const SKIN_ARML = { f:[36,52,4,12], e:[44,52,4,12], d:[32,52,4,12], i:[40,52,4,12], ar:[36,48,4,4], ab:[40,48,4,4] };
+const SKIN_LEGR = { f:[4,20,4,12],  e:[12,20,4,12], d:[0,20,4,12],  i:[8,20,4,12],  ar:[4,16,4,4],  ab:[8,16,4,4] };
+const SKIN_LEGL = { f:[20,52,4,12], e:[28,52,4,12], d:[16,52,4,12], i:[24,52,4,12], ar:[20,48,4,4], ab:[24,48,4,4] };
+/* --- LA SEGUNDA CAPA (la de encima: gorro, chaqueta, mangas, etc.) --- */
+const SKIN_HEAD2 = { f:[40,8,8,8],  e:[56,8,8,8],   d:[32,8,8,8],   i:[48,8,8,8],   ar:[40,0,8,8],  ab:[48,0,8,8] };
+const SKIN_BODY2 = { f:[20,36,8,12], e:[32,36,8,12], d:[16,36,4,12], i:[28,36,4,12], ar:[20,32,8,4], ab:[28,32,8,4] };
+const SKIN_ARMR2 = { f:[44,36,4,12], e:[52,36,4,12], d:[40,36,4,12], i:[48,36,4,12], ar:[44,32,4,4], ab:[48,32,4,4] };
+const SKIN_ARML2 = { f:[52,52,4,12], e:[60,52,4,12], d:[48,52,4,12], i:[56,52,4,12], ar:[52,48,4,4], ab:[56,48,4,4] };
+const SKIN_LEGR2 = { f:[4,36,4,12],  e:[12,36,4,12], d:[0,36,4,12],  i:[8,36,4,12],  ar:[4,32,4,4],  ab:[8,32,4,4] };
+const SKIN_LEGL2 = { f:[4,52,4,12],  e:[12,52,4,12], d:[0,52,4,12],  i:[8,52,4,12],  ar:[4,48,4,4],  ab:[8,48,4,4] };
+
+/* skins antiguas 64x32: no traen brazo/pierna izquierdos → se copian del
+   derecho volteados (en espejo), igual que hace Minecraft con ellas */
+function mirrorLegacyLimbs(ctx, s) {
+    function flip(sx, sy, w, h, dx, dy) {
+        const c = document.createElement('canvas');
+        c.width = Math.ceil(w * s); c.height = Math.ceil(h * s);
+        c.getContext('2d').drawImage(ctx.canvas, sx * s, sy * s, w * s, h * s, 0, 0, c.width, c.height);
+        ctx.save();
+        ctx.translate((dx + w) * s, dy * s);
+        ctx.scale(-1, 1);
+        ctx.drawImage(c, 0, 0);
+        ctx.restore();
+    }
+    /* brazo izquierdo ← espejo del brazo derecho */
+    flip(44,20,4,12, 36,52); flip(52,20,4,12, 44,52); flip(48,20,4,12, 32,52); flip(40,20,4,12, 40,52); flip(44,16,4,4, 36,48); flip(48,16,4,4, 40,48);
+    /* pierna izquierda ← espejo de la pierna derecha */
+    flip(4,20,4,12, 20,52);  flip(12,20,4,12, 28,52); flip(8,20,4,12, 16,52);  flip(0,20,4,12, 24,52); flip(4,16,4,4, 20,48);  flip(8,16,4,4, 24,48);
 }
 
-/* materiales en el orden de BoxGeometry: [+x, -x, arriba, abajo, +z(frente cam.), -z(cara)] */
-function skinPartMats(sk, front, back, right, left, top, bottom) {
-    return [
-        lam(texFromSkin(sk, right[0], right[1], right[2], right[3])),
-        lam(texFromSkin(sk, left[0], left[1], left[2], left[3])),
-        lam(texFromSkin(sk, top[0], top[1], top[2], top[3])),
-        lam(texFromSkin(sk, bottom[0], bottom[1], bottom[2], bottom[3])),
-        lam(texFromSkin(sk, back[0], back[1], back[2], back[3])),
-        lam(texFromSkin(sk, front[0], front[1], front[2], front[3]))
-    ];
+/* libera la memoria de los materiales anteriores al cambiar de skin */
+function disposeSkinMats(m) {
+    (Array.isArray(m) ? m : [m]).forEach(function (mt) {
+        if (mt && mt.map) mt.map.dispose();
+        if (mt) mt.dispose();
+    });
 }
 
-function applySkinImage(img) {
+function applySkinImage(img, guardar) {
+    /* escala NATIVA: 64→1, 128→2, 256→4... la imagen NO se aplasta a 64x64:
+     cada píxel de tu skin se queda tal cual (por eso se ve TODO el detalle) */
+    const s = img.width / 64;
+    const legacy = Math.abs(img.height - img.width / 2) < 1;   // ¿skin vieja 64x32?
     const sk = document.createElement('canvas');
-    sk.width = 64; sk.height = 64;
+    sk.width = Math.round(64 * s); sk.height = Math.round(64 * s);
     const sctx = sk.getContext('2d');
     sctx.imageSmoothingEnabled = false;
-    sctx.drawImage(img, 0, 0, 64, 64);   // vale skin 64x64, 64x32 o cualquier imagen
-    // cabeza: cara(8,8) nuca(24,8) der(0,8) izq(16,8) arriba(8,0) abajo(16,0)
-    headMesh.material = skinPartMats(sk, [8,8,8,8], [24,8,8,8], [0,8,8,8], [16,8,8,8], [8,0,8,8], [16,0,8,8]);
-    // torso
-    torsoMesh.material = skinPartMats(sk, [20,20,8,12], [32,20,8,12], [16,20,4,12], [28,20,4,12], [20,16,8,4], [28,16,8,4]);
-    // brazos y piernas (se usa el lado derecho, como en las skins clásicas)
-    const armMats = skinPartMats(sk, [44,20,4,12], [52,20,4,12], [40,20,4,12], [48,20,4,12], [44,16,4,4], [48,16,4,4]);
-    const legMats = skinPartMats(sk, [4,20,4,12], [12,20,4,12], [0,20,4,12], [8,20,4,12], [4,16,4,4], [8,16,4,4]);
-    armR.mesh.material = armMats; armL.mesh.material = armMats;
-    legR.mesh.material = legMats; legL.mesh.material = legMats;
-    // la mano en primera persona se tiñe con el color medio del brazo de la skin
-    const d = sctx.getImageData(44, 20, 4, 12).data;
+    sctx.drawImage(img, 0, 0);                                 // copia 1:1, sin reescalar nada
+    if (legacy) mirrorLegacyLimbs(sctx, s);
+
+    /* pinta UNA cara: capa 1 + capa 2 encima. La capa 2 tiene zonas
+       transparentes, así que se ven LAS DOS a la vez, como en Minecraft */
+    function face(base, extra) {
+        const w = Math.max(1, Math.round(base[2] * s)), h = Math.max(1, Math.round(base[3] * s));
+        const c = document.createElement('canvas');
+        c.width = w; c.height = h;
+        const cx = c.getContext('2d');
+        cx.imageSmoothingEnabled = false;
+        cx.drawImage(sk, base[0] * s, base[1] * s, base[2] * s, base[3] * s, 0, 0, w, h);
+        if (extra) cx.drawImage(sk, extra[0] * s, extra[1] * s, extra[2] * s, extra[3] * s, 0, 0, w, h);
+        const t = new THREE.CanvasTexture(c);
+        t.magFilter = THREE.NearestFilter;    // píxeles duros como en Minecraft
+        t.minFilter = THREE.NearestFilter;
+        t.generateMipmaps = false;
+        return t;
+    }
+    function skinLam(t) { return new THREE.MeshLambertMaterial({ map: t, transparent: true }); }
+    /* materiales en el orden de BoxGeometry: [+x, -x, arriba, abajo, +z, -z(cara)] */
+    function partMats(b, o) {
+        return [skinLam(face(b.d, o && o.d)), skinLam(face(b.i, o && o.i)), skinLam(face(b.ar, o && o.ar)),
+                skinLam(face(b.ab, o && o.ab)), skinLam(face(b.e, o && o.e)), skinLam(face(b.f, o && o.f))];
+    }
+
+    disposeSkinMats(headMesh.material);  disposeSkinMats(torsoMesh.material);
+    disposeSkinMats(armR.mesh.material); disposeSkinMats(armL.mesh.material);
+    disposeSkinMats(legR.mesh.material); disposeSkinMats(legL.mesh.material);
+    headMesh.material  = partMats(SKIN_HEAD, SKIN_HEAD2);
+    torsoMesh.material = partMats(SKIN_BODY, SKIN_BODY2);
+    armR.mesh.material = partMats(SKIN_ARMR, SKIN_ARMR2);
+    armL.mesh.material = partMats(SKIN_ARML, SKIN_ARML2);   // brazo izq. con SU textura propia
+    legR.mesh.material = partMats(SKIN_LEGR, SKIN_LEGR2);
+    legL.mesh.material = partMats(SKIN_LEGL, SKIN_LEGL2);
+
+    /* la mano en primera persona se tiñe con el color medio del brazo (capas 1+2) */
+    const fc = armR.mesh.material[5].map.image;
+    const d = fc.getContext('2d').getImageData(0, 0, fc.width, fc.height).data;
     let r = 0, g = 0, b = 0, n = 0;
     for (let i = 0; i < d.length; i += 4) { if (d[i + 3] > 10) { r += d[i]; g += d[i + 1]; b += d[i + 2]; n++; } }
     if (n) arm.material.color.setRGB(r / n / 255, g / n / 255, b / n / 255);
-    // la skin queda guardada incluso si cierras el juego
-    try { localStorage.setItem(SKIN_KEY, sk.toDataURL('image/png')); } catch (err) {}
+    /* la skin queda guardada en su calidad ORIGINAL (sin comprimir) */
+    if (guardar) { try { localStorage.setItem(SKIN_KEY, img.src); } catch (err) {} }
 }
 
 dollEl.addEventListener('click', function (e) {
@@ -1066,7 +1145,7 @@ skinInput.addEventListener('change', function () {
     const reader = new FileReader();
     reader.onload = function () {
         const img = new Image();
-        img.onload = function () { applySkinImage(img); };
+        img.onload = function () { applySkinImage(img, true); };
         img.src = reader.result;
     };
     reader.readAsDataURL(f);
