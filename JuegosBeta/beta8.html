@@ -1,0 +1,2244 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Minecraft 2D - Recolector de Recursos</title>
+    <script src="https://cdn.jsdelivr.net/npm/simplex-noise@2.4.0/simplex-noise.js"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body { 
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        #gameContainer {
+            position: relative;
+            background: rgba(0, 0, 0, 0.9);
+            border-radius: 20px;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+        
+        #gameCanvas {
+            border: 4px solid #333;
+            border-radius: 10px;
+            display: block;
+            cursor: crosshair;
+            image-rendering: pixelated;
+        }
+        
+        #inventory {
+            position: absolute;
+            bottom: 30px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 5px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            border: 3px solid #555;
+        }
+        
+        .inventorySlot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #666;
+            background: rgba(50, 50, 50, 0.8);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .inventorySlot:hover {
+            transform: scale(1.1);
+            border-color: #888;
+            background: rgba(70, 70, 70, 0.9);
+        }
+        
+        .inventorySlot.selected {
+            border-color: #FFD700;
+            background: rgba(255, 215, 0, 0.2);
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.5);
+        }
+        
+        .blockIcon {
+            width: 30px;
+            height: 30px;
+            border-radius: 3px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+        
+        .blockCount {
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            font-size: 10px;
+            color: white;
+            text-shadow: 1px 1px 2px black;
+        }
+        
+        #inventoryButton {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 60px;
+            background: linear-gradient(145deg, #8B4513, #A0522D);
+            border: 3px solid #654321;
+            border-radius: 10px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 24px;
+            color: white;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+        
+        #inventoryButton:hover {
+            transform: translateX(-50%) scale(1.1);
+            background: linear-gradient(145deg, #A0522D, #8B4513);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        #inventoryButton:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+        
+        #fullInventory {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 1000px; /* Ancho aumentado */
+            height: 550px; /* Altura aumentada */
+            background: linear-gradient(145deg, #3a3a3a, #2a2a2a);
+            border: 5px solid #555;
+            border-radius: 15px;
+            display: none;
+            padding: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.8);
+        }
+        
+        #fullInventory.active {
+            display: flex; /* Cambiado a flex */
+            animation: inventoryOpen 0.3s ease;
+        }
+
+        .fullInventory-columns {
+            display: flex;
+            width: 100%;
+            gap: 20px;
+        }
+
+        .inventory-column {
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        #playerInventoryColumn {
+            flex: 1.8;
+        }
+
+        #craftingColumn {
+            flex: 1;
+            align-items: center;
+        }
+        
+        #recipesColumn {
+            flex: 1.2;
+        }
+        
+        @keyframes inventoryOpen {
+            from {
+                opacity: 0;
+                transform: translate(-50%, -50%) scale(0.8);
+            }
+            to {
+                opacity: 1;
+                transform: translate(-50%, -50%) scale(1);
+            }
+        }
+        
+        .inventorySection {
+            margin-bottom: 10px;
+        }
+        
+        .inventoryTitle {
+            color: #FFD700;
+            font-size: 14px;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            text-align: center;
+        }
+        
+        .inventoryGrid {
+            display: grid;
+            grid-template-columns: repeat(6, 50px); /* 6 columnas para inventario */
+            gap: 5px;
+            margin-bottom: 10px;
+            justify-content: center;
+        }
+        
+        .craftingArea {
+            display: flex;
+            flex-direction: column; /* Apilado vertical */
+            align-items: center;
+            gap: 15px;
+            margin-top: 0;
+        }
+        
+        .craftingGrid {
+            display: grid;
+            grid-template-columns: repeat(3, 50px); /* Slots más pequeños */
+            gap: 5px;
+            padding: 10px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 10px;
+            border: 2px solid #666;
+        }
+        
+        .craftingResult {
+            width: 60px;
+            height: 60px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 3px solid #888;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            margin: 0;
+        }
+        
+        .craftButton {
+            padding: 10px 20px;
+            background: linear-gradient(145deg, #4CAF50, #45a049);
+            border: none;
+            border-radius: 8px;
+            color: white;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px; /* Texto más pequeño */
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(76, 175, 80, 0.3);
+        }
+        
+        .craftButton:hover {
+            transform: scale(1.05);
+            background: linear-gradient(145deg, #45a049, #4CAF50);
+            box-shadow: 0 6px 20px rgba(76, 175, 80, 0.4);
+        }
+        
+        .craftButton:active {
+            transform: scale(0.95);
+        }
+        
+        .closeButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 30px;
+            height: 30px;
+            background: #ff4444;
+            border: none;
+            border-radius: 50%;
+            color: white;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            z-index: 10;
+        }
+        
+        .closeButton:hover {
+            background: #ff6666;
+            transform: scale(1.1);
+        }
+        
+        #message {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            padding: 15px 25px;
+            border-radius: 10px;
+            font-size: 12px;
+            display: none;
+            animation: messageSlide 0.3s ease;
+            border: 2px solid #FFD700;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+        }
+        
+        @keyframes messageSlide {
+            from {
+                opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(-50%) translateY(0);
+            }
+        }
+        
+        #controls {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            color: white;
+            font-size: 10px;
+            line-height: 1.8;
+            border: 2px solid #555;
+        }
+        
+        #controls h3 {
+            color: #FFD700;
+            margin-bottom: 10px;
+            font-size: 12px;
+        }
+        
+        #coordinates {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 10px;
+            border: 2px solid #555;
+        }
+        
+        #toolInfo {
+            position: absolute;
+            bottom: 100px;
+            right: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px;
+            border-radius: 10px;
+            color: white;
+            font-size: 10px;
+            border: 2px solid #555;
+        }
+        
+        .durabilityBar {
+            width: 100px;
+            height: 10px;
+            background: #333;
+            border-radius: 5px;
+            overflow: hidden;
+            margin-top: 5px;
+            border: 1px solid #555;
+        }
+        
+        .durabilityFill {
+            height: 100%;
+            background: linear-gradient(90deg, #ff4444, #ff6666);
+            transition: width 0.3s ease;
+        }
+        
+        #gameTitle {
+            position: absolute;
+            top: 150px;
+            left: 50%;
+            transform: translateX(-50%);
+            color: #FFD700;
+            font-size: 16px;
+            text-shadow: 3px 3px 6px rgba(0, 0, 0, 0.7);
+            pointer-events: none;
+        }
+        
+        #gameTime {
+            position: absolute;
+            top: 70px;
+            left: 10%;
+            transform: translateX(-50%);
+            color: white;
+            font-size: 10px;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.7);
+        }
+        
+        #healthBar {
+            position: absolute;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+        }
+
+        .heart {
+            width: 20px;
+            height: 20px;
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="%23ff4444" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+            background-size: contain;
+            background-repeat: no-repeat;
+        }
+
+        .heart.empty {
+            background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path fill="none" stroke="%23555" stroke-width="2" d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/></svg>');
+        }
+        
+        .fullInventorySlot {
+            width: 50px;
+            height: 50px;
+            border: 2px solid #666;
+            background: rgba(50, 50, 50, 0.8);
+            border-radius: 5px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .fullInventorySlot:hover {
+            transform: scale(1.1);
+            border-color: #888;
+            background: rgba(70, 70, 70, 0.9);
+        }
+        
+        .fullInventorySlot .blockIcon {
+            width: 35px;
+            height: 35px;
+        }
+        
+        .fullInventorySlot .blockCount {
+            font-size: 10px;
+        }
+        
+        #recipeBook {
+            width: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            border: 2px solid #666;
+            border-radius: 10px;
+            padding: 15px;
+            height: 100%; /* Ocupa toda la altura de la columna */
+            overflow-y: auto; /* Scroll si es necesario */
+        }
+        
+        .recipe {
+            background: rgba(50, 50, 50, 0.8);
+            border: 1px solid #555;
+            border-radius: 5px;
+            padding: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        
+        .recipe:hover {
+            background: rgba(70, 70, 70, 0.9);
+            border-color: #888;
+            transform: scale(1.02);
+        }
+        
+        .recipeName {
+            color: #FFD700;
+            font-size: 9px;
+            margin-bottom: 4px;
+        }
+        
+        .recipeIngredients {
+            color: white;
+            font-size: 7px;
+            line-height: 1.3;
+        }
+        
+        .recipeResult {
+            color: #4CAF50;
+            font-size: 7px;
+            margin-top: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <div id="healthBar"></div>
+        
+        <div id="gameTime">Día: 1 - 06:00</div>
+        
+        <canvas id="gameCanvas"></canvas>
+        
+        <div id="coordinates">
+            <div>X: <span id="posX">0</span></div>
+            <div>Y: <span id="posY">0</span></div>
+        </div>
+        
+        <div id="toolInfo">
+            <div>Herramienta: <span id="currentTool">Manos</span></div>
+            <div>Durabilidad:</div>
+            <div class="durabilityBar">
+                <div class="durabilityFill" id="durabilityFill" style="width: 100%"></div>
+            </div>
+        </div>
+        
+        <button id="inventoryButton">🎒</button>
+        
+        <div id="inventory">
+            <div class="inventorySlot selected" data-slot="0">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="1">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="2">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="3">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="4">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="5">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="6">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="7">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+            <div class="inventorySlot" data-slot="8">
+                <div class="blockIcon"></div>
+                <span class="blockCount">0</span>
+            </div>
+        </div>
+        
+        <div id="fullInventory">
+            <button class="closeButton">✕</button>
+            <div class="fullInventory-columns">
+                <!-- Columna 1: Inventario del Jugador -->
+                <div class="inventory-column" id="playerInventoryColumn">
+                    <div class="inventorySection">
+                        <div class="inventoryTitle">INVENTARIO</div>
+                        <div class="inventoryGrid" id="mainInventoryGrid"></div>
+                    </div>
+                    <div class="inventorySection">
+                        <div class="inventoryTitle">ACCESO RÁPIDO</div>
+                        <div class="inventoryGrid" id="hotbarGrid"></div>
+                    </div>
+                </div>
+
+                <!-- Columna 2: Crafteo -->
+                <div class="inventory-column" id="craftingColumn">
+                    <div class="inventoryTitle">CRAFTEO</div>
+                    <div class="craftingArea">
+                        <div class="craftingGrid" id="craftingGrid">
+                            <div class="fullInventorySlot" data-craft-slot="0"></div><div class="fullInventorySlot" data-craft-slot="1"></div><div class="fullInventorySlot" data-craft-slot="2"></div>
+                            <div class="fullInventorySlot" data-craft-slot="3"></div><div class="fullInventorySlot" data-craft-slot="4"></div><div class="fullInventorySlot" data-craft-slot="5"></div>
+                            <div class="fullInventorySlot" data-craft-slot="6"></div><div class="fullInventorySlot" data-craft-slot="7"></div><div class="fullInventorySlot" data-craft-slot="8"></div>
+                        </div>
+                        <div class="craftingResult" id="craftingResult">
+                            <div class="blockIcon" style="width: 50px; height: 50px;"></div>
+                        </div>
+                        <button class="craftButton" id="craftButton">CRAFTEAR</button>
+                    </div>
+                </div>
+
+                <!-- Columna 3: Libro de Recetas -->
+                <div class="inventory-column" id="recipesColumn">
+                    <div id="recipeBook">
+                        <div class="inventoryTitle">RECETAS</div>
+                        <div id="recipesList"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div id="message"></div>
+        <div id="tooltip" style="position: absolute; display: none; background: rgba(0, 0, 0, 0.8); color: white; padding: 5px 10px; border-radius: 5px; font-size: 10px; pointer-events: none; z-index: 100; border: 1px solid #333; font-family: 'Press Start 2P', cursive;"></div>
+    </div>
+
+    <script>
+        const blockTextures = {
+            // EJEMPLO - DESCOMENTA Y REEMPLAZA LAS URLS
+            'dirt': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-26_083213200.png',
+            'stone': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114346344.png?updatedAt=1773333828932',
+            'sand': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114642605.png?updatedAt=1773334644870',
+            'grass': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-26_083229999.png',
+            'wood': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114437683.png?updatedAt=1773334644699',
+            'leaves': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-26_083906448-removebg-preview.png',
+            'sapling': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114942798-removebg-preview.png?updatedAt=1773334645289',
+            'coal': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114548642.png?updatedAt=1773334645191',
+            'iron': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114600014.png?updatedAt=1773334645279',
+            'gold': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114611008.png?updatedAt=1773334645251',
+            'diamond': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114405060.png?updatedAt=1773334645502',
+            'wood_planks': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111144130.png',
+            'stick': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114156262-removebg-preview.png?updatedAt=1773334645003',
+            'furnace': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114805019.png?updatedAt=1773334644427',
+            'chest': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111227221.png',
+            'wooden_pickaxe': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_113938818-removebg-preview.png?updatedAt=1773334645352',
+            'stone_pickaxe': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111310116-removebg-preview.png',
+            'iron_pickaxe': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114107874-removebg-preview.png?updatedAt=1773334645068',
+            'diamond_pickaxe': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111416979-removebg-preview.png',
+            'wooden_sword': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_112008556-removebg-preview.png',
+            'stone_sword': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_112144626-removebg-preview.png',
+            'iron_sword': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_112433045-removebg-preview.png',
+            'diamond_sword': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111516704-removebg-preview.png?updatedAt=1773764457156',
+            'water': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-12_114713616.png?updatedAt=1773334644622',
+            'underworld_stone': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111057042.png',
+            'cracked_underworld_stone': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111057042.png',
+            'lava': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/imagen_2026-03-17_111007433.png',
+            'adamantium': 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/bedrock.png'
+        };
+
+        const blockImages = {};
+
+        function loadBlockImages() {
+            for (const type in blockTextures) {
+                const img = new Image();
+                img.src = blockTextures[type];
+                blockImages[type] = img;
+            }
+        }
+        loadBlockImages();
+        // --- FIN: SECCIÓN PARA IMÁGENES PERSONALIZADAS ---
+
+        // Configuración del juego
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        canvas.width = 900;
+        canvas.height = 500;
+        
+        const GRAVITY = 0.5;
+        const JUMP_STRENGTH = -7;
+        const MOVE_SPEED = 5;
+        const BLOCK_SIZE = 25;
+        const WORLD_WIDTH = 50000; // Mundo mucho más grande para sensación "infinita"
+        const WORLD_HEIGHT = 200; // Rango extendido para nuevas capas subterráneas
+        
+        let gameTime = 0;
+        let day = 1;
+        let isNight = false;
+        let selectedSlot = 0;
+        let inventoryOpen = false;
+        
+        let camera = { x: 0, y: 0 };
+        let mousePos = { x: 0, y: 0 };
+        let isMouseDown = false;
+        let mouseButton = -1;
+        let breakCooldown = 0;
+        const BREAK_DELAY = 10; // Ticks before breaking next block
+        
+        const playerImage = new Image();
+        playerImage.src = 'https://ik.imagekit.io/rx3s8imfb/GIF%20E%20IMAGENES/steveplayer.png?updatedAt=1773757839914';
+        
+        const player = {
+            x: WORLD_WIDTH * BLOCK_SIZE / 2,
+            y: 0,
+            width: 24, // Ancho < 25 para caber en 1 bloque
+            height: 48, // Alto < 50 para caber en 2 bloques
+            velocityX: 0,
+            velocityY: 0,
+            isJumping: false,
+            health: 8,
+            facing: 'right',
+            fallDistance: 0
+        };
+        
+        const keys = {};
+        
+        // Inventario extendido (27 slots + 9 hotbar)
+        let fullInventory = Array(36).fill(null).map(() => ({ type: null, count: 0, durability: null }));
+        let craftingGrid = Array(9).fill(null).map(() => ({ type: null, count: 0 }));
+        let growingSaplings = [];
+        
+        // Recetas de crafteo
+        const recipes = [
+            {
+                name: "Pico de Madera",
+                ingredients: [
+                    { type: 'wood', count: 3, positions: [0, 1, 2] },
+                    { type: 'wood', count: 1, positions: [4] }
+                ],
+                result: { type: 'wooden_pickaxe', count: 1 },
+                shape: [
+                    ['wood', 'wood', 'wood'],
+                    [null, 'wood', null],
+                    [null, null, null]
+                ]
+            },
+            {
+                name: "Pico de Piedra",
+                ingredients: [
+                    { type: 'stone', count: 3, positions: [0, 1, 2] },
+                    { type: 'wood', count: 2, positions: [3, 5] }
+                ],
+                result: { type: 'stone_pickaxe', count: 1 },
+                shape: [
+                    ['stone', 'stone', 'stone'],
+                    ['wood', null, 'wood'],
+                    [null, null, null]
+                ]
+            },
+            {
+                name: "Pico de Hierro",
+                ingredients: [
+                    { type: 'iron', count: 3, positions: [0, 1, 2] },
+                    { type: 'wood', count: 2, positions: [3, 5] }
+                ],
+                result: { type: 'iron_pickaxe', count: 1 },
+                shape: [
+                    ['iron', 'iron', 'iron'],
+                    ['wood', null, 'wood'],
+                    [null, null, null]
+                ]
+            },
+            {
+                name: "Madera",
+                ingredients: [
+                    { type: 'wood', count: 1, positions: [0] }
+                ],
+                result: { type: 'wood_planks', count: 4 },
+                shape: [
+                    ['wood', null, null],
+                    [null, null, null],
+                    [null, null, null]
+                ]
+            },
+            {
+                name: "Palo",
+                ingredients: [
+                    { type: 'wood_planks', count: 2, positions: [0, 3] }
+                ],
+                result: { type: 'stick', count: 4 },
+                shape: [
+                    ['wood_planks', null, null],
+                    ['wood_planks', null, null],
+                    [null, null, null]
+                ]
+            },
+            {
+                name: "Horno",
+                ingredients: [
+                    { type: 'stone', count: 8, positions: [0, 1, 2, 3, 5, 6, 7, 8] }
+                ],
+                result: { type: 'furnace', count: 1 },
+                shape: [
+                    ['stone', 'stone', 'stone'],
+                    ['stone', null, 'stone'],
+                    ['stone', 'stone', 'stone']
+                ]
+            },
+            {
+                name: "Cofre",
+                ingredients: [
+                    { type: 'wood_planks', count: 8, positions: [0, 1, 2, 3, 5, 6, 7, 8] }
+                ],
+                result: { type: 'chest', count: 1 },
+                shape: [
+                    ['wood_planks', 'wood_planks', 'wood_planks'],
+                    ['wood_planks', null, 'wood_planks'],
+                    ['wood_planks', 'wood_planks', 'wood_planks']
+                ]
+            },
+            {
+                name: "Espada de Madera",
+                result: { type: 'wooden_sword', count: 1 },
+                shape: [
+                    [null, 'wood_planks', null],
+                    [null, 'wood_planks', null],
+                    [null, 'stick', null]
+                ]
+            }
+        ];
+        
+        // Herramientas y durabilidad
+        let currentTool = 'hands';
+        let toolDurability = 100;
+        
+        const blockTypes = {
+            dirt: { color: '#8B4513', hardness: 1, tool: 'any', name: 'Tierra', image:'dirt' },
+            stone: { color: '#808080', hardness: 3, tool: 'pickaxe', name: 'Piedra', image: 'stone' },
+            wood: { color: '#8B4513', hardness: 1, tool: 'any', name: 'Madera', image: 'wood' },
+            sand: { color: '#F4E4C1', hardness: 1, tool: 'any', name: 'Arena', image: 'sand' },
+            grass: { color: '#228B22', hardness: 1, tool: 'any', name: 'Césped', image: 'grass' },
+            leaves: { color: '#228B22', hardness: 0.5, tool: 'any', name: 'Hojas', image: 'leaves' },
+            sapling: { color: '#3CB371', hardness: 0, tool: 'any', name: 'Retoño', image: 'sapling' },
+            coal: { color: '#2F2F2F', hardness: 3, tool: 'pickaxe', name: 'Carbón', image: 'coal' },
+            iron: { color: '#B8B8B8', hardness: 4, tool: 'pickaxe', name: 'Hierro', image: 'iron' },
+            gold: { color: '#FFD700', hardness: 4, tool: 'pickaxe', name: 'Oro', image: 'gold' },
+            diamond: { color: '#00CED1', hardness: 5, tool: 'pickaxe', name: 'Diamante', image: 'diamond' },
+            wood_planks: { color: '#DEB887', hardness: 2, tool: 'any', name: 'Tablones', image: 'wood_planks' },
+            stick: { color: '#8B4513', hardness: 0.5, tool: 'any', name: 'Palo', image: 'stick' },
+            furnace: { color: '#696969', hardness: 5, tool: 'pickaxe', name: 'Horno', image: 'furnace' },
+            chest: { color: '#8B4513', hardness: 2.5, tool: 'any', name: 'Cofre', image: 'chest' },
+            wooden_pickaxe: { color: '#8B4513', hardness: 0, tool: 'any', name: 'Pico de Madera', image: 'wooden_pickaxe' },
+            stone_pickaxe: { color: '#808080', hardness: 0, tool: 'any', name: 'Pico de Piedra', image: 'stone_pickaxe' },
+            iron_pickaxe: { color: '#B8B8B8', hardness: 0, tool: 'any', name: 'Pico de Hierro', image: 'iron_pickaxe' },
+            wooden_sword: { color: '#8B4513', hardness: 0, tool: 'any', name: 'Espada de Madera', image: 'wooden_sword' },
+            water: { color: 'rgba(0, 105, 255, 0.5)', hardness: 0, tool: 'any', name: 'Agua', image: 'water' },
+            underworld_stone: { color: '#8B0000', hardness: 5, tool: 'pickaxe', name: 'Piedra del Inframundo', image: 'underworld_stone' },
+            cracked_underworld_stone: { color: '#6e0000', hardness: 5, tool: 'pickaxe', name: 'Piedra del Inframundo Agrietada', image: 'cracked_underworld_stone' },
+            lava: { color: '#FF4500', hardness: 0, tool: 'any', name: 'Lava', image: 'lava' },
+            adamantium: { color: '#3d3d3d', hardness: Infinity, tool: 'none', name: 'Adamantium', image: 'adamantium' }
+        };
+        
+        let mobs = [];
+        let world = [];
+        
+        function initWorld() {
+            world = [];
+            const simplex = new SimplexNoise();
+            const cave_noise = new SimplexNoise();
+            const GROUND_LEVEL = 64; // Corresponde a la capa Y=0 del jugador
+            
+            // Inicializar mundo como un array vacío
+            for (let y = 0; y < WORLD_HEIGHT; y++) {
+                world[y] = [];
+                 for (let x = 0; x < WORLD_WIDTH; x++) {
+                    world[y][x] = null;
+                }
+            }
+
+            // Generación del terreno
+            for (let x = 0; x < WORLD_WIDTH; x++) {
+                const heightNoise = simplex.noise2D(x * 0.01, 0); // Ruido más suave para terreno más plano
+                const surfaceHeight = Math.floor(22 + heightNoise * 15); // Terreno más alto (cerca de y=10) y con más variación
+                
+                const biomeNoise = simplex.noise2D(x * 0.01, 0);
+                let biome = 'plains';
+                if (biomeNoise < -0.3) biome = 'ocean';
+                else if (biomeNoise > 0.5) biome = 'desert';
+
+                for (let y = 0; y < WORLD_HEIGHT; y++) {
+                    if (y > surfaceHeight) { // Corregido: comparar 'y' con 'surfaceHeight'
+                        const depth = y - surfaceHeight;
+                        
+                        if (depth > 5) { // Subterráneo
+                            world[y][x] = 'stone'; // Por defecto es piedra
+                            const rand = Math.random();
+
+                            // Los minerales solo se generan en el mundo normal (arriba de la capa Y=0)
+                            if (y < GROUND_LEVEL) {
+                                // Carbón: Empieza a aparecer justo debajo de la superficie
+                                if (y > surfaceHeight + 5 && rand < 0.20) {
+                                    world[y][x] = 'coal';
+                                }
+                                // Hierro: Empieza a aparecer más abajo que el carbón
+                                if (y > 40 && rand < 0.10) {
+                                    world[y][x] = 'iron';
+                                }
+                                // Diamantes: Cerca de la capa Y=0 del jugador (y=64)
+                                if (y > 50 && rand < 0.04) { // Ligeramente más comunes ahora
+                                    world[y][x] = 'diamond';
+                                }
+                            }
+                        } else { // Capas superficiales
+                            if (biome === 'desert' && depth <= 3) {
+                                world[y][x] = 'sand';
+                            } else if (biome !== 'desert') {
+                                world[y][x] = 'dirt';
+                            } else {
+                                world[y][x] = 'stone';
+                            }
+                        }
+                    }
+                }
+
+                // Capa de césped (después de la generación base)
+                if (world[surfaceHeight + 1] && world[surfaceHeight + 1][x] === 'dirt') {
+                    world[surfaceHeight][x] = 'grass';
+                }
+
+
+                // Generación de árboles
+                if (biome === 'plains' && Math.random() < 0.05 && x > 5 && x < WORLD_WIDTH - 5) {
+                    let treeY = surfaceHeight;
+                    if(world[treeY] && world[treeY][x] === 'grass') {
+                        // Tronco
+                        for (let i = 1; i <= 4; i++) {
+                            if (treeY - i >= 0) world[treeY - i][x] = 'wood';
+                        }
+                        // Hojas
+                        for (let dy = -3; dy <= -1; dy++) {
+                            for (let dx = -2; dx <= 2; dx++) {
+                                if (treeY - 4 + dy >= 0 && x + dx >= 0 && x + dx < WORLD_WIDTH) {
+                                    if (Math.abs(dx) + Math.abs(dy) <= 3) {
+                                        if(!world[treeY - 4 + dy][x + dx])
+                                            world[treeY - 4 + dy][x + dx] = 'leaves';
+                                    }
+                                 }
+                            }
+                        }
+                    }
+                }
+            }
+            // Generación de cuevas
+            for (let x = 0; x < WORLD_WIDTH; x++) {
+                for (let y = 0; y < GROUND_LEVEL; y++) {
+                    if (world[y] && world[y][x] === 'stone') {
+                        const caveValue = cave_noise.noise2D(x * 0.05, y * 0.05);
+                        if (caveValue > 0.6) {
+                            world[y][x] = null; // Aire (cueva)
+                        }
+                    }
+                }
+            }
+            
+            // Generación de agua
+            const WATER_LEVEL_MIN = 34; // Corresponde a Y=30 del jugador
+            const WATER_LEVEL_MAX = 59; // Corresponde a Y=5 del jugador
+            for (let x = 0; x < WORLD_WIDTH; x++) {
+                const heightNoise = simplex.noise2D(x * 0.01, 0);
+                const surfaceHeight = Math.floor(22 + heightNoise * 15);
+
+                // Generar lagos/océanos en la superficie
+                if (surfaceHeight > WATER_LEVEL_MIN) {
+                    for (let y = surfaceHeight; y > WATER_LEVEL_MIN; y--) {
+                        if (world[y] && !world[y][x]) { // Rellena espacios vacíos hasta el nivel del agua
+                             world[y][x] = 'water';
+                        }
+                    }
+                }
+
+                // Rellenar cuevas con agua en el rango especificado
+                for (let y = WATER_LEVEL_MIN; y < WATER_LEVEL_MAX; y++) {
+                    // Si el bloque actual es aire y el de abajo es sólido, poner agua.
+                    if (world[y] && world[y][x] === null && world[y+1] && world[y+1][x] !== null && world[y+1][x] !== 'water') {
+                        world[y][x] = 'water';
+                    }
+                }
+            }
+
+            // --- INICIO: Generación del Inframundo ---
+            for (let x = 0; x < WORLD_WIDTH; x++) {
+                // Capa 0 a -10: Piedra de Inframundo Roja
+                // Reemplaza el suelo existente por piedra roja.
+                for (let y = GROUND_LEVEL; y < GROUND_LEVEL + 11; y++) {
+                    if (world[y] && world[y][x] && world[y][x] !== 'water' && world[y][x] !== 'air') {
+                        world[y][x] = 'underworld_stone';
+                    }
+                }
+
+                // Capa -11 a -15: Vacío de aire
+                for (let y = GROUND_LEVEL + 11; y < GROUND_LEVEL + 16; y++) {
+                    if (world[y]) {
+                        world[y][x] = null;
+                    }
+                }
+
+                // Capa -16 a -19: Islas flotantes con ORO
+                for (let y = GROUND_LEVEL + 16; y < GROUND_LEVEL + 20; y++) {
+                     if (world[y]) {
+                        const islandNoise = simplex.noise2D(x * 0.05, y * 0.1);
+                        if (islandNoise > 0.35) { // Umbral para crear islas
+                            // Generar oro en las islas
+                            if (Math.random() < 0.1) { // 10% de probabilidad de oro
+                                world[y][x] = 'gold';
+                            } else {
+                                world[y][x] = 'underworld_stone';
+                            }
+                        } else {
+                            world[y][x] = null; // Aire alrededor de las islas
+                        }
+                    }
+                }
+
+                // Capa -20 a -30: Océano de lava
+                for (let y = GROUND_LEVEL + 20; y < GROUND_LEVEL + 31; y++) {
+                    if (world[y]) {
+                        world[y][x] = 'lava';
+                    }
+                }
+            }
+            // --- FIN: Generación del Inframundo ---
+
+            // Capa indestructible de Adamantium después de la lava
+            const adamantiumLevel = GROUND_LEVEL + 31; // Y=95, que corresponde a la capa -30 del jugador
+            for (let x = 0; x < WORLD_WIDTH; x++) {
+                if (world[adamantiumLevel]) {
+                    world[adamantiumLevel][x] = 'adamantium';
+                }
+                 // Limpiar todo lo que esté por debajo para que no se genere nada más
+                for (let y = adamantiumLevel + 1; y < WORLD_HEIGHT; y++) {
+                    if (world[y]) {
+                        world[y][x] = null;
+                    }
+                }
+            }
+
+
+            // Encuentra un punto de aparición seguro
+            const spawnX = Math.floor(WORLD_WIDTH / 2);
+            let spawnY = 0;
+            for (let y = 0; y < WORLD_HEIGHT; y++) {
+                if (world[y][spawnX] && world[y][spawnX] !== 'water' && (!world[y-1] || !world[y-1][spawnX])) {
+                    spawnY = y * BLOCK_SIZE - player.height;
+                    break;
+                }
+            }
+            player.x = spawnX * BLOCK_SIZE;
+            player.y = spawnY;
+        }
+        
+        function updateCamera() {
+            const marginX = 350; // Ancho de la zona muerta
+            const marginTop = 150; // Altura superior de la zona muerta
+            const marginBottom = 150; // Altura inferior de la zona muerta (espacio para la hotbar)
+
+            const playerScreenX = player.x - camera.x;
+            const playerScreenY = player.y - camera.y;
+
+            // Mover cámara horizontalmente
+            if (playerScreenX < marginX) {
+                camera.x = player.x - marginX;
+            } else if (playerScreenX > canvas.width - player.width - marginX) {
+                camera.x = player.x - (canvas.width - player.width - marginX);
+            }
+
+            // Mover cámara verticalmente
+            if (playerScreenY < marginTop) {
+                camera.y = player.y - marginTop;
+            } else if (playerScreenY > canvas.height - player.height - marginBottom) {
+                camera.y = player.y - (canvas.height - player.height - marginBottom);
+            }
+            
+            // Limitar la cámara al borde inferior del mundo
+            camera.y = Math.min(camera.y, WORLD_HEIGHT * BLOCK_SIZE - canvas.height);
+            
+            document.getElementById('posX').textContent = Math.floor(player.x / BLOCK_SIZE);
+            document.getElementById('posY').textContent = 64 - Math.floor((player.y + player.height/2) / BLOCK_SIZE);
+        }
+        
+        function drawWorld() {
+            const startX = Math.floor(camera.x / BLOCK_SIZE);
+            const endX = Math.ceil((camera.x + canvas.width) / BLOCK_SIZE);
+            const startY = Math.floor(camera.y / BLOCK_SIZE);
+            const endY = Math.ceil((camera.y + canvas.height) / BLOCK_SIZE);
+            
+            for (let y = Math.max(0, startY); y < Math.min(WORLD_HEIGHT, endY); y++) {
+                for (let x = Math.max(0, startX); x < Math.min(WORLD_WIDTH, endX); x++) {
+                    const block = world[y][x];
+                    if (block) {
+                        const screenX = x * BLOCK_SIZE - camera.x;
+                        const screenY = y * BLOCK_SIZE - camera.y;
+                        
+                        const blockImage = blockImages[block];
+
+                        if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                            ctx.drawImage(blockImage, screenX, screenY, BLOCK_SIZE, BLOCK_SIZE);
+                        } else {
+                            const blockType = blockTypes[block];
+                            ctx.fillStyle = blockType.color;
+                            ctx.fillRect(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE);
+                            
+                            ctx.strokeStyle = 'rgba(0, 0, 0, 0.2)';
+                            ctx.strokeRect(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE);
+                            
+                            if (block === 'grass') {
+                                ctx.fillStyle = '#006400';
+                                ctx.fillRect(screenX, screenY, BLOCK_SIZE, 5);
+                            } else if (block === 'wood') {
+                                ctx.strokeStyle = '#654321';
+                                ctx.beginPath();
+                                ctx.moveTo(screenX, screenY + 8);
+                                ctx.lineTo(screenX + BLOCK_SIZE, screenY + 8);
+                                ctx.moveTo(screenX, screenY + 16);
+                                ctx.lineTo(screenX + BLOCK_SIZE, screenY + 16);
+                                ctx.stroke();
+                            } else if (block === 'leaves') {
+                                ctx.fillStyle = 'rgba(0, 100, 0, 0.3)';
+                                ctx.beginPath();
+                                ctx.arc(screenX + BLOCK_SIZE/2, screenY + BLOCK_SIZE/2, 8, 0, Math.PI * 2);
+                                ctx.fill();
+                            } else if (block === 'water') {
+                                ctx.globalAlpha = 0.7;
+                                ctx.fillStyle = blockType.color;
+                                ctx.fillRect(screenX, screenY, BLOCK_SIZE, BLOCK_SIZE);
+                                ctx.globalAlpha = 1;
+                                
+                                // wave effect
+                                ctx.fillStyle = 'rgba(255, 255, 255, 0.2)';
+                                ctx.beginPath();
+                                ctx.moveTo(screenX, screenY + 5 + Math.sin(x * 0.5 + gameTime * 5) * 2);
+                                ctx.lineTo(screenX + BLOCK_SIZE, screenY + 5 + Math.sin(x * 0.5 + gameTime * 5 + 1) * 2);
+                                ctx.lineTo(screenX + BLOCK_SIZE, screenY);
+                                ctx.lineTo(screenX, screenY);
+                                ctx.closePath();
+                                ctx.fill();
+                            } else if (block === 'coal') {
+                                ctx.fillStyle = '#1a1a1a';
+                                ctx.fillRect(screenX + 5, screenY + 5, BLOCK_SIZE - 10, BLOCK_SIZE - 10);
+                            } else if (block === 'iron') {
+                                ctx.fillStyle = '#D3D3D3';
+                                ctx.fillRect(screenX + 3, screenY + 3, BLOCK_SIZE - 6, BLOCK_SIZE - 6);
+                            } else if (block === 'gold') {
+                                ctx.fillStyle = '#FFED4E';
+                                ctx.fillRect(screenX + 3, screenY + 3, BLOCK_SIZE - 6, BLOCK_SIZE - 6);
+                            } else if (block === 'diamond') {
+                                ctx.fillStyle = '#40E0D0';
+                                ctx.beginPath();
+                                ctx.moveTo(screenX + BLOCK_SIZE/2, screenY + 5);
+                                ctx.lineTo(screenX + BLOCK_SIZE - 5, screenY + BLOCK_SIZE/2);
+                                ctx.lineTo(screenX + BLOCK_SIZE/2, screenY + BLOCK_SIZE - 5);
+                                ctx.lineTo(screenX + 5, screenY + BLOCK_SIZE/2);
+                                ctx.closePath();
+                                ctx.fill();
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        
+        function drawPlayer() {
+            const screenX = player.x - camera.x;
+            const screenY = player.y - camera.y;
+
+            ctx.save();
+            
+            if (!playerImage.complete || playerImage.naturalHeight === 0) {
+                ctx.fillStyle = '#FF6B6B';
+                ctx.fillRect(screenX, screenY, player.width, player.height);
+                
+                ctx.fillStyle = 'white';
+                ctx.fillRect(screenX + 5, screenY + 10, 8, 8);
+                ctx.fillRect(screenX + 17, screenY + 10, 8, 8);
+                
+                ctx.fillStyle = 'black';
+                ctx.fillRect(screenX + 7, screenY + 12, 4, 4);
+                ctx.fillRect(screenX + 19, screenY + 12, 4, 4);
+            } else {
+                const aspectRatio = playerImage.naturalHeight / playerImage.naturalWidth;
+                const drawnHeight = player.width * aspectRatio;
+                const yOffset = player.height - drawnHeight; // Align to the bottom
+
+                if (player.facing === 'right') {
+                    ctx.drawImage(playerImage, screenX, screenY + yOffset, player.width, drawnHeight);
+                } else {
+                    ctx.save();
+                    ctx.translate(screenX + player.width, screenY);
+                    ctx.scale(-1, 1);
+                    // Draw image flipped, respecting the new aspect ratio and alignment
+                    ctx.drawImage(playerImage, 0, yOffset, player.width, drawnHeight);
+                    ctx.restore();
+                }
+            }
+            
+            ctx.restore();
+        }
+
+        function drawTargetBlock() {
+            const worldX = mousePos.x + camera.x;
+            const worldY = mousePos.y + camera.y;
+
+            const blockX = Math.floor(worldX / BLOCK_SIZE);
+            const blockY = Math.floor(worldY / BLOCK_SIZE);
+
+            const screenX = blockX * BLOCK_SIZE - camera.x;
+            const screenY = blockY * BLOCK_SIZE - camera.y;
+
+            const playerCenterX = player.x + player.width / 2;
+            const playerCenterY = player.y + player.height / 2;
+            const blockCenterX = blockX * BLOCK_SIZE + BLOCK_SIZE / 2;
+            const blockCenterY = blockY * BLOCK_SIZE + BLOCK_SIZE / 2;
+
+            const distance = Math.sqrt(
+                Math.pow(playerCenterX - blockCenterX, 2) +
+                Math.pow(playerCenterY - blockCenterY, 2)
+            );
+
+            if (distance <= 5 * BLOCK_SIZE) { // 5 blocks reach
+                ctx.strokeStyle = 'rgba(255, 255, 255, 0.9)';
+                ctx.lineWidth = 2;
+                ctx.strokeRect(screenX + 1, screenY + 1, BLOCK_SIZE - 2, BLOCK_SIZE - 2);
+            }
+        }
+        
+        function updateInventoryDisplay() {
+            const slots = document.querySelectorAll('.inventorySlot');
+            slots.forEach((slot, index) => {
+                const blockCount = slot.querySelector('.blockCount');
+                const blockIcon = slot.querySelector('.blockIcon');
+                const inventoryIndex = 27 + index; // Hotbar empieza en el slot 27
+                const item = fullInventory[inventoryIndex];
+                
+                if (item && item.type) {
+                    const blockType = blockTypes[item.type];
+                    const blockImage = blockImages[item.type];
+
+                    if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                        blockIcon.style.background = `url('${blockImage.src}')`;
+                        blockIcon.style.backgroundSize = 'contain';
+                        blockIcon.style.backgroundColor = 'transparent';
+                    } else {
+                        blockIcon.style.background = blockType.color;
+                    }
+
+                    blockIcon.style.border = '1px solid rgba(0,0,0,0.3)';
+                    blockCount.textContent = item.count > 1 ? item.count : '';
+                } else {
+                    blockIcon.style.background = 'transparent';
+                    blockIcon.style.border = 'none';
+                    blockCount.textContent = '';
+                }
+            });
+        }
+        
+        function updateFullInventoryDisplay() {
+            const mainGrid = document.getElementById('mainInventoryGrid');
+            const hotbarGrid = document.getElementById('hotbarGrid');
+            mainGrid.innerHTML = '';
+            hotbarGrid.innerHTML = '';
+
+            // Main inventory (first 27 slots)
+            for (let i = 0; i < 27; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'fullInventorySlot';
+                slot.dataset.inventorySlot = i;
+                const item = fullInventory[i];
+                
+                if (item && item.type) {
+                    const blockIcon = document.createElement('div');
+                    blockIcon.className = 'blockIcon';
+                    const blockImage = blockImages[item.type];
+
+                    if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                        blockIcon.style.background = `url('${blockImage.src}')`;
+                        blockIcon.style.backgroundSize = 'contain';
+                        blockIcon.style.backgroundColor = 'transparent';
+                    } else {
+                        blockIcon.style.background = blockTypes[item.type].color;
+                    }
+                    
+                    const blockCount = document.createElement('span');
+                    blockCount.className = 'blockCount';
+                    blockCount.textContent = item.count > 1 ? item.count : '';
+                    
+                    slot.appendChild(blockIcon);
+                    slot.appendChild(blockCount);
+                }
+                mainGrid.appendChild(slot);
+            }
+
+            // Hotbar (last 9 slots)
+            for (let i = 27; i < 36; i++) {
+                const slot = document.createElement('div');
+                slot.className = 'fullInventorySlot';
+                slot.dataset.inventorySlot = i;
+                const item = fullInventory[i];
+
+                if (item && item.type) {
+                    const blockIcon = document.createElement('div');
+                    blockIcon.className = 'blockIcon';
+                    const blockImage = blockImages[item.type];
+
+                    if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                        blockIcon.style.background = `url('${blockImage.src}')`;
+                        blockIcon.style.backgroundSize = 'contain';
+                        blockIcon.style.backgroundColor = 'transparent';
+                    } else {
+                        blockIcon.style.background = blockTypes[item.type].color;
+                    }
+                    
+                    const blockCount = document.createElement('span');
+                    blockCount.className = 'blockCount';
+                    blockCount.textContent = item.count > 1 ? item.count : '';
+                    
+                    slot.appendChild(blockIcon);
+                    slot.appendChild(blockCount);
+                }
+                hotbarGrid.appendChild(slot);
+            }
+        }
+        
+        let selectedItemSlot = -1;
+
+        document.getElementById('fullInventory').addEventListener('click', (e) => {
+            const slot = e.target.closest('.fullInventorySlot');
+            if (!slot) return;
+
+            const clickedSlotIndex = parseInt(slot.dataset.inventorySlot);
+            
+            if (selectedItemSlot === -1) {
+                if (fullInventory[clickedSlotIndex] && fullInventory[clickedSlotIndex].type) {
+                    selectedItemSlot = clickedSlotIndex;
+                    slot.style.borderColor = '#FFD700'; // Highlight
+                }
+            } else {
+                // Swap items
+                const item1 = fullInventory[selectedItemSlot];
+                const item2 = fullInventory[clickedSlotIndex];
+                fullInventory[selectedItemSlot] = item2;
+                fullInventory[clickedSlotIndex] = item1;
+
+                const previouslySelectedSlot = document.querySelector(`.fullInventorySlot[data-inventory-slot='${selectedItemSlot}']`);
+                if (previouslySelectedSlot) {
+                     previouslySelectedSlot.style.borderColor = '#666';
+                }
+                selectedItemSlot = -1;
+
+                updateFullInventoryDisplay();
+                updateInventoryDisplay();
+            }
+        });
+
+        const toolTypes = ['wooden_pickaxe', 'stone_pickaxe', 'iron_pickaxe', 'wooden_sword'];
+
+        function addToInventory(itemType, count = 1, durability = 100) {
+            const isTool = toolTypes.includes(itemType);
+
+            // Si es una herramienta, no se apila. Busca un slot vacío.
+            if (isTool) {
+                // Prioritize hotbar
+                for (let i = 27; i < 36; i++) {
+                    if (!fullInventory[i] || !fullInventory[i].type) {
+                        fullInventory[i] = { type: itemType, count: 1, durability: durability };
+                        updateInventoryDisplay();
+                        updateToolDisplay();
+                        return true;
+                    }
+                }
+                // Then main inventory
+                for (let i = 0; i < 27; i++) {
+                    if (!fullInventory[i] || !fullInventory[i].type) {
+                        fullInventory[i] = { type: itemType, count: 1, durability: durability };
+                        updateFullInventoryDisplay();
+                        return true;
+                    }
+                }
+            } else { // Si no es una herramienta, intentar apilar.
+                // Prioritize hotbar for stacking
+                for (let i = 27; i < 36; i++) {
+                    if (fullInventory[i] && fullInventory[i].type === itemType && fullInventory[i].count < 64) {
+                        const canAdd = Math.min(count, 64 - fullInventory[i].count);
+                        fullInventory[i].count += canAdd;
+                        count -= canAdd;
+                        if (count === 0) {
+                            updateInventoryDisplay();
+                            return true;
+                        }
+                    }
+                }
+                // Then main inventory for stacking
+                for (let i = 0; i < 27; i++) {
+                     if (fullInventory[i] && fullInventory[i].type === itemType && fullInventory[i].count < 64) {
+                        const canAdd = Math.min(count, 64 - fullInventory[i].count);
+                        fullInventory[i].count += canAdd;
+                        count -= canAdd;
+                        if (count === 0) { updateFullInventoryDisplay(); return true; }
+                    }
+                }
+                // Find empty slot in hotbar
+                 for (let i = 27; i < 36; i++) {
+                    if (!fullInventory[i] || !fullInventory[i].type) {
+                        fullInventory[i] = { type: itemType, count: count, durability: null };
+                        updateInventoryDisplay();
+                        return true;
+                    }
+                }
+                // Find empty slot in main inventory
+                for (let i = 0; i < 27; i++) {
+                    if (!fullInventory[i] || !fullInventory[i].type) {
+                        fullInventory[i] = { type: itemType, count: count, durability: null };
+                        updateFullInventoryDisplay();
+                        return true;
+                    }
+                }
+            }
+            
+            showMessage('¡Inventario lleno!');
+            return false;
+        }
+        
+        function removeFromInventory(slot, count = 1) {
+            if (fullInventory[slot] && fullInventory[slot].count >= count) {
+                fullInventory[slot].count -= count;
+                if (fullInventory[slot].count === 0) {
+                    fullInventory[slot] = { type: null, count: 0, durability: null };
+                }
+                updateInventoryDisplay();
+                updateFullInventoryDisplay();
+                return true;
+            }
+            return false;
+        }
+        
+       function canBreakBlock(blockToBreak, tool) {
+            const blockInfo = blockTypes[blockToBreak];
+            const toolType = tool ? tool.type : 'hands';
+
+            if (blockInfo.tool === 'any') {
+                return true;
+            }
+            if (blockInfo.tool === 'pickaxe') {
+                return toolType && toolType.includes('pickaxe');
+            }
+            return false;
+        }
+        
+        function breakBlock(mouseX, mouseY) {
+            const worldX = mouseX + camera.x;
+            const worldY = mouseY + camera.y;
+            
+            const blockX = Math.floor(worldX / BLOCK_SIZE);
+            const blockY = Math.floor(worldY / BLOCK_SIZE);
+            
+            if (blockX >= 0 && blockX < WORLD_WIDTH && blockY >= 0 && blockY < WORLD_HEIGHT && world[blockY][blockX]) {
+
+                const playerCenterX = player.x + player.width / 2;
+                const playerCenterY = player.y + player.height / 2;
+                const blockCenterX = blockX * BLOCK_SIZE + BLOCK_SIZE / 2;
+                const blockCenterY = blockY * BLOCK_SIZE + BLOCK_SIZE / 2;
+
+                const distance = Math.sqrt(
+                    Math.pow(playerCenterX - blockCenterX, 2) + 
+                    Math.pow(playerCenterY - blockCenterY, 2)
+                );
+
+                if (distance > 5 * BLOCK_SIZE) { // Rango de minado un poco mayor
+                    showMessage("¡Estás muy lejos!");
+                    return;
+                }
+
+                const blockType = world[blockY][blockX];
+                if (blockType === 'water' || blockType === 'adamantium') return;
+
+                const hotbarSlot = 27 + selectedSlot;
+                const currentToolItem = fullInventory[hotbarSlot];
+                
+                if (canBreakBlock(blockType, currentToolItem)) {
+                    if (currentToolItem && currentToolItem.type && toolTypes.includes(currentToolItem.type)) {
+                        currentToolItem.durability -= 5;
+                        if (currentToolItem.durability <= 0) {
+                            fullInventory[hotbarSlot] = { type: null, count: 0, durability: null };
+                            showMessage('¡Herramienta rota!');
+                        }
+                    }
+                    
+                    updateToolDisplay();
+                    world[blockY][blockX] = null;
+                    
+                    if (blockType === 'leaves') {
+                        if (Math.random() < 0.3) {
+                            addToInventory('sapling', 1);
+                        }
+                    } else {
+                        addToInventory(blockType, 1);
+                    }
+                    updateInventoryDisplay();
+                    updateFullInventoryDisplay();
+
+                } else {
+                    showMessage('¡Herramienta incorrecta para este bloque!');
+                }
+            }
+        }
+        
+        function placeBlock(mouseX, mouseY) {
+            const worldX = mouseX + camera.x;
+            const worldY = mouseY + camera.y;
+            
+            const blockX = Math.floor(worldX / BLOCK_SIZE);
+            const blockY = Math.floor(worldY / BLOCK_SIZE);
+            
+            if (blockX >= 0 && blockX < WORLD_WIDTH && blockY >= 0 && blockY < WORLD_HEIGHT) {
+                // Se eliminó la verificación de colisión del jugador para permitir la construcción fluida (ej. hacer torres).
+                // La física de colisión existente evitará que el jugador se quede atascado.
+
+                if (!world[blockY][blockX] || world[blockY][blockX] === 'water') {
+                    const inventoryIndex = 27 + selectedSlot;
+                    const itemToPlace = fullInventory[inventoryIndex];
+                    if (itemToPlace && itemToPlace.type && itemToPlace.count > 0 && !toolTypes.includes(itemToPlace.type)) {
+                        world[blockY][blockX] = itemToPlace.type;
+                        
+                        if (itemToPlace.type === 'sapling') {
+                            growingSaplings.push({ x: blockX, y: blockY, time: Date.now() });
+                        }
+
+                        removeFromInventory(inventoryIndex, 1);
+                    }
+                }
+            }
+        }
+
+        function growTree(x, y) {
+            // Verifica si hay espacio para crecer
+            for(let i = 1; i <= 4; i++) {
+                if(y - i < 0 || (world[y-i] && world[y-i][x])) {
+                    return; // Hay una obstrucción
+                }
+            }
+
+            // Genera un árbol en la posición dada, reemplazando el retoño.
+            // Tronco (4 bloques de alto)
+            for (let i = 0; i < 4; i++) {
+                if (y - i >= 0) world[y - i][x] = 'wood';
+            }
+            
+            // Hojas (una copa simple)
+            const canopyY = y - 4; // Parte superior del tronco
+            for (let ly = canopyY - 2; ly <= canopyY; ly++) {
+                for (let lx = x - 2; lx <= x + 2; lx++) {
+                    if (lx >= 0 && lx < WORLD_WIDTH && ly >= 0 && ly < WORLD_HEIGHT) {
+                        // No sobrescribir bloques que no sean aire
+                        if (!world[ly][lx]) {
+                            world[ly][lx] = 'leaves';
+                        }
+                    }
+                }
+            }
+        }
+
+        function updateSaplings() {
+            const now = Date.now();
+            const growthTime = 5000; // 5 segundos en milisegundos
+
+            for (let i = growingSaplings.length - 1; i >= 0; i--) {
+                const sapling = growingSaplings[i];
+                
+                if (now - sapling.time >= growthTime) {
+                    // ¡Es hora de crecer!
+                    // Verifica si todavía hay un retoño en esa posición
+                    if (world[sapling.y] && world[sapling.y][sapling.x] === 'sapling') {
+                        growTree(sapling.x, sapling.y);
+                    }
+                    // Elimina el retoño de la lista de crecimiento
+                    growingSaplings.splice(i, 1);
+                }
+            }
+        }
+        
+        function updateToolDisplay() {
+            const hotbarSlot = 27 + selectedSlot;
+            const selectedItem = fullInventory[hotbarSlot];
+            
+            const toolNames = {
+                'wooden_pickaxe': 'Pico de Madera',
+                'stone_pickaxe': 'Pico de Piedra',
+                'iron_pickaxe': 'Pico de Hierro',
+                'wooden_sword': 'Espada de Madera'
+            };
+
+            if (selectedItem && toolTypes.includes(selectedItem.type)) {
+                document.getElementById('currentTool').textContent = toolNames[selectedItem.type];
+                document.getElementById('durabilityFill').style.width = selectedItem.durability + '%';
+            } else if (selectedItem && selectedItem.type) {
+                 document.getElementById('currentTool').textContent = blockTypes[selectedItem.type].name;
+                 document.getElementById('durabilityFill').style.width = '100%';
+            } 
+            else {
+                document.getElementById('currentTool').textContent = 'Manos';
+                document.getElementById('durabilityFill').style.width = '100%';
+            }
+        }
+        
+        function checkRecipe() {
+            for (const recipe of recipes) {
+                let matches = true;
+                
+                for (let i = 0; i < 9; i++) {
+                    const expectedType = recipe.shape[Math.floor(i / 3)][i % 3];
+                    const actualType = craftingGrid[i] ? craftingGrid[i].type : null;
+                    
+                    if (expectedType !== actualType) {
+                        matches = false;
+                        break;
+                    }
+                }
+                
+                if (matches) {
+                    return recipe;
+                }
+            }
+            
+            return null;
+        }
+        
+        function updateCraftingDisplay() {
+            const slots = document.querySelectorAll('#craftingGrid .fullInventorySlot');
+            slots.forEach((slot, index) => {
+                slot.innerHTML = '';
+                
+                if (craftingGrid[index] && craftingGrid[index].type) {
+                    const icon = document.createElement('div');
+                    icon.className = 'blockIcon';
+                    const blockImage = blockImages[craftingGrid[index].type];
+                    if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                        icon.style.background = `url('${blockImage.src}')`;
+                        icon.style.backgroundSize = 'contain';
+                        icon.style.backgroundColor = 'transparent';
+                    } else {
+                        icon.style.background = blockTypes[craftingGrid[index].type].color;
+                    }
+                    
+                    const count = document.createElement('span');
+                    count.className = 'blockCount';
+                    count.textContent = craftingGrid[index].count;
+                    
+                    slot.appendChild(icon);
+                    slot.appendChild(count);
+                }
+            });
+            
+            const recipe = checkRecipe();
+            const resultSlot = document.getElementById('craftingResult');
+            const icon = resultSlot.querySelector('.blockIcon');
+
+            if (recipe) {
+                const blockImage = blockImages[recipe.result.type];
+                if (blockImage && blockImage.complete && blockImage.naturalHeight !== 0) {
+                    icon.style.background = `url('${blockImage.src}')`;
+                    icon.style.backgroundSize = 'contain';
+                    icon.style.backgroundColor = 'transparent';
+                } else {
+                    icon.style.background = blockTypes[recipe.result.type].color;
+                }
+                resultSlot.dataset.result = recipe.result.type;
+                resultSlot.dataset.count = recipe.result.count;
+            } else {
+                icon.style.background = 'transparent';
+                resultSlot.dataset.result = '';
+            }
+        }
+        
+        function craft() {
+            const recipe = checkRecipe();
+            if (recipe) {
+                craftingGrid = Array(9).fill(null).map(() => ({ type: null, count: 0 }));
+
+                const isTool = toolTypes.includes(recipe.result.type);
+                if(isTool){
+                    addToInventory(recipe.result.type, recipe.result.count, 100);
+                } else {
+                    addToInventory(recipe.result.type, recipe.result.count);
+                }
+
+                showMessage(`¡Has creado ${blockTypes[recipe.result.type].name}!`);
+                
+                updateCraftingDisplay();
+                updateFullInventoryDisplay();
+                updateInventoryDisplay();
+            } else {
+                showMessage('¡No hay receta válida!');
+            }
+        }
+
+        function populateCraftingGrid(recipe) {
+            // First, return any items from the crafting grid to the inventory
+            for (let i = 0; i < craftingGrid.length; i++) {
+                if (craftingGrid[i].type) {
+                    addToInventory(craftingGrid[i].type, craftingGrid[i].count);
+                }
+                craftingGrid[i] = { type: null, count: 0 };
+            }
+
+            const required = {};
+            recipe.shape.flat().forEach(type => {
+                if (type) required[type] = (required[type] || 0) + 1;
+            });
+
+            const available = {};
+            fullInventory.forEach(item => {
+                if (item.type) available[item.type] = (available[item.type] || 0) + item.count;
+            });
+
+            let canCraft = true;
+            for (const type in required) {
+                if (!available[type] || available[type] < required[type]) {
+                    canCraft = false;
+                    break;
+                }
+            }
+
+            if (canCraft) {
+                recipe.shape.flat().forEach((type, index) => {
+                    if (type) {
+                        for (let i = 0; i < fullInventory.length; i++) {
+                            if (fullInventory[i].type === type && fullInventory[i].count > 0) {
+                                removeFromInventory(i, 1);
+                                craftingGrid[index] = { type: type, count: 1 };
+                                break;
+                            }
+                        }
+                    }
+                });
+                updateCraftingDisplay();
+                updateFullInventoryDisplay();
+                showMessage('Receta cargada en la mesa de crafteo.');
+            } else {
+                showMessage('¡No tienes suficientes materiales!');
+            }
+        }
+        
+        function getInventoryCounts() {
+            const counts = {};
+            fullInventory.forEach(item => {
+                if (item && item.type) {
+                    counts[item.type] = (counts[item.type] || 0) + item.count;
+                }
+            });
+            return counts;
+        }
+
+        function canCraftRecipe(recipe, inventoryCounts) {
+            const required = {};
+            recipe.shape.flat().forEach(type => {
+                if (type) {
+                    required[type] = (required[type] || 0) + 1;
+                }
+            });
+
+            for (const type in required) {
+                if (!inventoryCounts[type] || inventoryCounts[type] < required[type]) {
+                    return false;
+                }
+            }
+            return true;
+        }
+
+        function displayRecipes() {
+            const recipesList = document.getElementById('recipesList');
+            recipesList.innerHTML = '';
+            
+            const inventoryCounts = getInventoryCounts();
+            const craftableRecipes = [];
+            const uncraftableRecipes = [];
+
+            recipes.forEach(recipe => {
+                if (canCraftRecipe(recipe, inventoryCounts)) {
+                    craftableRecipes.push(recipe);
+                } else {
+                    uncraftableRecipes.push(recipe);
+                }
+            });
+
+            const sortedRecipes = [...craftableRecipes, ...uncraftableRecipes];
+            
+            sortedRecipes.forEach(recipe => {
+                const recipeDiv = document.createElement('div');
+                recipeDiv.className = 'recipe';
+                
+                const canCraft = craftableRecipes.includes(recipe);
+                if (canCraft) {
+                    recipeDiv.style.borderLeft = '3px solid #4CAF50'; // Indicador verde
+                }
+                
+                const name = document.createElement('div');
+                name.className = 'recipeName';
+                name.textContent = recipe.name;
+                
+                const ingredients = document.createElement('div');
+                ingredients.className = 'recipeIngredients';
+                
+                const ingredientCounts = {};
+                recipe.shape.flat().forEach(item => {
+                    if (item) {
+                        ingredientCounts[item] = (ingredientCounts[item] || 0) + 1;
+                    }
+                });
+                
+                ingredients.innerHTML = Object.entries(ingredientCounts)
+                    .map(([type, count]) => `${count}x ${blockTypes[type].name}`)
+                    .join('<br>');
+                
+                const result = document.createElement('div');
+                result.className = 'recipeResult';
+                result.textContent = `→ ${recipe.result.count}x ${blockTypes[recipe.result.type].name}`;
+                
+                recipeDiv.appendChild(name);
+                recipeDiv.appendChild(ingredients);
+                recipeDiv.appendChild(result);
+
+                recipeDiv.addEventListener('click', () => populateCraftingGrid(recipe));
+                
+                recipesList.appendChild(recipeDiv);
+            });
+        }
+        
+
+        
+        function updatePlayer() {
+            // Movimiento y físicas
+            if (keys['a'] || keys['ArrowLeft']) {
+                player.velocityX = -MOVE_SPEED;
+                player.facing = 'left';
+            } else if (keys['d'] || keys['ArrowRight']) {
+                player.velocityX = MOVE_SPEED;
+                player.facing = 'right';
+            } else {
+                player.velocityX = 0;
+            }
+            
+            if ((keys['w'] || keys[' '] || keys['ArrowUp']) && !player.isJumping) {
+                player.velocityY = JUMP_STRENGTH;
+                player.isJumping = true;
+            }
+
+            player.velocityY += GRAVITY;
+
+            if (player.isJumping && player.velocityY > 0) {
+                player.fallDistance += player.velocityY;
+            }
+
+            player.x += player.velocityX;
+            checkCollisions('horizontal');
+            player.y += player.velocityY;
+            checkCollisions('vertical');
+            
+            // Limites del mundo (solo verticales por ahora)
+             if (player.y < 0) {
+                player.y = 0;
+                player.velocityY = 0;
+            }
+            if (player.y > WORLD_HEIGHT * BLOCK_SIZE - player.height) {
+                player.y = WORLD_HEIGHT * BLOCK_SIZE - player.height;
+                player.velocityY = 0;
+                player.isJumping = false;
+            }
+            updateHealthBar();
+        }
+
+        function getBlock(x, y) {
+            const blockX = Math.floor(x / BLOCK_SIZE);
+            const blockY = Math.floor(y / BLOCK_SIZE);
+            if (blockX >= 0 && blockX < WORLD_WIDTH && blockY >= 0 && blockY < WORLD_HEIGHT) {
+                return world[blockY][blockX];
+            }
+            return null;
+        }
+
+        function checkCollisions(axis) {
+            let collided = false;
+
+            for (let y = Math.floor(player.y / BLOCK_SIZE); y < Math.ceil((player.y + player.height) / BLOCK_SIZE); y++) {
+                for (let x = Math.floor(player.x / BLOCK_SIZE); x < Math.ceil((player.x + player.width) / BLOCK_SIZE); x++) {
+                    const block = getBlock(x * BLOCK_SIZE, y * BLOCK_SIZE);
+                    if (block && block !== 'water') { // Ignorar colisiones con el agua
+                        if (axis === 'vertical') {
+                            if (player.velocityY > 0) {
+                                player.y = y * BLOCK_SIZE - player.height;
+                                player.velocityY = 0;
+                                player.isJumping = false;
+                                collided = true;
+                            } else if (player.velocityY < 0) {
+                                player.y = (y + 1) * BLOCK_SIZE;
+                                player.velocityY = 0;
+                                collided = true;
+                            }
+                        }
+                        if (axis === 'horizontal') {
+                            if (player.velocityX > 0) {
+                                player.x = x * BLOCK_SIZE - player.width;
+                                player.velocityX = 0;
+                                collided = true;
+                            } else if (player.velocityX < 0) {
+                                player.x = (x + 1) * BLOCK_SIZE;
+                                player.velocityX = 0;
+                                collided = true;
+                            }
+                        }
+                    }
+                }
+            }
+            return collided;
+        }
+
+        // Esta función ya no es necesaria, la nueva lógica está en handleCollisions
+        function checkBlockCollisions() { }
+        
+        function updateGameTime() {
+            gameTime += 0.001;
+            
+            const hours = Math.floor((gameTime % 24) * 1);
+            const minutes = Math.floor(((gameTime % 24) * 1 - hours) * 60);
+            
+            if (hours >= 6 && hours < 18) {
+                isNight = false;
+            } else {
+                isNight = true;
+            }
+            
+            if (gameTime >= 24) {
+                gameTime = 0;
+                day++;
+            }
+            
+            document.getElementById('gameTime').textContent = `Día: ${day} - ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+        }
+        
+        function updateSky() {
+            const hours = Math.floor((gameTime % 24) * 1);
+            
+            if (hours >= 6 && hours < 12) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#98D8E8');
+                ctx.fillStyle = gradient;
+            } else if (hours >= 12 && hours < 18) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#87CEEB');
+                gradient.addColorStop(1, '#F0E68C');
+                ctx.fillStyle = gradient;
+            } else if (hours >= 18 && hours < 20) {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#FF6347');
+                gradient.addColorStop(1, '#FFA500');
+                ctx.fillStyle = gradient;
+            } else {
+                const gradient = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                gradient.addColorStop(0, '#191970');
+                gradient.addColorStop(1, '#000033');
+                ctx.fillStyle = gradient;
+            }
+            
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            if (!isNight) {
+                const sunX = (hours - 6) * (canvas.width / 12);
+                const sunY = 50 + Math.sin((hours - 6) * Math.PI / 12) * -30;
+                
+                ctx.fillStyle = '#FFD700';
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, 30, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.strokeStyle = '#FFD700';
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i * Math.PI) / 4;
+                    ctx.beginPath();
+                    ctx.moveTo(sunX + Math.cos(angle) * 35, sunY + Math.sin(angle) * 35);
+                    ctx.lineTo(sunX + Math.cos(angle) * 45, sunY + Math.sin(angle) * 45);
+                    ctx.stroke();
+                }
+            } else {
+                const moonX = ((hours >= 20 ? hours - 20 : hours + 4) * (canvas.width / 12));
+                const moonY = 50 + Math.sin((hours >= 20 ? hours - 20 : hours + 4) * Math.PI / 12) * -30;
+                
+                ctx.fillStyle = '#F0F0F0';
+                ctx.beginPath();
+                ctx.arc(moonX, moonY, 25, 0, Math.PI * 2);
+                ctx.fill();
+                
+                ctx.fillStyle = 'white';
+                for (let i = 0; i < 50; i++) {
+                    const starX = (i * 73) % canvas.width;
+                    const starY = (i * 37) % (canvas.height / 2);
+                    const size = (i % 3) + 1;
+                    
+                    ctx.beginPath();
+                    ctx.arc(starX, starY, size / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+        
+        function showMessage(text) {
+            const messageEl = document.getElementById('message');
+            messageEl.textContent = text;
+            messageEl.style.display = 'block';
+            
+            setTimeout(() => {
+                messageEl.style.display = 'none';
+            }, 2000);
+        }
+
+        function updateHealthBar() {
+            const healthBar = document.getElementById('healthBar');
+            healthBar.innerHTML = '';
+            for (let i = 0; i < 8; i++) {
+                const heart = document.createElement('div');
+                heart.classList.add('heart');
+                if (i >= player.health) {
+                    heart.classList.add('empty');
+                }
+                healthBar.appendChild(heart);
+            }
+        }
+
+        function handleDeath(message) {
+            if (player.health > 0) { // Evitar muertes múltiples
+                player.health = 0;
+                updateHealthBar();
+                showMessage(message);
+
+                // Respawn logic
+                setTimeout(() => {
+                    const spawnX = Math.floor(WORLD_WIDTH / 2);
+                    let spawnY = 0;
+                    for (let y = 0; y < WORLD_HEIGHT; y++) {
+                        if (world[y] && world[y][spawnX] && world[y][spawnX] !== 'water' && (!world[y - 1] || !world[y - 1][spawnX])) {
+                            spawnY = y * BLOCK_SIZE - player.height;
+                            break;
+                        }
+                    }
+                    player.x = spawnX * BLOCK_SIZE;
+                    player.y = spawnY;
+                    player.health = 8;
+                    player.velocityY = 0;
+                    updateHealthBar();
+                    showMessage("Has reaparecido.");
+                }, 1000); // 1 segundo de retraso antes de reaparecer
+            }
+        }
+
+        function checkLava() {
+            const playerLeft = Math.floor(player.x / BLOCK_SIZE);
+            const playerRight = Math.floor((player.x + player.width) / BLOCK_SIZE);
+            const playerBottom = Math.floor((player.y + player.height) / BLOCK_SIZE);
+            const playerTop = Math.floor(player.y / BLOCK_SIZE);
+
+            for (let y = playerTop; y <= playerBottom; y++) {
+                for (let x = playerLeft; x <= playerRight; x++) {
+                    const block = getBlock(x * BLOCK_SIZE, y * BLOCK_SIZE);
+                    if (block === 'lava') {
+                        handleDeath('¡Has muerto en la lava!');
+                        return;
+                    }
+                }
+            }
+        }
+
+        const tooltip = document.getElementById('tooltip');
+        const gameContainer = document.getElementById('gameContainer');
+
+        function showTooltip(e) {
+            const slot = e.target.closest('.inventorySlot, .fullInventorySlot');
+            if (!slot) return;
+
+            let item;
+            if (slot.dataset.slot) { // Hotbar
+                item = fullInventory[27 + parseInt(slot.dataset.slot)];
+            } else if (slot.dataset.inventorySlot) { // Main inventory
+                item = fullInventory[parseInt(slot.dataset.inventorySlot)];
+            } else if (slot.dataset.craftSlot) { // Crafting grid
+                item = craftingGrid[parseInt(slot.dataset.craftSlot)];
+            }
+
+            if (item && item.type) {
+                tooltip.textContent = blockTypes[item.type].name;
+                tooltip.style.display = 'block';
+            }
+        }
+
+        function hideTooltip() {
+            tooltip.style.display = 'none';
+        }
+
+        function moveTooltip(e) {
+            if (tooltip.style.display === 'block') {
+                const rect = gameContainer.getBoundingClientRect();
+                const x = e.clientX - rect.left;
+                const y = e.clientY - rect.top;
+                tooltip.style.left = (x + 15) + 'px';
+                tooltip.style.top = (y + 15) + 'px';
+            }
+        }
+        
+        function handleMouseInput() {
+            if (isMouseDown) {
+                if (breakCooldown <= 0) {
+                    if (mouseButton === 0) {
+                        breakBlock(mousePos.x, mousePos.y);
+                    } else if (mouseButton === 2) {
+                        placeBlock(mousePos.x, mousePos.y);
+                    }
+                    breakCooldown = BREAK_DELAY;
+                } else {
+                    breakCooldown--;
+                }
+            } else {
+                breakCooldown = 0;
+            }
+        }
+
+        let isWorldGenerated = false;
+        function gameLoop() {
+            if (!isWorldGenerated) {
+                ctx.fillStyle = 'black';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.fillStyle = 'white';
+                ctx.font = "20px 'Press Start 2P'";
+                ctx.textAlign = 'center';
+                ctx.fillText('Cargando mundo...', canvas.width / 2, canvas.height / 2);
+                requestAnimationFrame(gameLoop);
+                return;
+            }
+
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            updateSky();
+            updateGameTime();
+            handleMouseInput();
+            updatePlayer();
+            checkLava();
+            updateSaplings();
+            updateCamera();
+            
+            drawWorld();
+            drawPlayer();
+            drawTargetBlock();
+            // drawMinimap() ha sido eliminado
+            
+            requestAnimationFrame(gameLoop);
+        }
+        
+        // Event listeners
+        window.addEventListener('keydown', (e) => {
+            keys[e.key.toLowerCase()] = true;
+            
+            if (e.key >= '1' && e.key <= '9') {
+                selectedSlot = parseInt(e.key) - 1;
+                document.querySelectorAll('.inventorySlot').forEach(slot => slot.classList.remove('selected'));
+                document.querySelectorAll('.inventorySlot')[selectedSlot].classList.add('selected');
+                updateToolDisplay(); // Actualizar display de herramienta al cambiar
+            }
+            
+            if (e.key.toLowerCase() === 'e') {
+                inventoryOpen = !inventoryOpen;
+                const fullInventoryEl = document.getElementById('fullInventory');
+                if (inventoryOpen) {
+                    fullInventoryEl.classList.add('active');
+                    updateFullInventoryDisplay();
+                    displayRecipes();
+                } else {
+                    fullInventoryEl.classList.remove('active');
+                }
+            }
+        });
+        
+        window.addEventListener('keyup', (e) => {
+            keys[e.key.toLowerCase()] = false;
+        });
+
+        canvas.addEventListener('mousemove', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            mousePos.x = e.clientX - rect.left;
+            mousePos.y = e.clientY - rect.top;
+        });
+        
+        canvas.addEventListener('mousedown', (e) => {
+            const rect = canvas.getBoundingClientRect();
+            const mouseX = e.clientX - rect.left;
+            const mouseY = e.clientY - rect.top;
+            
+            if (e.button === 0) {
+                breakBlock(mouseX, mouseY);
+            } else if (e.button === 2) {
+                placeBlock(mouseX, mouseY);
+            }
+        });
+        
+        canvas.addEventListener('contextmenu', (e) => {
+            e.preventDefault();
+        });
+        
+        document.querySelectorAll('.inventorySlot').forEach((slot, index) => {
+            slot.addEventListener('click', () => {
+                selectedSlot = index;
+                document.querySelectorAll('.inventorySlot').forEach(s => s.classList.remove('selected'));
+                slot.classList.add('selected');
+                updateToolDisplay();
+            });
+        });
+        
+        // Botón de inventario
+        document.getElementById('inventoryButton').addEventListener('click', () => {
+            inventoryOpen = !inventoryOpen;
+            const fullInventoryEl = document.getElementById('fullInventory');
+            if (inventoryOpen) {
+                fullInventoryEl.classList.add('active');
+                updateFullInventoryDisplay();
+                displayRecipes();
+            } else {
+                fullInventoryEl.classList.remove('active');
+            }
+        });
+        
+        // Botón de cerrar inventario
+        document.querySelector('.closeButton').addEventListener('click', () => {
+            inventoryOpen = false;
+            document.getElementById('fullInventory').classList.remove('active');
+        });
+        
+        // Botón de crafteo
+        document.getElementById('craftButton').addEventListener('click', craft);
+        
+        // Event listeners para tooltips
+        const inventoryContainer = document.getElementById('fullInventory');
+        inventoryContainer.addEventListener('mouseover', showTooltip);
+        inventoryContainer.addEventListener('mouseout', hideTooltip);
+        inventoryContainer.addEventListener('mousemove', moveTooltip);
+
+        const hotbarContainer = document.getElementById('inventory');
+        hotbarContainer.addEventListener('mouseover', showTooltip);
+        hotbarContainer.addEventListener('mouseout', hideTooltip);
+        hotbarContainer.addEventListener('mousemove', moveTooltip);
+        
+        // Drag and drop para crafting grid
+        document.querySelectorAll('#craftingGrid .fullInventorySlot').forEach((slot, index) => {
+            slot.addEventListener('click', () => {
+                // Si hay algo en el hotbar seleccionado, añadirlo al crafting grid
+                const inventoryIndex = 27 + selectedSlot;
+                if (fullInventory[inventoryIndex] && fullInventory[inventoryIndex].type && fullInventory[inventoryIndex].count > 0) {
+                    if (!craftingGrid[index] || !craftingGrid[index].type) {
+                        craftingGrid[index] = {
+                            type: fullInventory[inventoryIndex].type,
+                            count: 1
+                        };
+                        removeFromInventory(inventoryIndex, 1);
+                        updateCraftingDisplay();
+                    }
+                } else if (craftingGrid[index] && craftingGrid[index].type) {
+                    // Devolver item al inventario
+                    addToInventory(craftingGrid[index].type, craftingGrid[index].count);
+                    craftingGrid[index] = { type: null, count: 0 };
+                    updateCraftingDisplay();
+                }
+            });
+        });
+        
+        // Inicializar juego
+        gameLoop(); // Inicia el bucle de juego para mostrar "Cargando"
+
+        setTimeout(() => {
+            initWorld();
+            updateInventoryDisplay();
+            updateToolDisplay();
+            isWorldGenerated = true; // El mundo ya se generó
+            showMessage('¡Recolecta madera y craftea tu primer pico!');
+        }, 50); // Timeout para permitir que el mensaje de carga se renderice
+    </script>
+</body>
+</html>
