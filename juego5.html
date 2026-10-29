@@ -2001,5 +2001,63 @@ UI.show('scrMenu');
 Game.state = 'menu';
 requestAnimationFrame(frame);
 </script>
+<script>
+/* ============ CONECTOR DE SCORE: FIREBOY & WATERGIRL → PÁGINA PRINCIPAL ============
+   Reporta un TOTAL = suma de mejores puntuaciones por nivel + bonus por estrellas.
+   Bonus por nivel: 1★ = 0 pts · 2★ = +1 pt · 3★ = +2 pts */
+(function () {
+  var GAME_TITLE = "Fireboy & Watergirl";  /* ← DEBE SER IDÉNTICO al title de index.html */
+  var SAVE_KEY   = 'fw_legado_eterno_v1';  /* clave donde el juego guarda sus récords */
+  var SCORE_INTERNO = true;                /* false = contar SOLO los puntos por estrellas */
+  var lastSent = -1;
+
+  function inIframe() { try { return window.self !== window.top; } catch (e) { return true; } }
+  function starPoints(s) { return s > 1 ? s - 1 : 0; } /* 1★=0 · 2★=1 · 3★=2 */
+
+  function computeTotal() {
+    var total = 0;
+    try {
+      var d = JSON.parse(localStorage.getItem(SAVE_KEY) || 'null');
+      if (d && d.best) {
+        for (var n in d.best) {
+          var b = d.best[n];
+          if (!b) continue;
+          if (SCORE_INTERNO) total += (b.score || 0);
+          total += starPoints(b.stars || 0);
+        }
+      }
+    } catch (e) {}
+    return total;
+  }
+
+  function report() {
+    if (!inIframe()) return;
+    var t = computeTotal();
+    if (t <= 0 || t <= lastSent) return;
+    lastSent = t;
+    try { window.parent.postMessage({ type: "gameScore", game: GAME_TITLE, score: t }, "*"); } catch (e) {}
+  }
+
+  /* 1) Reporte inmediato al superar un nivel (aparece la pantalla de completado/victoria) */
+  ['scrComplete', 'scrVictory'].forEach(function (id) {
+    var el = document.getElementById(id);
+    if (el && window.MutationObserver) {
+      new MutationObserver(function () {
+        if (!el.classList.contains('hidden')) setTimeout(report, 300);
+      }).observe(el, { attributes: true, attributeFilter: ['class'] });
+    }
+  });
+
+  /* 2) Respaldo: sondeo cada 4 segundos */
+  setInterval(report, 4000);
+
+  /* 3) Al cerrar el juego o cambiar de pestaña */
+  window.addEventListener('pagehide', report);
+  window.addEventListener('beforeunload', report);
+  document.addEventListener('visibilitychange', function () { if (document.hidden) report(); });
+
+  report(); /* reporte inicial si ya había progreso guardado en este navegador */
+})();
+</script>
 </body>
 </html>
