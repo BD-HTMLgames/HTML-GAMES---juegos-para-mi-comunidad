@@ -2006,9 +2006,9 @@ requestAnimationFrame(frame);
    Reporta un TOTAL = suma de mejores puntuaciones por nivel + bonus por estrellas.
    Bonus por nivel: 1★ = 0 pts · 2★ = +1 pt · 3★ = +2 pts */
 (function () {
-  var GAME_TITLE = "Fireboy & Watergirl";  /* ← DEBE SER IDÉNTICO al title de index.html */
+  var GAME_TITLE = "Agua y Fuego";  /* ← DEBE SER IDÉNTICO al title de index.html */
   var SAVE_KEY   = 'fw_legado_eterno_v1';  /* clave donde el juego guarda sus récords */
-  var SCORE_INTERNO = true;                /* false = contar SOLO los puntos por estrellas */
+  var SCORE_INTERNO = false;                /* false = contar SOLO los puntos por estrellas */
   var lastSent = -1;
 
   function inIframe() { try { return window.self !== window.top; } catch (e) { return true; } }
