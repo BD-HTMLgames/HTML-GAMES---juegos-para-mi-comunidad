@@ -563,7 +563,7 @@ function addScore(p){
   spawnSparks(cx, cy);
   floaters.push({ x: cx, y: cy - 26, vy: -46, life: .8, max: .8, text: '+1', size: 13, color: '#ffd54a' });
   /* Momento firma: el cielo cambia de día a noche cada 10 puntos */
-  const night = (Math.floor(score / 10) % 2 === 1);
+  const night = (Math.floor(score / 50) % 2 === 1);
   if(night !== (nightTarget === 1)){
     nightTarget = night ? 1 : 0;
     Sfx.swoosh();
