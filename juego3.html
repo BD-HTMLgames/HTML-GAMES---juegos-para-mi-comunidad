@@ -1120,5 +1120,53 @@ requestAnimationFrame(function loop(now){
   render(now / 1000);
 });
 </script>
+<script>
+/* ============ CONECTOR DE SCORE: FLAPPY → PÁGINA PRINCIPAL ============
+   Conversión: cada 10 puntos del juego = 1 punto para la página.
+   (9 pts juego = 0 · 10 pts = 1 · 25 pts = 2 · 40 pts = 4 ...) */
+(function () {
+  var GAME_TITLE = "FlappyBird"; /* EXACTO al title del array games en index.html */
+  var DIVISOR = 10;              /* puntos del juego ÷ 10 = puntos de la página */
+  var bestSeen = 0;              /* máximo de esta sesión */
+  var lastSent = -1;
+
+  function inIframe() { try { return window.self !== window.top; } catch (e) { return true; } }
+
+  function report() {
+    if (!inIframe()) return;
+    var pts = Math.floor(bestSeen / DIVISOR);
+    if (pts <= 0 || pts === lastSent) return;
+    lastSent = pts;
+    try { window.parent.postMessage({ type: "gameScore", game: GAME_TITLE, score: pts }, "*"); } catch (e) {}
+  }
+
+  function readScore() {
+    var el = document.getElementById("score");
+    if (!el) return;
+    var v = parseInt((el.textContent || "").replace(/[^0-9]/g, ""), 10);
+    if (!isNaN(v) && v > bestSeen) bestSeen = v;
+  }
+
+  /* Observa el marcador en vivo */
+  var scoreEl = document.getElementById("score");
+  if (scoreEl && window.MutationObserver) {
+    new MutationObserver(readScore).observe(scoreEl, { childList: true, characterData: true, subtree: true });
+  }
+
+  /* Reporte inmediato al aparecer el panel "FIN DEL JUEGO" */
+  var overEl = document.getElementById("over");
+  if (overEl && window.MutationObserver) {
+    new MutationObserver(function () {
+      if (overEl.classList.contains("show")) { readScore(); setTimeout(report, 900); }
+    }).observe(overEl, { attributes: true, attributeFilter: ["class"] });
+  }
+
+  /* Respaldo periódico y al cerrar el juego */
+  setInterval(function () { readScore(); report(); }, 5000);
+  window.addEventListener("pagehide", report);
+  window.addEventListener("beforeunload", report);
+  document.addEventListener("visibilitychange", function () { if (document.hidden) report(); });
+})();
+</script>
 </body>
 </html>
