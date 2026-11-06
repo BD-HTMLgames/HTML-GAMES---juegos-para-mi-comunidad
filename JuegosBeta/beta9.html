@@ -1,4 +1,4 @@
->
+<!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
@@ -478,7 +478,7 @@ input[type=range]::-webkit-slider-thumb{
 #reloj .num.urgente{ color:var(--rojo2); animation:latir .5s steps(2) infinite; }
 #reloj .etq{ font-size:9px; letter-spacing:2px; color:var(--crema2); text-transform:uppercase; margin-top:2px; }
 
-.barras-meter{ position:absolute; bottom:18px; display:flex; flex-direction:column; gap:4px; width:330px; }
+.barras-meter{ position:absolute; top:78px; display:flex; flex-direction:column; gap:4px; width:330px; }
 #meterP1{ left:18px; } #meterP2{ right:18px; align-items:flex-end; }
 .meter{ position:relative; width:300px; height:15px; background:#14141d; border:1px solid #000;
   box-shadow:0 0 0 1px rgba(212,175,55,.5); transform:skewX(-16deg); overflow:hidden; }
@@ -1095,7 +1095,8 @@ const Input = {
       for (const act in mapa){
         const arr = mapa[act];
         for (const k of arr){
-          if (this.teclas[k]){
+          // tecla sostenida O pulsación rápida registrada entre frames
+          if (this.teclas[k] || this.pendientes[k]){
             this.mant[p][act] = true;
             if (this.teclas[k] === 1 || this.pendientes[k]) this.pul[p][act] = true; // borde
           }
@@ -1291,9 +1292,9 @@ const ARMAS = ['none','parasol','hat','sword','scythe','needle'];
 
 // Normales compartidas (daño escalado por stats del personaje)
 const NORMALES = {
-  l: { nombre:'Ligero', arran:4, activo:3, recup:8,  dmg:42,  hs:15, bs:10, kbx:4.5, kby:0,   cx:36, cy:-116, an:76,  al:58,  cadena:['m','h'] },
-  m: { nombre:'Medio',  arran:7, activo:4, recup:11, dmg:66,  hs:20, bs:13, kbx:6.5, kby:0,   cx:44, cy:-106, an:90,  al:76,  cadena:['h'] },
-  h: { nombre:'Fuerte', arran:10, activo:5, recup:17, dmg:104, hs:26, bs:16, kbx:9,  kby:-8.5, cx:50, cy:-108, an:104, al:98,  cadena:[], lanzar:true }
+  l: { nombre:'Ligero', arran:4, activo:3, recup:8,  dmg:42,  hs:13, bs:10, kbx:2.6, kby:0,   cx:36, cy:-116, an:76,  al:58,  cadena:['m','h'] },
+  m: { nombre:'Medio',  arran:7, activo:4, recup:11, dmg:66,  hs:20, bs:13, kbx:4,   kby:0,   cx:44, cy:-106, an:90,  al:76,  cadena:['h'] },
+  h: { nombre:'Fuerte', arran:10, activo:5, recup:17, dmg:104, hs:26, bs:16, kbx:7,  kby:-8.5, cx:50, cy:-108, an:104, al:98,  cadena:[], lanzar:true }
 };
 
 // Plantilla de specials por tipo (el motor los interpreta)
@@ -2055,6 +2056,7 @@ function saltar(f, dir){
   AudioSys.sfx('salto');
 }
 function aterrizar(f){
+  if (f.estado === 'ko'){ f.vx *= 0.3; return; } // los KO permanecen en el suelo
   if (f.estado === 'lanzado' || f.estado === 'abajo'){
     f.estado = 'abajo'; f.f = 0; f.vx *= 0.4; AudioSys.sfx('aterr'); fxPolvo(f.x);
   } else {
@@ -2148,7 +2150,7 @@ function actualizarFighter(F, f, foe){
 // Actualiza un ataque (normal, especial o blockbuster) con encadenados
 function actualizarMovimiento(F, f, foe){
   const mv = f.mv;
-  f.f++;
+  // f.f ya se incrementó en actualizarFighter (evita doble velocidad)
   if (f.estado === 'ataque'){
     const m = mv, total = m.arran + m.activo + m.recup;
     // ventana de encadenado (como los combos por toques del móvil)
@@ -2160,8 +2162,10 @@ function actualizarMovimiento(F, f, foe){
       else if (f.in.pulS1) objetivo = 'SP1';
       else if (f.in.pulS2) objetivo = 'SP2';
       else if (f.in.pulBB) objetivo = 'BB';
+      else if (f.in.arr && f.y <= 0) objetivo = 'JUMP'; // salto-cancel / combo aéreo tras lanzador
       if (!objetivo && f.buf){ objetivo = f.buf; f.buf = null; f.bufT = 0; }
       if (objetivo){
+        if (objetivo === 'JUMP'){ saltar(f, f.facing); return; }
         if (objetivo === 'SP1' && f.def.specials.sp1){ iniciarEspecial(f, 'sp1'); return; }
         if (objetivo === 'SP2' && f.def.specials.sp2){ iniciarEspecial(f, 'sp2'); return; }
         if (objetivo === 'BB' && (f.lado === 1 ? F.eq1 : F.eq2).meter >= 100){ iniciarNormal(f, 'h'); intentarBB(f); return; }
@@ -2303,7 +2307,7 @@ function cajaGolpe(f){
   } else if (f.estado === 'especial' || f.estado === 'bb'){
     const esp = f.mv;
     if (esp.tipo === 'dash' || esp.tipo === 'tele'){
-      if (f.f >= esp.arran && f.f < esp.arran + esp.dur){
+      if (f.f >= esp.arran && f.f < esp.arran + esp.dur && !f.golpeHecho){
         const cx = f.x + f.facing * 34, cy = FIS.SUELO - f.y - 92;
         return { x1: cx - 44, x2: cx + 44, y1: cy - 56, y2: cy + 56, mv: { dmg: esp.dmg, hs: 22, bs: 14, kbx: 8, kby: 0 } };
       }
@@ -3468,8 +3472,13 @@ function pintarListaCustoms(){
   const cont = $('cus-lista');
   cont.innerHTML = '';
   const lista = SaveSys.datos.costumbres;
-  $('cus-vacio').style.display = lista.length ? 'none' : '';
-  if (!lista.length){ cont.appendChild($('cus-vacio')); return; }
+  if (!lista.length){
+    const v = document.createElement('div');
+    v.id = 'cus-vacio';
+    v.textContent = '— Aún no hay personajes propios —';
+    cont.appendChild(v);
+    return;
+  }
   lista.forEach(function(item, i){
     const r = validarDefCustom(item.json);
     const fila = document.createElement('div');
